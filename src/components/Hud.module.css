@@ -1,0 +1,96 @@
+.hud {
+  position: fixed;
+  z-index: 5;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.mark {
+  top: var(--pad);
+  left: var(--pad);
+  color: var(--ink);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mark span {
+  color: var(--gold);
+}
+
+.lang {
+  top: var(--pad);
+  right: var(--pad);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  /* Единственный интерактивный элемент HUD */
+  pointer-events: auto;
+}
+
+.lang a {
+  color: var(--dim);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.lang a:hover {
+  color: var(--gold);
+}
+
+.lang a:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 5px;
+}
+
+.langActive {
+  color: var(--ink);
+}
+
+.langSep {
+  opacity: 0.4;
+}
+
+.frame {
+  bottom: calc(var(--pad) - 6px);
+  left: var(--pad);
+}
+
+.frame b {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.pct {
+  bottom: calc(var(--pad) - 6px);
+  right: var(--pad);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar {
+  width: 76px;
+  height: 1px;
+  background: var(--line);
+  position: relative;
+}
+
+.bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--gold);
+  width: 0;
+}
+
+@media (max-width: 860px) {
+  .frame,
+  .pct {
+    font-size: 10px;
+  }
+}

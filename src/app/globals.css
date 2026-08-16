@@ -1,0 +1,45 @@
+:root {
+  --void: #03050a;
+  --ink: #e8edf4;
+  --dim: #78828f;
+  /* Golden Record «Вояджера» */
+  --gold: #d9a441;
+  --line: rgba(232, 237, 244, 0.13);
+
+  /* Unbounded покрывает и латиницу, и кириллицу — заголовки выглядят
+     одинаково в обеих версиях сайта */
+  --display: var(--font-display), "Arial Black", system-ui, sans-serif;
+  --mono: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --pad: clamp(20px, 5vw, 80px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--gold);
+  color: #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
