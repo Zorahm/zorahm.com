@@ -14,6 +14,14 @@ export type ShapeId =
   | "github"
   | "mark";
 
+/**
+ * Фигуры вне ленты кадров: живут на служебных страницах и потому не требуют
+ * ни текстов кадра, ни места в FRAME_STRUCTURE.
+ */
+export type ExtraShapeId = "notfound" | "waifik";
+
+export type AnyShapeId = ShapeId | ExtraShapeId;
+
 export type FrameAlign = "left" | "right" | "center";
 
 export type Paragraph = {
@@ -54,6 +62,21 @@ export type FrameText = {
 
 export type Frame = FrameStructure & FrameText;
 
+/**
+ * Экран без кадра: страница 404 и её пасхальное состояние собраны из одних
+ * и тех же полей, поэтому переключение между ними — это подмена одного
+ * объекта другим, а не набор отдельных строк.
+ */
+export type ScreenText = {
+  eyebrow: string;
+  title: string;
+  body: string;
+  /** Второй абзац, приглушённый */
+  muted: string;
+  /** Строка состояния в HUD, на месте счётчика кадров */
+  status: string;
+};
+
 /** Строки интерфейса вне кадров */
 export type UiStrings = {
   /** Название языка в переключателе */
@@ -66,4 +89,12 @@ export type UiStrings = {
   siteTitle: string;
   /** Подпись ссылки на другой язык для скринридеров */
   switchLanguage: string;
+  /** Страница 404 */
+  notFound: ScreenText;
+  /** Она же после того, как нашли маскота */
+  waifik: ScreenText;
+  /** Ссылка на главную с 404 */
+  notFoundHome: string;
+  /** Что делает невидимая кнопка пасхалки — только для скринридеров */
+  eggLabel: string;
 };

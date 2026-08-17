@@ -71,11 +71,31 @@ describe("кадры", () => {
 });
 
 describe("строки интерфейса", () => {
+  /** Обходит и вложенные группы строк — тексты 404 лежат объектами */
+  const walk = (value: unknown, path: string, visit: (s: string, p: string) => void) => {
+    if (typeof value === "string") return visit(value, path);
+    for (const [key, nested] of Object.entries(value as object)) {
+      walk(nested, `${path}/${key}`, visit);
+    }
+  };
+
   it("заполнены во всех языках", () => {
     for (const lang of LANGS) {
-      for (const [key, value] of Object.entries(getUi(lang))) {
-        expect(value.trim(), `${lang}/${key}`).not.toBe("");
-      }
+      walk(getUi(lang), lang, (value, path) => {
+        expect(value.trim(), path).not.toBe("");
+      });
+    }
+  });
+
+  it("набор ключей одинаков во всех языках", () => {
+    const keys = (lang: (typeof LANGS)[number]) => {
+      const found: string[] = [];
+      walk(getUi(lang), "", (_, path) => found.push(path));
+      return found.sort();
+    };
+    const [first, ...rest] = LANGS;
+    for (const lang of rest) {
+      expect(keys(lang), `${lang} против ${first}`).toEqual(keys(first));
     }
   });
 });

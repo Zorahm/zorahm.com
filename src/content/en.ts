@@ -9,6 +9,22 @@ export const enUi: UiStrings = {
   siteDescription:
     "I work with artificial intelligence: I build systems, take models apart, and write about how all of it reshapes the world around us.",
   switchLanguage: "Переключиться на русский",
+  notFound: {
+    eyebrow: "Error 404 — signal lost",
+    title: "Page not found",
+    body: "There is nothing at this address. The dots gathered into a number and stopped there.",
+    muted: "Whatever you were looking for lives somewhere else.",
+    status: "404 — not found",
+  },
+  waifik: {
+    eyebrow: "Easter egg — mascot found",
+    title: "Waifik",
+    body: "Waifik is the cat of the whole ecosystem. He was looking for this page too and found only dots.",
+    muted: "Click again to let him back into the noise.",
+    status: "404 — waifik found",
+  },
+  notFoundHome: "Back to the main page",
+  eggLabel: "Show the mascot",
 };
 
 export const enFrames: Record<ShapeId, FrameText> = {

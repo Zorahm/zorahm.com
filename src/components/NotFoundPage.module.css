@@ -1,0 +1,165 @@
+/* Кнопка пасхалки лежит поверх поля и под текстом: клик мимо букв ищет кота */
+.egg {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: none;
+  /* Пасхалка на то и пасхалка: курсор её не выдаёт */
+  cursor: default;
+}
+
+.egg:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: -8px;
+}
+
+.main {
+  position: relative;
+  z-index: 3;
+  min-height: 100dvh;
+  display: flex;
+  /* Текст уходит в нижнюю треть: верх экрана занимает фигура из точек */
+  align-items: flex-end;
+  justify-content: center;
+  padding: 14vh var(--pad) 12vh;
+  text-align: center;
+  /* Мимо текста клик должен доходить до кнопки под низом */
+  pointer-events: none;
+}
+
+.copy {
+  position: relative;
+  max-width: 52ch;
+  pointer-events: auto;
+  animation: appear 0.7s ease both;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Та же подложка, что под текстом кадров: гасит точки строго под буквами */
+.copy::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -8vh -7vw;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side at 50% 50%,
+    rgba(3, 5, 10, 0.95) 0%,
+    rgba(3, 5, 10, 0.9) 45%,
+    rgba(3, 5, 10, 0.55) 74%,
+    transparent 100%
+  );
+  -webkit-backdrop-filter: blur(7px) brightness(0.4);
+  backdrop-filter: blur(7px) brightness(0.4);
+  -webkit-mask-image: radial-gradient(
+    closest-side at 50% 50%,
+    #000 0%,
+    #000 50%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    closest-side at 50% 50%,
+    #000 0%,
+    #000 50%,
+    transparent 100%
+  );
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 22px;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+}
+
+.title {
+  font-family: var(--display);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  margin: 0 0 22px;
+  font-size: clamp(2.2rem, 6.4vw, 4.6rem);
+  text-shadow: 0 0 40px rgba(3, 5, 10, 0.9);
+}
+
+.body {
+  margin: 0 auto 18px;
+  max-width: 46ch;
+  color: #d8dfe8;
+  text-shadow:
+    0 0 22px rgba(3, 5, 10, 1),
+    0 0 8px rgba(3, 5, 10, 1),
+    0 1px 2px rgba(3, 5, 10, 1);
+}
+
+.muted {
+  color: var(--dim);
+}
+
+.biglink {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 26px;
+  text-decoration: none;
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-size: clamp(1.35rem, 3.6vw, 2.4rem);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+  text-shadow: 0 0 24px rgba(3, 5, 10, 1);
+}
+
+.biglink i {
+  font-style: normal;
+  font-size: 0.6em;
+  color: var(--gold);
+  transition: transform 0.3s;
+}
+
+.biglink:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.biglink:hover i {
+  transform: translateX(4px);
+}
+
+.biglink:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy {
+    animation: none;
+  }
+}

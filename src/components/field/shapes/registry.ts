@@ -1,4 +1,4 @@
-import type { ShapeId } from "@/content";
+import type { AnyShapeId } from "@/content";
 import type { Shape } from "./common";
 import { saturn } from "./saturn";
 import { noise } from "./noise";
@@ -8,8 +8,10 @@ import { globe } from "./globe";
 import { ripple } from "./ripple";
 import { github } from "./github";
 import { mark } from "./mark";
+import { notfound } from "./notfound";
+import { waifik } from "./waifik";
 
-export const SHAPES: Record<ShapeId, Shape> = {
+export const SHAPES: Record<AnyShapeId, Shape> = {
   saturn,
   noise,
   network,
@@ -18,6 +20,8 @@ export const SHAPES: Record<ShapeId, Shape> = {
   ripple,
   github,
   mark,
+  notfound,
+  waifik,
 };
 
 export type { Shape } from "./common";

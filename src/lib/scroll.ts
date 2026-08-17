@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { create } from "zustand";
 import {
   clamp,
@@ -46,21 +46,26 @@ const prefersReducedMotion = () =>
  * Единственный писатель scrollState. Крутит свой requestAnimationFrame, а не
  * живёт внутри R3F, чтобы HUD и прогресс работали даже там, где WebGL не
  * поднялся вовсе.
+ *
+ * Цель сцены и работа после доводки приходят колбэками: ленте кадров их даёт
+ * скролл, служебным страницам — их собственное состояние. Оба колбэка читаются
+ * из ref, поэтому цикл заводится один раз на страницу и не перезапускается на
+ * каждый рендер.
  */
-export function useScrollDriver(frameCount: number) {
-  useEffect(() => {
-    if (frameCount === 0) return;
+function useFieldLoop(readTarget: () => number, onSettled?: () => void) {
+  const targetRef = useRef(readTarget);
+  const settledRef = useRef(onSettled);
 
+  // Колбэки подменяются после каждого рендера — цикл читает их из ref
+  useEffect(() => {
+    targetRef.current = readTarget;
+    settledRef.current = onSettled;
+  });
+
+  useEffect(() => {
     const reduce = prefersReducedMotion();
-    let boxes: SectionBox[] = [];
     let raf = 0;
     let last = performance.now();
-
-    const measureSections = () => {
-      boxes = Array.from(
-        document.querySelectorAll<HTMLElement>("[data-frame]"),
-      ).map((el) => ({ top: el.offsetTop, height: el.offsetHeight }));
-    };
 
     const onPointerMove = (e: PointerEvent) => {
       scrollState.pointerX = e.clientX;
@@ -76,11 +81,59 @@ export function useScrollDriver(frameCount: number) {
       const dt = Math.min((now - last) / 1000, 0.1);
       last = now;
 
-      const target = measureStage(window.scrollY, window.innerHeight, boxes);
+      const target = targetRef.current();
       scrollState.stagePos = reduce
         ? target
         : damp(scrollState.stagePos, target, 0.12, dt);
       scrollState.intro = reduce ? 1 : Math.min(1, scrollState.intro + dt * 0.84);
+
+      settledRef.current?.();
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    // scrollState живёт вне React и переживает переход между страницами.
+    // Без этого уход с восьмого кадра на 404 прогонял бы всю ленту заново.
+    scrollState.stagePos = targetRef.current();
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerleave", onPointerLeave);
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerleave", onPointerLeave);
+    };
+  }, []);
+}
+
+/** Драйвер ленты кадров: позицию сцены задаёт прокрутка секций */
+export function useScrollDriver(frameCount: number) {
+  const boxesRef = useRef<SectionBox[]>([]);
+
+  useEffect(() => {
+    const measureSections = () => {
+      boxesRef.current = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-frame]"),
+      ).map((el) => ({ top: el.offsetTop, height: el.offsetHeight }));
+    };
+
+    measureSections();
+    // Шрифты приезжают позже и меняют высоту секций
+    document.fonts?.ready.then(measureSections).catch(() => {});
+    window.addEventListener("resize", measureSections, { passive: true });
+
+    return () => window.removeEventListener("resize", measureSections);
+  }, [frameCount]);
+
+  useFieldLoop(
+    () =>
+      frameCount === 0
+        ? 0
+        : measureStage(window.scrollY, window.innerHeight, boxesRef.current),
+    () => {
+      if (frameCount === 0) return;
 
       const scrollable = document.body.scrollHeight - window.innerHeight;
       const progress = clamp(
@@ -101,24 +154,15 @@ export function useScrollDriver(frameCount: number) {
       if (hud.frameIndex !== frameIndex || hud.percent !== percent) {
         useHudStore.setState({ frameIndex, percent });
       }
+    },
+  );
+}
 
-      raf = requestAnimationFrame(tick);
-    };
-
-    measureSections();
-    // Шрифты приезжают позже и меняют высоту секций
-    document.fonts?.ready.then(measureSections).catch(() => {});
-
-    window.addEventListener("resize", measureSections, { passive: true });
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("pointerleave", onPointerLeave);
-    raf = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", measureSections);
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerleave", onPointerLeave);
-    };
-  }, [frameCount]);
+/**
+ * Драйвер для страниц без ленты кадров: цель сцены задаёт сама страница.
+ * Поле по-прежнему само доводит позицию, поэтому смена кадра выглядит как
+ * обычный переход между фигурами, а не как подмена картинки.
+ */
+export function useStageDriver(target: number) {
+  useFieldLoop(() => target);
 }

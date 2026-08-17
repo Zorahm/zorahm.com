@@ -1,5 +1,19 @@
-import type { ShapeId } from "@/content";
+import type { AnyShapeId } from "@/content";
 import type { Grid } from "../grid";
+
+/**
+ * Семейство заголовочного шрифта для Canvas2D.
+ *
+ * next/font подставляет сгенерированное имя вида `__Unbounded_a1b2c3`, поэтому
+ * задать шрифт литералом («Unbounded») нельзя — canvas молча возьмёт фолбэк.
+ * Настоящее имя лежит в CSS-переменной, которую ставит layout.
+ */
+export function displayFamily(): string {
+  const name = getComputedStyle(document.documentElement)
+    .getPropertyValue("--font-display")
+    .trim();
+  return name ? `${name}, "Arial Black", sans-serif` : '"Arial Black", sans-serif';
+}
 
 /**
  * Запечённые фигуры рисуются в разрешении выше сеточного, чтобы поворот и
@@ -20,7 +34,7 @@ export type BakeContext = {
 };
 
 export type Shape = {
-  id: ShapeId;
+  id: AnyShapeId;
   /**
    * Тело фрагментного шейдера. Обязано определить
    *   float field(vec2 node)

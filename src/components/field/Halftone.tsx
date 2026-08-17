@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { FRAME_STRUCTURE } from "@/content";
+import type { AnyShapeId } from "@/content";
 import { scrollState } from "@/lib/scroll";
 import { computeGrid, type Grid } from "./grid";
 import { resolveStage } from "./stage";
@@ -127,7 +127,17 @@ type ShapePass = {
   bakeCanvas: HTMLCanvasElement | null;
 };
 
-export function Halftone() {
+/**
+ * Кадр глазами поля: какую фигуру показывать и сколько в ней золота.
+ * Лента главной страницы даёт их из FRAME_STRUCTURE, служебные страницы —
+ * своим списком, поэтому поле про содержание сайта ничего не знает.
+ */
+export type FieldFrame = {
+  id: AnyShapeId;
+  accent: number;
+};
+
+export function Halftone({ frames }: { frames: readonly FieldFrame[] }) {
   const gl = useThree((s) => s.gl);
   const size = useThree((s) => s.size);
 
@@ -167,10 +177,10 @@ export function Halftone() {
     [],
   );
 
-  /** По проходу на каждый кадр, в порядке FRAME_STRUCTURE */
+  /** По проходу на каждый кадр, в порядке frames */
   const passes = useMemo<ShapePass[]>(
     () =>
-      FRAME_STRUCTURE.map((frame) => {
+      frames.map((frame) => {
         const shape = SHAPES[frame.id];
         const material = new THREE.ShaderMaterial({
           glslVersion: THREE.GLSL3,
@@ -201,7 +211,7 @@ export function Halftone() {
 
         return { material, bakeTexture, bakeCanvas };
       }),
-    [],
+    [frames],
   );
 
   const points = useMemo(() => {
@@ -284,7 +294,7 @@ export function Halftone() {
 
     const rebake = () => {
       passes.forEach((pass, index) => {
-        const shape = SHAPES[FRAME_STRUCTURE[index].id];
+        const shape = SHAPES[frames[index].id];
         if (!shape.bake || !pass.bakeCanvas || !pass.bakeTexture) return;
 
         const width = cols * BAKE_SCALE;
@@ -319,7 +329,7 @@ export function Halftone() {
     rebake();
     // Знак Z\M запекается шрифтом: до загрузки шрифта глиф был бы чужим
     document.fonts?.ready.then(rebake).catch(() => {});
-  }, [size.width, size.height, targets, passes, points, reduce]);
+  }, [size.width, size.height, targets, passes, points, reduce, frames]);
 
   useEffect(() => {
     const currentTargets = targets;
@@ -338,6 +348,8 @@ export function Halftone() {
     };
   }, [targets, passes, points, fbo]);
 
+  const accents = useMemo(() => frames.map((f) => f.accent), [frames]);
+
   useFrame(() => {
     const grid = gridRef.current;
     const time = reduce ? 0 : (performance.now() - startRef.current) / 1000;
@@ -345,7 +357,7 @@ export function Halftone() {
     const stage = resolveStage(
       scrollState.stagePos,
       scrollState.intro,
-      FRAME_STRUCTURE.map((f) => f.accent),
+      accents,
     );
 
     // Курсор приходит в экранных координатах, где Y растёт вниз, а поле
