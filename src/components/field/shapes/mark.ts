@@ -1,18 +1,4 @@
-import type { Shape } from "./common";
-
-/**
- * Семейство заголовочного шрифта для Canvas2D.
- *
- * next/font подставляет сгенерированное имя вида `__Unbounded_a1b2c3`, поэтому
- * задать шрифт литералом («Unbounded») нельзя — canvas молча возьмёт фолбэк.
- * Настоящее имя лежит в CSS-переменной, которую ставит layout.
- */
-function displayFamily(): string {
-  const name = getComputedStyle(document.documentElement)
-    .getPropertyValue("--font-display")
-    .trim();
-  return name ? `${name}, "Arial Black", sans-serif` : '"Arial Black", sans-serif';
-}
+import { displayFamily, type Shape } from "./common";
 
 /**
  * Кадр «Связь»: знак Z\M, по которому проходит тёмная волна.
@@ -22,15 +8,25 @@ export const mark: Shape = {
   id: "mark",
 
   bake({ ctx, width, height, centerX, centerY }) {
-    const size = Math.round(height * 0.62);
+    const family = displayFamily();
     ctx.save();
     ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = `800 ${size}px ${displayFamily()}`;
+
+    // Знак широкий: кегль берётся от высоты, но ужимается по реальной ширине
+    // строки, иначе на телефоне и на низком окне ПК он вылезает за края
+    let size = Math.round(height * 0.52);
+    ctx.font = `800 ${size}px ${family}`;
+    const measured = ctx.measureText("Z\\M").width;
+    const limit = width * 0.9;
+    if (measured > limit) {
+      size = Math.floor((size * limit) / measured);
+      ctx.font = `800 ${size}px ${family}`;
+    }
+
     ctx.fillText("Z\\M", centerX, centerY + size * 0.03);
     ctx.restore();
-    void width;
   },
 
   glsl: /* glsl */ `
