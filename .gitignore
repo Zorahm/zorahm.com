@@ -43,6 +43,9 @@ yarn-error.log*
 # сервисов на сервере — держим локально
 docs/deploy-vps.md
 
+# сгенерированные GIF планет: пересобираются из scripts/planets
+/gifs/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
