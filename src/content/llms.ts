@@ -1,7 +1,8 @@
-import { getContacts, getFrames, getUi, langPath } from "./index";
+import { getBodies, getContacts, getFrames, getUi, langPath, spacePath } from "./index";
 import { LANGS, SITE_URL, type Lang } from "./types";
 
 const absolute = (lang: Lang) => new URL(langPath(lang), SITE_URL).toString();
+const spaceUrl = (lang: Lang) => new URL(spacePath(lang), SITE_URL).toString();
 
 const LANG_TITLE: Record<Lang, string> = {
   en: "English",
@@ -28,9 +29,10 @@ export function buildLlmsTxt(): string {
   lines.push("");
   lines.push(
     "Personal site of ZorahM. A single scroll-driven page told in eight frames, " +
-      "each pairing a short text with a halftone figure rendered in WebGL. " +
-      "Available in English and Russian; the full text of both versions is " +
-      "included below.",
+      "each pairing a short text with a halftone figure rendered in WebGL, plus " +
+      "an interactive solar system at /space where every body can be opened and " +
+      "read about. Available in English and Russian; the full text of both " +
+      "versions is included below.",
   );
   lines.push("");
   lines.push("Crawling and indexing by AI agents is allowed.");
@@ -41,6 +43,12 @@ export function buildLlmsTxt(): string {
   for (const lang of LANGS) {
     lines.push(
       `- [${LANG_TITLE[lang]}](${absolute(lang)}): ${getUi(lang).siteTitle}`,
+    );
+  }
+  for (const lang of LANGS) {
+    lines.push(
+      `- [${getUi(lang).space.title} — ${LANG_TITLE[lang]}](${spaceUrl(lang)}): ` +
+        getUi(lang).space.description,
     );
   }
   lines.push("");
@@ -70,6 +78,20 @@ export function buildLlmsTxt(): string {
         lines.push(`Link: ${frame.cta.href}`);
         lines.push("");
       }
+    }
+
+    lines.push(`### ${getUi(lang).space.title}`);
+    lines.push("");
+    lines.push(`Source: ${spaceUrl(lang)}`);
+    lines.push("");
+
+    for (const body of getBodies(lang)) {
+      lines.push(`#### ${body.name} — ${body.tagline}`);
+      lines.push("");
+      lines.push(body.stats.map((s) => `${s.label}: ${s.value}`).join(" · "));
+      lines.push("");
+      lines.push(body.body);
+      lines.push("");
     }
   }
 

@@ -1,0 +1,277 @@
+/* Строка состояния и подсказка живут в той же телеметрической типографике,
+   что и HUD главной страницы */
+.status,
+.hint {
+  position: fixed;
+  z-index: 5;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.status {
+  top: calc(var(--pad) + 34px);
+  left: var(--pad);
+  color: var(--ink);
+}
+
+.hint {
+  top: calc(var(--pad) + 34px);
+  right: var(--pad);
+  color: var(--dim);
+  text-align: right;
+  max-width: 42ch;
+  letter-spacing: 0.14em;
+}
+
+/* Ряд имён: единственный способ выбрать тело с клавиатуры и на телефоне */
+.rail {
+  position: fixed;
+  z-index: 5;
+  left: 50%;
+  bottom: var(--pad);
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+  padding: 7px 10px;
+  max-width: calc(100vw - var(--pad) * 2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(3, 5, 10, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.railItem {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+  transition:
+    color 0.25s,
+    background 0.25s;
+}
+
+.railItem:hover {
+  color: var(--ink);
+  background: rgba(232, 237, 244, 0.07);
+}
+
+.railItem[aria-pressed="true"] {
+  color: var(--gold);
+  background: rgba(217, 164, 65, 0.12);
+}
+
+.railItem:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Карточка тела прижата к правому краю: центр экрана занимает планета */
+.main {
+  position: fixed;
+  z-index: 4;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: calc(var(--pad) + 60px) var(--pad) calc(var(--pad) + 70px);
+  /* Мимо карточки указатель должен доходить до сцены */
+  pointer-events: none;
+}
+
+.card {
+  position: relative;
+  width: min(38ch, 100%);
+  pointer-events: auto;
+  animation: appear 0.5s ease both;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* Та же подложка, что под текстом кадров: гасит точки строго под буквами */
+.card::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -6vh -3vw;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side at 50% 50%,
+    rgba(3, 5, 10, 0.95) 0%,
+    rgba(3, 5, 10, 0.9) 45%,
+    rgba(3, 5, 10, 0.55) 74%,
+    transparent 100%
+  );
+  -webkit-backdrop-filter: blur(7px) brightness(0.4);
+  backdrop-filter: blur(7px) brightness(0.4);
+  -webkit-mask-image: radial-gradient(
+    closest-side at 50% 50%,
+    #000 0%,
+    #000 50%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    closest-side at 50% 50%,
+    #000 0%,
+    #000 50%,
+    transparent 100%
+  );
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+}
+
+.title {
+  font-family: var(--display);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  margin: 0 0 14px;
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  text-shadow: 0 0 40px rgba(3, 5, 10, 0.9);
+}
+
+.tagline {
+  margin: 0 0 24px;
+  color: #d8dfe8;
+  text-shadow: 0 0 22px rgba(3, 5, 10, 1);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+  margin: 0 0 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.stat dt {
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 5px;
+}
+
+.stat dd {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.body {
+  margin: 0;
+  color: #d8dfe8;
+  text-shadow:
+    0 0 22px rgba(3, 5, 10, 1),
+    0 0 8px rgba(3, 5, 10, 1);
+}
+
+.back {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin-top: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+
+.back i {
+  font-style: normal;
+  color: var(--gold);
+  transition: transform 0.3s;
+}
+
+.back:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.back:hover i {
+  transform: translateX(-4px);
+}
+
+.back:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 6px;
+}
+
+/* На узком экране карточка уезжает вниз, чтобы не закрывать планету */
+@media (max-width: 860px) {
+  .hint {
+    display: none;
+  }
+
+  .main {
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: calc(var(--pad) + 96px);
+  }
+
+  .card {
+    width: 100%;
+    max-width: 46ch;
+  }
+
+  .stats {
+    gap: 12px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}

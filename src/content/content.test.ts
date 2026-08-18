@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   FRAME_STRUCTURE,
   LANGS,
+  SPACE_STRUCTURE,
+  getBodies,
   getContacts,
   getFrames,
   getUi,
   langPath,
   otherLang,
+  spacePath,
 } from "./index";
 
 describe("кадры", () => {
@@ -70,6 +73,58 @@ describe("кадры", () => {
   });
 });
 
+describe("тела сцены /space", () => {
+  it("во всех языках одинаковый набор и порядок тел", () => {
+    const ids = SPACE_STRUCTURE.map((b) => b.id);
+    for (const lang of LANGS) {
+      expect(getBodies(lang).map((b) => b.id)).toEqual(ids);
+    }
+  });
+
+  it("ни один текст не потерян при переводе", () => {
+    for (const lang of LANGS) {
+      for (const body of getBodies(lang)) {
+        expect(body.name.trim(), `${lang}/${body.id} name`).not.toBe("");
+        expect(body.eyebrow.trim(), `${lang}/${body.id} eyebrow`).not.toBe("");
+        expect(body.tagline.trim(), `${lang}/${body.id} tagline`).not.toBe("");
+        expect(body.body.trim(), `${lang}/${body.id} абзац`).not.toBe("");
+      }
+    }
+  });
+
+  it("у каждого тела ровно четыре заполненные величины", () => {
+    for (const lang of LANGS) {
+      for (const body of getBodies(lang)) {
+        expect(body.stats, `${lang}/${body.id}`).toHaveLength(4);
+        for (const stat of body.stats) {
+          expect(stat.label.trim(), `${lang}/${body.id} подпись`).not.toBe("");
+          expect(stat.value.trim(), `${lang}/${body.id} значение`).not.toBe("");
+        }
+      }
+    }
+  });
+
+  it("Солнце стоит первым и в центре, остальные — по возрастанию орбиты", () => {
+    expect(SPACE_STRUCTURE[0].id).toBe("sun");
+    expect(SPACE_STRUCTURE[0].orbit).toBe(0);
+    for (let i = 2; i < SPACE_STRUCTURE.length; i++) {
+      expect(
+        SPACE_STRUCTURE[i].orbit,
+        SPACE_STRUCTURE[i].id,
+      ).toBeGreaterThan(SPACE_STRUCTURE[i - 1].orbit);
+    }
+  });
+
+  it("орбиты помещаются в кадр, accent лежит в допустимых пределах", () => {
+    for (const body of SPACE_STRUCTURE) {
+      expect(body.orbit, body.id).toBeLessThanOrEqual(1);
+      expect(body.accent, body.id).toBeGreaterThanOrEqual(0);
+      expect(body.accent, body.id).toBeLessThanOrEqual(1);
+      expect(body.dot, body.id).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe("строки интерфейса", () => {
   /** Обходит и вложенные группы строк — тексты 404 лежат объектами */
   const walk = (value: unknown, path: string, visit: (s: string, p: string) => void) => {
@@ -104,6 +159,11 @@ describe("маршруты и контакты", () => {
   it("английский лежит в корне, русский — на /ru", () => {
     expect(langPath("en")).toBe("/");
     expect(langPath("ru")).toBe("/ru");
+  });
+
+  it("космос лежит рядом с языковой главной", () => {
+    expect(spacePath("en")).toBe("/space");
+    expect(spacePath("ru")).toBe("/ru/space");
   });
 
   it("переключение языка обратимо", () => {

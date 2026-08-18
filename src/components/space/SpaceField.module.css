@@ -1,0 +1,12 @@
+.host {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  cursor: grab;
+  /* Иначе перетаскивание на тач-экране прокручивало бы страницу под сценой */
+  touch-action: none;
+}
+
+.host:active {
+  cursor: grabbing;
+}

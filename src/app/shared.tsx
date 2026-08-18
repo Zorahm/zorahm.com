@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Unbounded } from "next/font/google";
-import { SITE_URL, getUi, langPath, type Lang } from "@/content";
+import { SITE_URL, getUi, langPath, spacePath, type Lang } from "@/content";
 
 /**
  * Общая обвязка для обоих корневых макетов.
@@ -74,6 +74,45 @@ export function buildMetadata(lang: Lang): Metadata {
       card: "summary_large_image",
       title: ui.siteTitle,
       description: ui.siteDescription,
+    },
+  };
+}
+
+/**
+ * Метаданные страницы /space.
+ *
+ * Заголовок и описание свои, всё остальное — та же обвязка: канонический
+ * адрес ведёт на язык страницы, hreflang связывает две её версии между
+ * собой, а не с главной.
+ */
+export function buildSpaceMetadata(lang: Lang): Metadata {
+  const ui = getUi(lang);
+  const url = new URL(spacePath(lang), SITE_URL).toString();
+  const title = `${ui.space.title} — ZorahM`;
+
+  return {
+    title,
+    description: ui.space.description,
+    alternates: {
+      canonical: url,
+      languages: {
+        en: new URL(spacePath("en"), SITE_URL).toString(),
+        ru: new URL(spacePath("ru"), SITE_URL).toString(),
+        "x-default": new URL(spacePath("en"), SITE_URL).toString(),
+      },
+    },
+    openGraph: {
+      title,
+      description: ui.space.description,
+      url,
+      siteName: "ZorahM",
+      locale: OG_LOCALE[lang],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: ui.space.description,
     },
   };
 }
