@@ -23,6 +23,8 @@ export const scrollState = {
   stagePos: 0,
   /** Плавное появление всей сцены после загрузки, 0..1 */
   intro: 0,
+  /** Уход со страницы: 0 — кадр на месте, 1 — точки разлетелись и погасли */
+  exit: 0,
   pointerX: -9999,
   pointerY: -9999,
   pointerActive: false,

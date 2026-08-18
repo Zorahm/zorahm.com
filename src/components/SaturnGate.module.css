@@ -1,0 +1,86 @@
+/* Ворота лежат поверх поля и ниже текста кадра: в разметке они идут раньше
+   main, и позиционированный текст перекрывает их сам собой */
+.gate {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Круг по диску планеты. Кольца тянутся дальше, но целиться в них неудобно:
+   на них приходится ровно та часть кадра, где лежит текст */
+.hit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 42vmin;
+  height: 42vmin;
+  transform: translate(-50%, -50%);
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.hit:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 6px;
+}
+
+.caption {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 24vmin);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-shadow: 0 0 18px rgba(3, 5, 10, 1);
+  opacity: 0.55;
+  transition:
+    opacity 0.35s,
+    color 0.35s;
+}
+
+.captionOn {
+  opacity: 1;
+  color: var(--gold);
+}
+
+.caption i {
+  font-style: normal;
+  color: var(--gold);
+  transition: transform 0.35s;
+}
+
+.captionOn i {
+  transform: translateX(4px);
+}
+
+/* На узком экране текст кадра занимает середину — подпись уезжает ниже,
+   под планету, чтобы не спорить с заголовком */
+@media (max-width: 860px) {
+  .hit {
+    width: 34vmin;
+    height: 34vmin;
+  }
+
+  .caption {
+    top: calc(50% + 21vmin);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caption,
+  .caption i {
+    transition: none;
+  }
+}

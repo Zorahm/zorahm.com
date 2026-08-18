@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useSyncExternalStore } from "react";
 import { Hud } from "./Hud";
+import { SaturnGate } from "./SaturnGate";
 import { Section } from "./Section";
 import { getFrames, type Lang } from "@/content";
 import { useScrollDriver } from "@/lib/scroll";
@@ -29,6 +30,11 @@ export function HomePage({ lang }: { lang: Lang }) {
       <Hud lang={lang} />
 
       <main className={styles.main}>
+        {/* Раньше секций в разметке: текст кадра позиционирован и потому
+            перекрывает ворота сам собой, а клик по абзацу остаётся кликом
+            по абзацу */}
+        <SaturnGate lang={lang} />
+
         {frames.map((frame, index) => (
           <Section key={frame.id} frame={frame} index={index} lang={lang} />
         ))}
