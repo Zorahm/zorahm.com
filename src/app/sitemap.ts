@@ -1,5 +1,13 @@
 import type { MetadataRoute } from "next";
-import { LANGS, SITE_URL, langPath, spacePath, type Lang } from "@/content";
+import {
+  LANGS,
+  SITE_URL,
+  langPath,
+  space3dPath,
+  spacePath,
+  spiritPath,
+  type Lang,
+} from "@/content";
 
 // Дата сборки делает маршрут динамическим — при статическом экспорте это
 // нужно снять явно
@@ -14,6 +22,8 @@ type Route = {
 const ROUTES: Route[] = [
   { path: langPath, priority: (lang) => (lang === "en" ? 1 : 0.8) },
   { path: spacePath, priority: (lang) => (lang === "en" ? 0.7 : 0.6) },
+  { path: space3dPath, priority: (lang) => (lang === "en" ? 0.6 : 0.5) },
+  { path: spiritPath, priority: (lang) => (lang === "en" ? 0.5 : 0.4) },
 ];
 
 const absolute = (path: (lang: Lang) => string, lang: Lang) =>

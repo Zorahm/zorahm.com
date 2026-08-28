@@ -18,7 +18,7 @@ export type ShapeId =
  * Фигуры вне ленты кадров: живут на служебных страницах и потому не требуют
  * ни текстов кадра, ни места в FRAME_STRUCTURE.
  */
-export type ExtraShapeId = "notfound" | "waifik";
+export type ExtraShapeId = "notfound" | "waifik" | "spirit";
 
 export type AnyShapeId = ShapeId | ExtraShapeId;
 
@@ -99,6 +99,10 @@ export type UiStrings = {
   eggLabel: string;
   /** Страница /space */
   space: SpaceStrings;
+  /** Страница /space-3d */
+  space3d: Space3DStrings;
+  /** Страница /spirit */
+  spirit: SpiritStrings;
 };
 
 /** Тела на странице /space. Порядок — от Солнца наружу. */
@@ -163,5 +167,147 @@ export type SpaceStrings = {
   /** Подпись у Сатурна на главной: клик по нему ведёт сюда */
   enter: string;
   /** Ссылка на главную */
+  home: string;
+  /** Ссылка на трассированную версию сцены */
+  view3d: string;
+};
+
+/**
+ * Строки страницы /space-3d.
+ *
+ * Страница намеренно выпадает из стиля сайта, и её интерфейс — приборный:
+ * счётчик кадров, панель параметров, горячие клавиши. Отсюда и набор строк,
+ * которого нет больше нигде.
+ */
+export type Space3DStrings = {
+  title: string;
+  description: string;
+  /** Строка под маркой: чем эта страница является */
+  subtitle: string;
+  /** Заголовок панели параметров */
+  panel: string;
+  /** Подписи ползунков */
+  params: {
+    time: string;
+    exposure: string;
+    orbits: string;
+    glow: string;
+    stars: string;
+  };
+  autoOrbit: string;
+  reset: string;
+  /** Подсказка по указателю */
+  hint: string;
+  /** Что делают горячие клавиши H, R, Space и F */
+  keys: {
+    hide: string;
+    reset: string;
+    auto: string;
+    fullscreen: string;
+  };
+  /** Подпись, когда камера смотрит на систему целиком */
+  overview: string;
+  /** Подпись ряда с именами тел */
+  bodiesLabel: string;
+  /** Кнопка возврата к обзору системы */
+  back: string;
+  /** Ссылка на точечную версию сцены */
+  dotsView: string;
+  /** Сноска о том, что пропорции тел художественные */
+  scaleNote: string;
+  /** Экран отказа, когда WebGL недоступен */
+  error: string;
+};
+
+/** Титулы на странице /spirit. Порядок — как шли финалы в тот день. */
+export type SpiritMatchId = "dota" | "cs";
+
+/**
+ * Неязыковая часть титула.
+ *
+ * Счёт, соперник и состав лежат здесь по той же причине, что и орбиты тел:
+ * у перевода не должно быть возможности разойтись с фактом. Ссылка рядом —
+ * тот источник, по которому факт проверяется.
+ */
+export type SpiritMatchStructure = {
+  id: SpiritMatchId;
+  /** Дисциплина так, как её пишут в таблице */
+  discipline: string;
+  event: string;
+  opponent: string;
+  /** Счёт серии: сначала Spirit, потом соперник */
+  score: [number, number];
+  /** Формат серии */
+  format: string;
+  /** Состав в порядке позиций */
+  roster: string[];
+  coach: string;
+  /** Первоисточник результата */
+  source: string;
+};
+
+/** Языковая часть титула */
+export type SpiritMatchText = {
+  /** Где играли */
+  venue: string;
+  /** Что именно взято */
+  prize: string;
+  /** Одна строка о том, как прошла серия */
+  line: string;
+};
+
+export type SpiritMatch = SpiritMatchStructure & SpiritMatchText;
+
+/**
+ * Высший титул, взятый в том же городе раньше. К 23 августа он не относится и
+ * потому лежит отдельно от SPIRIT_STRUCTURE — но проверяется теми же тестами.
+ */
+export type SpiritCityTitle = {
+  discipline: string;
+  event: string;
+  opponent: string;
+  /** Счёт серии: сначала Spirit, потом соперник */
+  score: [number, number];
+  source: string;
+};
+
+/** Ссылка на источник под запиской */
+export type SpiritSource = {
+  label: string;
+  href: string;
+};
+
+/** Строки страницы /spirit */
+export type SpiritStrings = {
+  title: string;
+  description: string;
+  /** Дата над заголовком, словами */
+  date: string;
+  eyebrow: string;
+  heading: string;
+  /** Вводные абзацы записки */
+  lead: string[];
+  /** Подписи внутри табло */
+  scoreWord: string;
+  rosterWord: string;
+  coachWord: string;
+  /** Ссылка на первоисточник результата */
+  sourceWord: string;
+  /** Хронология дня: подпись блока и сами шаги */
+  timelineLabel: string;
+  timeline: { mark: string; text: string }[];
+  /** Совпадение с городом: подпись блока и сам текст */
+  cityLabel: string;
+  city: string[];
+  /** Чем этот день войдёт в таблицы рекордов */
+  factsLabel: string;
+  facts: string[];
+  /** Личная часть записки */
+  noteLabel: string;
+  note: string[];
+  /** Ссылки и оговорка под ними */
+  sourcesLabel: string;
+  /** Чего на странице нет и почему */
+  disclaimer: string;
   home: string;
 };

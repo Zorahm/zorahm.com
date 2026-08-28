@@ -1,0 +1,425 @@
+.main {
+  position: relative;
+  z-index: 3;
+  min-height: 100dvh;
+  padding: clamp(96px, 16vh, 190px) var(--pad) clamp(72px, 12vh, 140px);
+  display: flex;
+  justify-content: center;
+}
+
+/*
+ * Записка лежит одной колонкой поверх поля. Подложка полупрозрачная и с
+ * размытием: точки должны читаться сквозь текст, но не мешать читать текст.
+ */
+.note {
+  position: relative;
+  width: 100%;
+  max-width: 72ch;
+  padding: clamp(28px, 5vw, 56px);
+  border: 1px solid var(--line);
+  background: rgba(3, 5, 10, 0.72);
+  -webkit-backdrop-filter: blur(10px) brightness(0.6);
+  backdrop-filter: blur(10px) brightness(0.6);
+  animation: appear 0.7s ease both;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.head {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: clamp(24px, 4vw, 38px);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+}
+
+.date {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 14px;
+}
+
+.title {
+  font-family: var(--display);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  margin: 0 0 26px;
+  font-size: clamp(2rem, 6.2vw, 4rem);
+}
+
+.lead {
+  margin: 0 0 16px;
+  color: #d8dfe8;
+}
+
+.lead:last-child {
+  margin-bottom: 0;
+}
+
+.muted {
+  color: var(--dim);
+}
+
+/* Два табло: рядом там, где хватает ширины, и друг под другом на телефоне */
+.boards {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin: clamp(28px, 5vw, 44px) 0;
+}
+
+.board {
+  border: 1px solid var(--line);
+  padding: clamp(20px, 3vw, 28px);
+  background: rgba(232, 237, 244, 0.02);
+}
+
+.discipline {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.venue {
+  margin: 0 0 22px;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+/* Счёт: столбиком, чтобы длинные названия команд не ломали строку */
+.score {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.side {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.digits {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(2.4rem, 8vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--dim);
+}
+
+.digits span {
+  margin: 0 0.14em;
+  color: var(--line);
+}
+
+/* Выигранная сторона — золотом; вторая цифра остаётся приглушённой */
+.won {
+  font-style: normal;
+  color: var(--gold);
+}
+
+.format {
+  margin: 0 0 20px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.prize {
+  margin: 0 0 10px;
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.line {
+  margin: 0 0 22px;
+  font-size: 14px;
+  color: #cfd7e1;
+}
+
+.roster {
+  margin: 0 0 20px;
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.roster div {
+  display: grid;
+  grid-template-columns: 7em 1fr;
+  gap: 12px;
+}
+
+.roster dt {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding-top: 2px;
+}
+
+.roster dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.source {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 4px;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+
+.source i,
+.sources i {
+  font-style: normal;
+  color: var(--gold);
+}
+
+.source:hover,
+.sources a:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.block {
+  margin: clamp(32px, 5vw, 48px) 0 0;
+}
+
+.blockTitle {
+  margin: 0 0 20px;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 400;
+  font-family: var(--mono);
+}
+
+/* Хронология: подпись места слева, событие справа */
+.timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 20px;
+}
+
+.timeline li {
+  display: grid;
+  grid-template-columns: 8.5em 1fr;
+  gap: 16px;
+  border-left: 1px solid var(--line);
+  padding-left: 18px;
+}
+
+.timeline p {
+  margin: 0;
+  color: #d8dfe8;
+}
+
+.mark {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding-top: 4px;
+}
+
+/* Отступление в сторону: то же поле записки, но с золотой линейкой слева */
+.city {
+  border-left: 1px solid var(--gold);
+  padding: 4px 0 4px 22px;
+}
+
+.cityScore {
+  margin: 0 0 18px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+}
+
+.cityScore b {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.03em;
+  color: var(--gold);
+  vertical-align: -0.06em;
+}
+
+.cityScore b span {
+  margin: 0 0.1em;
+  color: var(--line);
+}
+
+.facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.facts li {
+  position: relative;
+  padding-left: 22px;
+  color: #d8dfe8;
+}
+
+.facts li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.75;
+}
+
+.body {
+  margin: 0 0 16px;
+  color: #d8dfe8;
+}
+
+.body:last-child {
+  margin-bottom: 0;
+}
+
+.foot {
+  margin-top: clamp(40px, 6vw, 60px);
+  border-top: 1px solid var(--line);
+  padding-top: clamp(28px, 4vw, 40px);
+}
+
+.sources {
+  margin: 0 0 26px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.sources a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 3px;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+
+.disclaimer {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--dim);
+}
+
+.biglink {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 32px;
+  text-decoration: none;
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-size: clamp(1.2rem, 3.2vw, 1.9rem);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+
+.biglink i {
+  font-style: normal;
+  font-size: 0.6em;
+  color: var(--gold);
+  transition: transform 0.3s;
+}
+
+.biglink:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.biglink:hover i {
+  transform: translateX(4px);
+}
+
+.source:focus-visible,
+.sources a:focus-visible,
+.biglink:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 6px;
+}
+
+@media (max-width: 520px) {
+  .roster div,
+  .timeline li {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note {
+    animation: none;
+  }
+}

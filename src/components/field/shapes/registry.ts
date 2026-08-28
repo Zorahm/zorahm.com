@@ -10,6 +10,7 @@ import { github } from "./github";
 import { mark } from "./mark";
 import { notfound } from "./notfound";
 import { waifik } from "./waifik";
+import { spirit } from "./spirit";
 
 export const SHAPES: Record<AnyShapeId, Shape> = {
   saturn,
@@ -22,6 +23,7 @@ export const SHAPES: Record<AnyShapeId, Shape> = {
   mark,
   notfound,
   waifik,
+  spirit,
 };
 
 export type { Shape } from "./common";

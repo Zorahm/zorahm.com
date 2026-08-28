@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Unbounded } from "next/font/google";
-import { SITE_URL, getUi, langPath, spacePath, type Lang } from "@/content";
+import {
+  SITE_URL,
+  getUi,
+  langPath,
+  space3dPath,
+  spacePath,
+  spiritPath,
+  type Lang,
+} from "@/content";
 
 /**
  * Общая обвязка для обоих корневых макетов.
@@ -79,31 +87,35 @@ export function buildMetadata(lang: Lang): Metadata {
 }
 
 /**
- * Метаданные страницы /space.
+ * Метаданные внутренней страницы.
  *
  * Заголовок и описание свои, всё остальное — та же обвязка: канонический
  * адрес ведёт на язык страницы, hreflang связывает две её версии между
  * собой, а не с главной.
  */
-export function buildSpaceMetadata(lang: Lang): Metadata {
-  const ui = getUi(lang);
-  const url = new URL(spacePath(lang), SITE_URL).toString();
-  const title = `${ui.space.title} — ZorahM`;
+function buildPageMetadata(
+  lang: Lang,
+  path: (lang: Lang) => string,
+  name: string,
+  description: string,
+): Metadata {
+  const url = new URL(path(lang), SITE_URL).toString();
+  const title = `${name} — ZorahM`;
 
   return {
     title,
-    description: ui.space.description,
+    description,
     alternates: {
       canonical: url,
       languages: {
-        en: new URL(spacePath("en"), SITE_URL).toString(),
-        ru: new URL(spacePath("ru"), SITE_URL).toString(),
-        "x-default": new URL(spacePath("en"), SITE_URL).toString(),
+        en: new URL(path("en"), SITE_URL).toString(),
+        ru: new URL(path("ru"), SITE_URL).toString(),
+        "x-default": new URL(path("en"), SITE_URL).toString(),
       },
     },
     openGraph: {
       title,
-      description: ui.space.description,
+      description,
       url,
       siteName: "ZorahM",
       locale: OG_LOCALE[lang],
@@ -112,7 +124,30 @@ export function buildSpaceMetadata(lang: Lang): Metadata {
     twitter: {
       card: "summary_large_image",
       title,
-      description: ui.space.description,
+      description,
     },
   };
+}
+
+/** Метаданные страницы /space */
+export function buildSpaceMetadata(lang: Lang): Metadata {
+  const { space } = getUi(lang);
+  return buildPageMetadata(lang, spacePath, space.title, space.description);
+}
+
+/** Метаданные страницы /space-3d */
+export function buildSpace3DMetadata(lang: Lang): Metadata {
+  const { space3d } = getUi(lang);
+  return buildPageMetadata(
+    lang,
+    space3dPath,
+    space3d.title,
+    space3d.description,
+  );
+}
+
+/** Метаданные страницы /spirit */
+export function buildSpiritMetadata(lang: Lang): Metadata {
+  const { spirit } = getUi(lang);
+  return buildPageMetadata(lang, spiritPath, spirit.title, spirit.description);
 }

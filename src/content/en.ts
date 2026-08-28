@@ -1,4 +1,12 @@
-import type { BodyId, BodyText, FrameText, ShapeId, UiStrings } from "./types";
+import type {
+  BodyId,
+  BodyText,
+  FrameText,
+  ShapeId,
+  SpiritMatchId,
+  SpiritMatchText,
+  UiStrings,
+} from "./types";
 
 export const enUi: UiStrings = {
   langName: "EN",
@@ -34,6 +42,95 @@ export const enUi: UiStrings = {
     bodiesLabel: "Bodies",
     back: "Back to the system",
     enter: "Open the system",
+    home: "Home",
+    view3d: "3D view",
+  },
+  space3d: {
+    title: "Solar System 3D",
+    description:
+      "The solar system ray-traced in a single shader: orbit the camera, fly down to a planet, read about it.",
+    subtitle: "Ray-traced solar system",
+    panel: "Parameters",
+    params: {
+      time: "Time flow",
+      exposure: "Exposure",
+      orbits: "Orbits",
+      glow: "Glow",
+      stars: "Stars",
+    },
+    autoOrbit: "Auto-orbit",
+    reset: "Reset",
+    hint: "Drag to orbit · Scroll to zoom · Click a body",
+    keys: {
+      hide: "interface",
+      reset: "reset",
+      auto: "auto-orbit",
+      fullscreen: "fullscreen",
+    },
+    overview: "Solar system",
+    bodiesLabel: "Bodies",
+    back: "Back to the system",
+    dotsView: "Dots view",
+    scaleNote:
+      "Proportions are artistic: at true scale Mercury would be a single pixel and Neptune far outside the frame.",
+    error:
+      "WebGL is not available in this browser. Enable hardware acceleration and reload.",
+  },
+  spirit: {
+    title: "Spirit",
+    description:
+      "On 23 August 2026 Team Spirit took The International in Dota 2 and the Esports World Cup in CS2 on the same day. A fan's note.",
+    date: "23 August 2026",
+    eyebrow: "A fan's note",
+    heading: "One day, two titles",
+    lead: [
+      "Shanghai and Paris keep different hours, and on most days that means nothing. On the twenty-third of August it meant this: two stages, two best-of-five grand finals, one organisation — and both series ended the same way.",
+      "There is not much left to analyse; it is all in the tables by now. I am writing it down while I still remember how it went.",
+    ],
+    scoreWord: "Series",
+    rosterWord: "Roster",
+    coachWord: "Coach",
+    sourceWord: "Source",
+    timelineLabel: "How the day went",
+    timeline: [
+      {
+        mark: "Shanghai",
+        text: "The International grand final reaches a fifth map: the series is level and the last game decides it.",
+      },
+      {
+        mark: "Shanghai",
+        text: "Spirit take game five. The Aegis goes to them for a third time — nobody had collected three before.",
+      },
+      {
+        mark: "Paris",
+        text: "The same day, the CS2 grand final at the Esports World Cup. FUT take the opening map, and the arena starts to believe this will be hard.",
+      },
+      {
+        mark: "Paris",
+        text: "Spirit do not drop another map. A second trophy inside the same day.",
+      },
+    ],
+    cityLabel: "One more thing about Shanghai",
+    city: [
+      "This is the city's second time. In December 2024 Spirit took the CS2 crown right here — the Major; donk ended that final as the youngest Major MVP in the game's history.",
+      "No other city has handed them two crown trophies: Bucharest and Seattle gave one Aegis each, Shanghai gave a Major and the third.",
+    ],
+    factsLabel: "What the records say now",
+    facts: [
+      "Team Spirit are the first organisation to win The International three times.",
+      "Yatoro and Collapse are the first three-time TI champions; it took them six tournaments.",
+      "Miposhka took a third title — two as a player, this one as a coach.",
+      "Larl became a two-time champion of The International.",
+      "Both wins landed on the same calendar day.",
+    ],
+    noteLabel: "Personal",
+    note: [
+      "I have supported them long enough to know it is never calm: a fifth map, a dropped opener, a scoreline that stays level until the very end. Today it happened twice in a row, in two different games, on two different continents.",
+      "Days like this usually leave one line in a record list. I wanted to keep something else as well — so here is this page.",
+    ],
+    sourcesLabel: "Where the numbers come from",
+    disclaimer:
+      "A personal fan page. Not affiliated with Team Spirit, Valve, the Esports World Cup, or any tournament organiser. Team and tournament names appear only to name what this is about; there are no logos, emblems, or event photographs here — all artwork is my own.",
     home: "Home",
   },
 };
@@ -238,5 +335,18 @@ export const enBodies: Record<BodyId, BodyText> = {
       { label: "Temperature", value: "−214 °C" },
     ],
     body: "At the equator the wind blows against the planet's rotation at up to 2,100 km/h — faster than anywhere else in the system. A dark spot the size of Earth appears and vanishes within a few years. Triton is the only large moon running backwards around its planet: Neptune almost certainly captured it from the Kuiper belt.",
+  },
+};
+
+export const enSpiritMatches: Record<SpiritMatchId, SpiritMatchText> = {
+  dota: {
+    venue: "Shanghai, Oriental Sports Center",
+    prize: "A third Aegis of Champions",
+    line: "A regional rival pushed the series to a fifth map, but the last game stayed with Spirit.",
+  },
+  cs: {
+    venue: "Paris",
+    prize: "The Esports World Cup trophy",
+    line: "FUT took the opening map; the next three all went to Spirit.",
   },
 };

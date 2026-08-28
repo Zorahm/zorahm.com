@@ -3,13 +3,18 @@ import {
   FRAME_STRUCTURE,
   LANGS,
   SPACE_STRUCTURE,
+  SPIRIT_CITY_TITLE,
+  SPIRIT_SOURCES,
+  SPIRIT_STRUCTURE,
   getBodies,
   getContacts,
   getFrames,
+  getSpiritMatches,
   getUi,
   langPath,
   otherLang,
   spacePath,
+  spiritPath,
 } from "./index";
 
 describe("кадры", () => {
@@ -125,6 +130,83 @@ describe("тела сцены /space", () => {
   });
 });
 
+describe("титулы страницы /spirit", () => {
+  it("во всех языках одинаковый набор и порядок титулов", () => {
+    const ids = SPIRIT_STRUCTURE.map((m) => m.id);
+    for (const lang of LANGS) {
+      expect(getSpiritMatches(lang).map((m) => m.id)).toEqual(ids);
+    }
+  });
+
+  it("ни один текст не потерян при переводе", () => {
+    for (const lang of LANGS) {
+      for (const match of getSpiritMatches(lang)) {
+        expect(match.venue.trim(), `${lang}/${match.id} venue`).not.toBe("");
+        expect(match.prize.trim(), `${lang}/${match.id} prize`).not.toBe("");
+        expect(match.line.trim(), `${lang}/${match.id} line`).not.toBe("");
+      }
+    }
+  });
+
+  it("факты не зависят от языка", () => {
+    const facts = (lang: (typeof LANGS)[number]) =>
+      getSpiritMatches(lang).map((m) => ({
+        event: m.event,
+        opponent: m.opponent,
+        score: m.score,
+        roster: m.roster,
+        coach: m.coach,
+      }));
+    expect(facts("ru")).toEqual(facts("en"));
+  });
+
+  it("счёт серии сходится с её форматом", () => {
+    for (const match of SPIRIT_STRUCTURE) {
+      const games = Number(match.format.replace(/^Bo/, ""));
+      expect(games, `${match.id} формат`).toBeGreaterThan(0);
+
+      // Записка про победы: первая цифра всегда за Spirit
+      const [won, lost] = match.score;
+      expect(won, `${match.id} победы`).toBe(Math.ceil(games / 2));
+      expect(lost, `${match.id} поражения`).toBeLessThan(won);
+      expect(won + lost, `${match.id} сыграно карт`).toBeLessThanOrEqual(games);
+    }
+  });
+
+  it("состав заполнен и у каждого титула есть первоисточник", () => {
+    for (const match of SPIRIT_STRUCTURE) {
+      expect(match.roster.length, `${match.id} состав`).toBe(5);
+      for (const player of match.roster) {
+        expect(player.trim(), `${match.id} игрок`).not.toBe("");
+      }
+      expect(match.coach.trim(), `${match.id} тренер`).not.toBe("");
+      expect(match.source, `${match.id} источник`).toMatch(/^https:\/\//);
+    }
+  });
+
+  it("прошлый титул того же города записан по тем же правилам", () => {
+    const past = SPIRIT_CITY_TITLE;
+    const [won, lost] = past.score;
+
+    expect(past.event.trim()).not.toBe("");
+    expect(past.opponent.trim()).not.toBe("");
+    expect(won).toBeGreaterThan(lost);
+    expect(past.source).toMatch(/^https:\/\//);
+
+    // Совпадение теряет смысл, если это тот же турнир, что и в тот день
+    const sameDay = SPIRIT_STRUCTURE.map((m) => m.event);
+    expect(sameDay).not.toContain(past.event);
+  });
+
+  it("ссылки на источники ведут наружу по https", () => {
+    expect(SPIRIT_SOURCES.length).toBeGreaterThan(0);
+    for (const source of SPIRIT_SOURCES) {
+      expect(source.label.trim()).not.toBe("");
+      expect(source.href).toMatch(/^https:\/\//);
+    }
+  });
+});
+
 describe("строки интерфейса", () => {
   /** Обходит и вложенные группы строк — тексты 404 лежат объектами */
   const walk = (value: unknown, path: string, visit: (s: string, p: string) => void) => {
@@ -164,6 +246,11 @@ describe("маршруты и контакты", () => {
   it("космос лежит рядом с языковой главной", () => {
     expect(spacePath("en")).toBe("/space");
     expect(spacePath("ru")).toBe("/ru/space");
+  });
+
+  it("записка лежит рядом с языковой главной", () => {
+    expect(spiritPath("en")).toBe("/spirit");
+    expect(spiritPath("ru")).toBe("/ru/spirit");
   });
 
   it("переключение языка обратимо", () => {
