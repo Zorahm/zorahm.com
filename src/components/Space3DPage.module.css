@@ -1,0 +1,537 @@
+/* Страница намеренно выходит из стиля сайта: ни точечной сетки, ни золота
+   Golden Record, ни Unbounded. Здесь приборная панель — системный гротеск,
+   янтарный акцент и стеклянные подложки поверх чёрного неба. Свои токены
+   объявлены на хосте, чтобы ничего из :root сюда не протекло. */
+.host {
+  --fg: #e9eef6;
+  --muted: #7c8899;
+  --line: rgba(255, 255, 255, 0.1);
+  --glass: rgba(10, 13, 20, 0.62);
+  --accent: #ffb46a;
+  --edge: 26px;
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: var(--fg);
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
+    Helvetica, Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Всё, что прячется по клавише H */
+.ui {
+  position: fixed;
+  z-index: 5;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: opacity 0.35s ease;
+}
+
+.gone {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --- марка и состояние сцены --- */
+
+.brand {
+  top: 22px;
+  left: var(--edge);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.mark {
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+  text-decoration: none;
+  pointer-events: auto;
+  transition: color 0.3s;
+}
+
+.mark span {
+  color: var(--accent);
+}
+
+.mark:hover {
+  color: var(--accent);
+}
+
+.status {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  margin: -4px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+/* --- переключатели и телеметрия --- */
+
+.corner {
+  top: 22px;
+  right: var(--edge);
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 9px;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  pointer-events: auto;
+}
+
+.links a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.links a:hover {
+  color: var(--accent);
+}
+
+.links a:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.active {
+  color: var(--fg);
+}
+
+.sep {
+  opacity: 0.4;
+}
+
+.stats {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.stats b {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* --- подсказка --- */
+
+/* Живёт строкой в правом углу, поэтому не переносится: на экранах уже
+   820px её всё равно нет */
+.hint {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.hint kbd {
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* --- панель параметров --- */
+
+.panel {
+  bottom: 20px;
+  right: var(--edge);
+  width: 236px;
+  padding: 14px 16px 12px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+}
+
+.panel h2 {
+  margin: 0 0 12px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.row {
+  margin: 0 0 11px;
+}
+
+.row label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.row label span {
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.row input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  margin: 0;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.16);
+  outline: none;
+}
+
+.row input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--fg);
+  cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(255, 180, 106, 0.16);
+}
+
+.row input::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--fg);
+  cursor: pointer;
+}
+
+.row input:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 6px;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.buttons button {
+  flex: 1;
+  padding: 6px 0;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+
+.buttons button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.buttons button.on {
+  color: #0a0d14;
+  background: var(--accent);
+  border-color: transparent;
+}
+
+/* Оговорка про масштаб: тише всего, что есть в панели, — её читают один
+   раз и больше не возвращаются */
+.note {
+  margin: 12px 0 0;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+  font-size: 10px;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+/* --- ряд тел: единственный способ выбрать планету с клавиатуры --- */
+
+/* Ряд центрируется не по экрану, а по свободному месту слева от панели
+   параметров: иначе на узком десктопе он половиной уезжает под неё */
+.rail {
+  bottom: 20px;
+  left: var(--edge);
+  right: calc(236px + var(--edge) * 2);
+  width: fit-content;
+  margin: 0 auto;
+  display: flex;
+  gap: 2px;
+  padding: 5px 8px;
+  /* Предел задан в vw, а не в процентах: у фиксированного элемента проценты
+     считаются от окна целиком и края left/right его не удержали бы */
+  max-width: calc(100vw - 236px - var(--edge) * 3);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.railItem {
+  flex: 0 0 auto;
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.25s, background 0.25s;
+}
+
+.railItem:hover {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.railItem[aria-pressed="true"] {
+  color: #0a0d14;
+  background: var(--accent);
+}
+
+.railItem:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --- карточка тела --- */
+
+.main {
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 120px var(--edge) 110px;
+  /* Мимо карточки указатель должен доходить до сцены */
+  pointer-events: none;
+}
+
+.card {
+  width: min(34ch, 100%);
+  padding: 18px 20px 20px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+  animation: appear 0.45s ease both;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.tagline {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #c9d2de;
+}
+
+.values {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin: 0 0 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.values dt {
+  margin-bottom: 4px;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.values dd {
+  margin: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #c9d2de;
+}
+
+.back {
+  appearance: none;
+  margin-top: 18px;
+  padding: 0 0 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg);
+  transition: color 0.3s, border-color 0.3s;
+}
+
+.back i {
+  font-style: normal;
+  color: var(--accent);
+  transition: transform 0.3s;
+}
+
+.back:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.back:hover i {
+  transform: translateX(-4px);
+}
+
+.back:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 5px;
+}
+
+/* Строка подсказки тянется от правого угла влево и на узком десктопе
+   доходит до имени тела — тогда хоткеи из неё уходят */
+@media (max-width: 1200px) {
+  .keys {
+    display: none;
+  }
+}
+
+/* На узком экране приборка лишняя: остаётся сцена, имя тела и ряд планет */
+@media (max-width: 820px) {
+  .host {
+    --edge: 16px;
+  }
+
+  .panel,
+  .hint {
+    display: none;
+  }
+
+  .brand,
+  .corner {
+    top: 16px;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  /* Имя тела и телеметрия делят одну строку по ширине телефона, поэтому
+     разрядка ужимается — иначе они наезжают друг на друга */
+  .status {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+  }
+
+  .stats {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+
+  .links {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  /* Панели снизу больше нет — ряд занимает всю ширину */
+  .rail {
+    bottom: 16px;
+    right: var(--edge);
+    max-width: calc(100vw - var(--edge) * 2);
+  }
+
+  .main {
+    align-items: flex-end;
+    padding: 100px var(--edge) 74px;
+  }
+
+  /* Карточка занимает низ экрана и прокручивается внутри себя: русский
+     текст длиннее английского и иначе выталкивал бы планету за кадр */
+  .card {
+    width: 100%;
+    max-width: 42ch;
+    max-height: 54dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}

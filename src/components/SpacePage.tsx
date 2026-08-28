@@ -8,6 +8,7 @@ import {
   getUi,
   langPath,
   otherLang,
+  space3dPath,
   spacePath,
   type Lang,
 } from "@/content";
@@ -71,6 +72,13 @@ export function SpacePage({ lang }: { lang: Lang }) {
 
       <p className={styles.status}>{body ? body.name : ui.space.overview}</p>
       <p className={styles.hint}>{ui.space.hint}</p>
+
+      {/* Та же система, посчитанная лучами: вторая сцена живёт отдельной
+          страницей и в стиль сайта намеренно не попадает */}
+      <Link href={space3dPath(lang)} className={styles.viewLink}>
+        {ui.space.view3d}
+        <i aria-hidden="true">→</i>
+      </Link>
 
       <nav className={styles.rail} aria-label={ui.space.bodiesLabel}>
         {bodies.map((item, index) => (

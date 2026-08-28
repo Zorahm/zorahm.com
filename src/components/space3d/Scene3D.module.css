@@ -1,0 +1,31 @@
+/* Холст занимает окно целиком: страница поверх него не прокручивается,
+   поэтому экранная точка события — это сразу точка сцены */
+.canvas {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100dvh;
+  cursor: grab;
+  /* Жесты браузера отключены: колесо и щипок обслуживает сама сцена */
+  touch-action: none;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+/* Экран отказа на месте сцены: без WebGL показывать нечего */
+.error {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  text-align: center;
+  max-width: 46ch;
+  margin: 0 auto;
+  color: #7c8899;
+  font-size: 14px;
+  line-height: 1.7;
+}

@@ -27,6 +27,44 @@
   letter-spacing: 0.14em;
 }
 
+/* Ссылка на трассированную сцену. Живёт в нижнем углу, подальше от ряда
+   тел: это переход на другую страницу, а не ещё одна кнопка выбора */
+.viewLink {
+  position: fixed;
+  z-index: 5;
+  bottom: var(--pad);
+  left: var(--pad);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.viewLink i {
+  font-style: normal;
+  color: var(--gold);
+  transition: transform 0.3s;
+}
+
+.viewLink:hover {
+  color: var(--ink);
+}
+
+.viewLink:hover i {
+  transform: translateX(4px);
+}
+
+.viewLink:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 6px;
+}
+
 /* Ряд имён: единственный способ выбрать тело с клавиатуры и на телефоне */
 .rail {
   position: fixed;
