@@ -198,8 +198,10 @@ export type Space3DStrings = {
   reset: string;
   /** Подсказка по указателю */
   hint: string;
-  /** Что делают горячие клавиши H, R, Space и F */
+  /** Что делают горячие клавиши WASD, H, R, Space и F */
   keys: {
+    /** Свободный полёт по системе */
+    roam: string;
     hide: string;
     reset: string;
     auto: string;
@@ -215,6 +217,15 @@ export type Space3DStrings = {
   dotsView: string;
   /** Сноска о том, что пропорции тел художественные */
   scaleNote: string;
+  /** Экран сборки шейдера: он держится до первого кадра сцены */
+  loading: {
+    title: string;
+    /**
+     * Объяснение, почему так долго. Появляется не сразу: на быстрой машине
+     * сборка успевает кончиться раньше, и оправдываться там не за что.
+     */
+    note: string;
+  };
   /** Экран отказа, когда WebGL недоступен */
   error: string;
 };

@@ -181,7 +181,7 @@ vec4 orbitLayer(vec3 ro, vec3 rd, out float tOut){
 
   vec3  p = ro + rd * t;
   float r = length(p.xz);
-  float w = clamp(t * 0.0032, 0.010, 0.30);
+  float w = clamp(t * 0.0032, 0.010, 0.55);
 
   float line = 0.0;
   float clear = 1.0;

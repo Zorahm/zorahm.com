@@ -6,6 +6,15 @@
  * проходит сквозь слой несколькими отсчётами и набирает плотность по
  * трёхмерной решётке — в каждой занятой ячейке лежит один камень.
  *
+ * Камни именно освещаются, а не светятся: у каждого считается нормаль в той
+ * точке, где луч входит в его поверхность, и по ней — обычный Ламберт от
+ * Солнца. Без этого пояс читался бы как ровная пыльная дымка, потому что
+ * ровная пыльная дымка — это и есть равномерно яркая россыпь.
+ *
+ * Набор идёт от ближнего к дальнему с накоплением непрозрачности: густые
+ * направления упираются в единицу вместо того, чтобы выбеливаться, а когда
+ * прозрачности не осталось, цикл выходит досрочно.
+ *
  * Отсчёты берутся только на том отрезке луча, который вообще попал в слой,
  * так что для большей части кадра пояс не стоит ничего.
  */
@@ -14,22 +23,110 @@ export const BELTS = /* glsl */ `
 uniform vec4 uBelt[BELT_SETS];
 /** rgb — цвет вещества, a — размер ячейки решётки */
 uniform vec4 uBeltLook[BELT_SETS];
+/**
+ * Места щелей Кирквуда в долях ширины пояса. Считаются снаружи из настоящих
+ * радиусов резонансов; свободные места забиты единицей с запасом, и колокол
+ * там уже неотличим от нуля
+ */
+uniform vec3 uBeltGap[BELT_SETS];
+
+/** Колокол единичной высоты — им вырезаются щели */
+float bell(float x, float w){
+  float u = x / w;
+  return exp(-u * u);
+}
 
 /**
- * Камень в ячейке решётки. Порог по первому числу хеша оставляет занятой
- * лишь часть ячеек — иначе пояс превратился бы в сплошную пыльную стену.
+ * Плотность пояса по радиусу.
+ *
+ * Края размыты, середина гуще, а поперёк идут щели Кирквуда: там период
+ * обращения кратен юпитерианскому, и вещество оттуда выметено. Именно они
+ * отличают пояс от кольца — без них остаётся ровная баранка.
+ *
+ * Глубина у щелей разная: резонанс 3:1 выметает полосу почти начисто,
+ * 5:2 и 7:3 слабее и уже.
  */
-float beltRock(vec3 p, float cell, float thresh, float grow){
-  vec3  q  = p / cell;
-  vec3  id = floor(q);
-  vec3  h  = hash33(id);
+float beltProfile(float r, float inner, float outer, vec3 gap){
+  float u = (r - inner) / max(outer - inner, 1e-4);
+  float edge = smoothstep(0.0, 0.20, u) * (1.0 - smoothstep(0.80, 1.0, u));
+
+  float cut = 1.0
+            - 0.80 * bell(u - gap.x, 0.040)
+            - 0.62 * bell(u - gap.y, 0.030)
+            - 0.48 * bell(u - gap.z, 0.024);
+
+  return edge * max(cut, 0.0);
+}
+
+/**
+ * Камень в ячейке решётки.
+ *
+ * Решётка задана в цилиндрических координатах, а не в декартовых, и это
+ * принципиально. Кеплерова закрутка поворачивает вещество на угол, который
+ * зависит от радиуса; поворот декартовой решётки на такой угол — не поворот,
+ * а сдвиг, и он растягивает каждый камень в дугу тем сильнее, чем дольше
+ * идёт время. В цилиндрической решётке закрутка сводится к смещению
+ * углового индекса, одинаковому для всего кольца, — внутри кольца это
+ * честный поворот, и камни остаются камнями хоть через час.
+ *
+ * Порог по первому числу хеша оставляет занятой лишь часть ячеек — иначе
+ * пояс превратился бы в сплошную пыльную стену. Размер берётся из третьего
+ * числа, и вместе со смещением он подобран так, чтобы камень не вылезал за
+ * свою ячейку: соседние не проверяются, и вылезший край срезало бы плоско.
+ *
+ * Возвращает покрытие отсчёта; освещённость и оттенок уходят наружу.
+ */
+float beltRock(vec3 p, float r, vec3 rd, vec3 lw, float cell, float thresh,
+               float grow, float spin, out float lit, out float tone){
+  lit  = 0.0;
+  tone = 0.0;
+
+  float ir   = floor(r / cell);
+  float rMid = (ir + 0.5) * cell;
+  // Ячеек по кругу столько, чтобы их дуга была вровень с радиальной шириной
+  float n    = max(8.0, floor(TAU * rMid / cell + 0.5));
+  float dPhi = TAU / n;
+
+  // Внутренние кольца обгоняют внешние, ровно как планеты. Сдвиг общий для
+  // всего кольца, поэтому внутри него он остаётся поворотом
+  float phi = mod(atan(p.z, p.x) - spin * pow(rMid, -1.5), TAU);
+
+  vec3 id = vec3(ir, floor(phi / dPhi), floor(p.y / cell));
+  vec3 h  = hash33(id);
   if (h.x > thresh) return 0.0;
 
-  vec3  f   = fract(q) - 0.5;
-  vec3  off = (hash33(id + 7.3) - 0.5) * 0.72;
-  float d   = length(f - off);
+  // Место внутри ячейки: радиаль, ось системы, дуга — все три в её долях
+  vec3 f = vec3(fract(r / cell) - 0.5,
+                fract(p.y / cell) - 0.5,
+                (fract(phi / dPhi) - 0.5) * dPhi * rMid / cell);
 
-  return smoothstep(grow, grow * 0.2, d) * (0.35 + 0.65 * h.y);
+  vec3  off = (hash33(id + 7.3) - 0.5) * 0.44;
+  float rad = grow * (0.55 + 0.9 * h.z);
+  vec3  rel = f - off;
+  float d   = length(rel);
+  if (d > rad) return 0.0;
+
+  // Тот же базис, в котором посчитано смещение: радиаль, ось, касательная
+  vec3 er = vec3(p.x, 0.0, p.z) / r;
+  vec3 ep = vec3(-p.z, 0.0, p.x) / r;
+  vec3 rq = vec3(dot(rd, er), rd.y, dot(rd, ep));
+  vec3 lq = vec3(dot(lw, er), lw.y, dot(lw, ep));
+
+  // Нормаль там, где луч входит в камень: отсюда берётся освещённый серп,
+  // и одна и та же россыпь выглядит по-разному против света и по свету
+  float bq   = dot(rel, rq);
+  vec3  perp = rel - rq * bq;
+  float dp   = min(length(perp), rad);
+  vec3  nrm  = normalize(perp - rq * sqrt(max(rad * rad - dp * dp, 1e-9))
+                         + vec3(1e-6));
+
+  // Реголит рассеивает мягче гладкого шара, но ночная сторона всё равно
+  // тёмная: без этого пояс снова стал бы дымкой
+  float ndl = dot(nrm, lq);
+  lit  = 0.05 + 0.95 * pow(clamp(ndl * 0.5 + 0.5, 0.0, 1.0), 2.1);
+  tone = h.y;
+
+  return smoothstep(rad, rad * 0.30, d);
 }
 
 /**
@@ -38,6 +135,8 @@ float beltRock(vec3 p, float cell, float thresh, float grow){
  */
 vec3 beltLight(vec3 ro, vec3 rd, float tMax, float time){
   vec3 sum = vec3(0.0);
+  // Угловой размер пикселя: по нему камень не даёт себе стать мельче точки
+  float pix = 2.0 * uTanFov / uRes.y;
 
   for (int b = 0; b < BELT_SETS; b++){
     float inner = uBelt[b].x;
@@ -59,46 +158,53 @@ vec3 beltLight(vec3 ro, vec3 rd, float tMax, float time){
     if (t1 <= t0) continue;
 
     // Взгляд вдоль плоскости тянет отрезок через весь пояс насквозь;
-    // дальше поперечника набирать нечего
-    t1 = min(t1, t0 + outer * 1.7);
+    // дальше пары поперечников набирать нечего — передние камни всё равно
+    // съедают прозрачность
+    t1 = min(t1, t0 + min(outer * 1.7, (outer - inner) * 2.4));
 
     float span = (t1 - t0) / float(BELT_STEPS);
     // Сдвиг отсчётов по пикселю размывает ступеньки. Он постоянный во
     // времени: дрожащий каждый кадр шум читался бы как рябь
-    float jit  = hash31(vec3(gl_FragCoord.xy, 3.7));
-    float cell = uBeltLook[b].a;
-    float dens = 0.0;
+    float jit   = hash31(vec3(gl_FragCoord.xy, 3.7));
+    float cell  = uBeltLook[b].a;
+    vec3  gap   = uBeltGap[b];
+    float trans = 1.0;
+    vec3  acc   = vec3(0.0);
 
     for (int i = 0; i < BELT_STEPS; i++){
+      if (trans < 0.02) break;
+
       float t = t0 + (float(i) + jit) * span;
       vec3  p = ro + rd * t;
       float r = length(p.xz);
       if (r < inner || r > outer) continue;
 
-      // Кеплерова закрутка: внутренний край обгоняет внешний, ровно как
-      // планеты. Решётка неподвижна, вращается точка запроса
-      float a = -time * 6.0 * pow(r, -1.5);
-      float c = cos(a), s = sin(a);
-      vec3  q = vec3(p.x * c - p.z * s, p.y, p.x * s + p.z * c);
-
-      // Камни редеют к обоим краям кольца и к границам слоя
-      float width = outer - inner;
-      float edge  = smoothstep(inner, inner + width * 0.25, r)
-                  * (1.0 - smoothstep(outer - width * 0.3, outer, r));
-      float lift  = 1.0 - smoothstep(0.0, halfH, abs(p.y));
+      float lift = 1.0 - smoothstep(0.0, halfH, abs(p.y));
+      float prof = beltProfile(r, inner, outer, gap) * lift;
+      if (prof <= 0.001) continue;
 
       // Камень не мельчает на экране бесконечно: ниже пикселя пояс начал бы
       // мерцать при малейшем повороте камеры
-      float grow = clamp(t * 0.0016 / cell, 0.12, 0.45);
+      float grow = clamp(max(0.13, t * pix * 1.4 / cell), 0.13, 0.26);
+      vec3  lw   = -p / max(length(p), 1e-3);
 
-      dens += beltRock(q, cell, uBelt[b].w, grow) * edge * lift * span;
+      float lit, tone;
+      float cov = beltRock(p, r, rd, lw, cell, uBelt[b].w, grow,
+                           time * 6.0, lit, tone);
+      if (cov <= 0.0) continue;
+
+      // Толщина отсчёта нормирована на размер камня: иначе густота пояса
+      // менялась бы вместе с числом шагов
+      float alpha = clamp(cov * prof * span / (grow * cell) * 0.46, 0.0, 1.0);
+
+      // Тёмные углистые тела и светлые каменные вперемешку
+      vec3 tint = mix(vec3(0.62, 0.58, 0.55), vec3(1.20, 1.10, 0.92), tone);
+
+      acc   += tint * lit * alpha * trans * sunFalloff(length(p));
+      trans *= 1.0 - alpha;
     }
 
-    if (dens <= 0.0) continue;
-
-    // Освещённость берётся по середине пояса: разброс внутри него мал
-    // рядом с разницей между поясами
-    sum += uBeltLook[b].rgb * dens * 2.4 * sunFalloff(0.5 * (inner + outer));
+    sum += uBeltLook[b].rgb * acc * 2.6;
   }
 
   return sum;

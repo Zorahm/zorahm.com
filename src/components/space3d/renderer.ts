@@ -18,6 +18,7 @@ import {
   SPHERE_COUNT,
   SYSTEM_3D,
   Surface,
+  beltGapSlots,
   bodyIndex,
 } from "./system";
 
@@ -60,11 +61,16 @@ type Target = {
 /**
  * Создаёт рендер на холсте. Возвращает null, если WebGL недоступен или
  * шейдер не собрался: страница в этом ответе показывает экран отказа.
+ *
+ * Возврат из этой функции не значит, что сцена уже рисуется: программы
+ * в этот момент только отданы драйверу. Первый настоящий кадр отзывается
+ * через onReady, и до него страница держит экран сборки.
  */
 export function createRenderer(
   canvas: HTMLCanvasElement,
   onStats?: (stats: Stats) => void,
   onError?: (message: string) => void,
+  onReady?: () => void,
 ): Renderer | null {
   const options: WebGLContextAttributes = {
     alpha: false,
@@ -123,20 +129,35 @@ export function createRenderer(
    *  Программы
    * ---------------------------------------------------------------- */
 
+  /**
+   * Сборка программ разнесена на два шага, и это не украшательство.
+   *
+   * Любой вопрос драйверу о результате — COMPILE_STATUS, LINK_STATUS,
+   * getUniformLocation — обязан вернуть настоящий ответ, а значит,
+   * заставляет драйвер досчитать сборку прямо внутри вызова. Шейдер сцены
+   * — пятьдесят тысяч знаков трассировки, и на медленной видеокарте этот
+   * один вызов стоит до минуты, всю которую главный поток стоит намертво:
+   * не крутится ни индикатор, ни курсор, страница не отвечает на клики.
+   *
+   * Поэтому сначала все четыре программы уходят драйверу без единого
+   * вопроса, а спрашиваем мы только после того, как он сам ответил, что
+   * готов. Сборка от этого короче не становится — но идёт она в его
+   * потоках, а наш остаётся свободен и рисует экран загрузки.
+   */
+  type Pending = { program: WebGLProgram; vs: WebGLShader; fs: WebGLShader };
+
   const compile = (type: number, source: string) => {
     const shader = gl.createShader(type);
     if (!shader) throw new Error("shader");
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      const log = gl.getShaderInfoLog(shader) ?? "";
-      gl.deleteShader(shader);
-      throw new Error(log);
-    }
+    // Об успехе не спрашиваем: вопрос остановил бы поток до конца сборки.
+    // Ошибка всё равно всплывёт при сборке программы, и там же, когда
+    // терять уже нечего, читается журнал
     return shader;
   };
 
-  const link = (fragment: string): Program => {
+  const startLink = (fragment: string): Pending => {
     const program = gl.createProgram();
     if (!program) throw new Error("program");
     const vs = compile(gl.VERTEX_SHADER, VERT);
@@ -145,38 +166,68 @@ export function createRenderer(
     gl.attachShader(program, fs);
     gl.bindAttribLocation(program, 0, "aPos");
     gl.linkProgram(program);
-    gl.deleteShader(vs);
-    gl.deleteShader(fs);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      throw new Error(gl.getProgramInfoLog(program) ?? "link");
+    return { program, vs, fs };
+  };
+
+  const finishLink = (p: Pending): Program => {
+    if (!gl.getProgramParameter(p.program, gl.LINK_STATUS)) {
+      // Журнал собирается из трёх мест разом: драйверы кладут причину то
+      // в шейдер, то в программу, и одного источника не хватает
+      const log = [
+        gl.getShaderInfoLog(p.vs),
+        gl.getShaderInfoLog(p.fs),
+        gl.getProgramInfoLog(p.program),
+      ]
+        .filter(Boolean)
+        .join("\n");
+      throw new Error(log || "link");
     }
+    gl.deleteShader(p.vs);
+    gl.deleteShader(p.fs);
 
     const uniforms: Record<string, WebGLUniformLocation | null> = {};
-    const count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS) as number;
+    const count = gl.getProgramParameter(
+      p.program,
+      gl.ACTIVE_UNIFORMS,
+    ) as number;
     for (let i = 0; i < count; i++) {
-      const info = gl.getActiveUniform(program, i);
+      const info = gl.getActiveUniform(p.program, i);
       if (!info) continue;
       // Массивы приходят с индексом в имени: uBody[0] — это вся uBody
       const name = info.name.replace(/\[0\]$/, "");
-      uniforms[name] = gl.getUniformLocation(program, info.name);
+      uniforms[name] = gl.getUniformLocation(p.program, info.name);
     }
-    return { program, uniforms };
+    return { program: p.program, uniforms };
   };
 
+  /**
+   * Единственный вопрос о сборке, на который драйвер отвечает, не досчитывая
+   * её. Без расширения спросить нечего — тогда считаем готовым сразу и
+   * платим той же заминкой, что и раньше: хуже, чем было, не станет.
+   */
+  const parallel = gl.getExtension("KHR_parallel_shader_compile") as {
+    COMPLETION_STATUS_KHR: number;
+  } | null;
+
+  const settled = (p: Pending) =>
+    !parallel ||
+    (gl.getProgramParameter(
+      p.program,
+      parallel.COMPLETION_STATUS_KHR,
+    ) as boolean);
+
+  let pending: Pending[] = [];
   let scene: Program;
   let bright: Program;
   let blur: Program;
   let composite: Program;
   try {
-    scene = link(FRAG_SCENE);
-    bright = link(FRAG_BRIGHT);
-    blur = link(FRAG_BLUR);
-    composite = link(FRAG_COMPOSITE);
+    pending = [FRAG_SCENE, FRAG_BRIGHT, FRAG_BLUR, FRAG_COMPOSITE].map(
+      startLink,
+    );
   } catch (e) {
-    // Ошибка сборки шейдера видна только здесь: наружу уходит экран отказа,
-    // а разбираться придётся по журналу драйвера
     const message = e instanceof Error ? e.message : String(e);
-    console.error("space3d: сборка шейдера не удалась\n" + message);
+    console.error("space3d: шейдер не отдался драйверу\n" + message);
     onError?.(message);
     return null;
   }
@@ -326,7 +377,7 @@ export function createRenderer(
       moon.color.map((c) => c * 0.45),
       i * 3,
     );
-    surfBuf.set([moon.detail, 1, 0, Surface.Rock], i * 4);
+    surfBuf.set([moon.detail, moon.contrast, 0, Surface.Rock], i * 4);
     // Спутники обращены к планете одной стороной, поэтому ось вертикальна,
     // а собственное вращение равно орбитальному
     axisBuf.set([0, 1, 0, 0], i * 4);
@@ -344,9 +395,11 @@ export function createRenderer(
   // Пояса неподвижны: вращение камней шейдер считает сам от времени
   const beltBuf = new Float32Array(Math.max(1, BELTS.length) * 4);
   const beltLookBuf = new Float32Array(Math.max(1, BELTS.length) * 4);
+  const beltGapBuf = new Float32Array(Math.max(1, BELTS.length) * 3);
   BELTS.forEach((belt, k) => {
     beltBuf.set([belt.inner, belt.outer, belt.height, belt.density], k * 4);
     beltLookBuf.set([...belt.color, belt.cell], k * 4);
+    beltGapBuf.set(beltGapSlots(belt), k * 3);
   });
 
   ringed.forEach(({ body, index }, k) => {
@@ -391,6 +444,8 @@ export function createRenderer(
   let stalled = 0;
   let fps = 0;
   let adaptAcc = 0;
+  /** Сколько кадров сцены уже нарисовано; по нему снимается экран сборки */
+  let drawn = 0;
 
   const frame = (now: number) => {
     raf = requestAnimationFrame(frame);
@@ -466,6 +521,7 @@ export function createRenderer(
     gl.uniform1fv(u.uRingOwner, ringOwnerBuf);
     gl.uniform4fv(u.uBelt, beltBuf);
     gl.uniform4fv(u.uBeltLook, beltLookBuf);
+    gl.uniform3fv(u.uBeltGap, beltGapBuf);
     drawQuad();
 
     /* --- проход 2: яркая часть в половинном разрешении --- */
@@ -546,6 +602,12 @@ export function createRenderer(
         applyScale(false);
       }
     }
+
+    // О готовности сообщаем со второго кадра: на первом команды только
+    // ушли в очередь драйвера, и на экране ещё чёрное поле. Убрать экран
+    // сборки в этот момент — показать зрителю пустоту вместо сцены
+    drawn++;
+    if (drawn === 2) onReady?.();
   };
 
   const onLost = (e: Event) => {
@@ -559,9 +621,41 @@ export function createRenderer(
   canvas.addEventListener("webglcontextlost", onLost);
   canvas.addEventListener("webglcontextrestored", onRestored);
 
+  /**
+   * Ожидание драйвера. Крутится тем же кадровым таймером, что и сцена,
+   * поэтому ничего не стоит: один вопрос о готовности на кадр.
+   *
+   * Первый кадр сцены считается от момента, когда программы собрались,
+   * а не от создания рендера. Иначе минута ожидания пришла бы в шаг сцены
+   * одним dt, и планеты стартовали бы, улетев вперёд на пол-оборота.
+   */
+  const waitForDriver = () => {
+    if (!pending.every(settled)) {
+      raf = requestAnimationFrame(waitForDriver);
+      return;
+    }
+    try {
+      [scene, bright, blur, composite] = pending.map(finishLink);
+    } catch (e) {
+      // Ошибка сборки видна только здесь: наружу уходит экран отказа,
+      // а разбираться придётся по журналу драйвера
+      const message = e instanceof Error ? e.message : String(e);
+      console.error("space3d: сборка шейдера не удалась\n" + message);
+      pending = [];
+      onError?.(message);
+      return;
+    }
+    pending = [];
+    resize();
+    applyScale(true);
+    prev = performance.now();
+    fpsTime = prev;
+    raf = requestAnimationFrame(frame);
+  };
+
   resize();
   applyScale(true);
-  raf = requestAnimationFrame(frame);
+  raf = requestAnimationFrame(waitForDriver);
 
   return {
     dispose() {
@@ -570,9 +664,16 @@ export function createRenderer(
       canvas.removeEventListener("webglcontextrestored", onRestored);
       [rtScene, rtHalfA, rtHalfB, rtQuarterA, rtQuarterB].forEach(dropTarget);
       gl.deleteBuffer(quad);
-      [scene, bright, blur, composite].forEach((p) =>
-        gl.deleteProgram(p.program),
-      );
+      // Уйти со страницы можно и посреди сборки: тогда собранных программ
+      // ещё нет, а отданные драйверу — есть, и убирать надо их
+      pending.forEach((p) => {
+        gl.deleteShader(p.vs);
+        gl.deleteShader(p.fs);
+        gl.deleteProgram(p.program);
+      });
+      [scene, bright, blur, composite].forEach((p) => {
+        if (p) gl.deleteProgram(p.program);
+      });
       // Контекст намеренно не гасится через WEBGL_lose_context: холст тот же
       // самый, и повторный getContext вернул бы уже потерянный контекст —
       // в строгом режиме, где эффект монтируется дважды, сцена не поднялась

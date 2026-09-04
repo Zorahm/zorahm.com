@@ -10,6 +10,12 @@
  * Рисунок считается в собственных координатах тела: нормаль поворачивается
  * назад на угол собственного вращения, поэтому материки и пояса уезжают
  * за лимб вместе с телом, а не ползут по неподвижному диску.
+ *
+ * Мелочь на поверхности стоит дорого и видна только вблизи, поэтому её
+ * количество зависит от того, какую долю кадра тело занимает: снаружи
+ * приходит lod от нуля (точка на обзорном плане) до единицы (диск во весь
+ * экран). Издали лишние октавы не только не видны — они мерцали бы при
+ * малейшем повороте камеры, попадая между пикселями.
  */
 export const SURFACES = /* glsl */ `
 const int S_SUN   = 0;
@@ -18,9 +24,6 @@ const int S_GAS   = 2;
 const int S_EARTH = 3;
 const int S_ICE   = 4;
 const int S_CLOUD = 5;
-
-/** Освещённость на орбите Земли принята за единицу */
-const float LIGHT_REF = 11.4;
 
 /**
  * Ослабление света с расстоянием. Обратный квадрат оставил бы Нептун
@@ -31,21 +34,150 @@ float sunFalloff(float dist){
   return clamp(pow(LIGHT_REF / max(dist, 0.001), 0.55), 0.28, 1.7);
 }
 
+/**
+ * Затмение: не загородил ли путь к Солнцу кто-то из соседей.
+ *
+ * Перебираются все сферы сцены разом, поэтому тень Ио ложится на облака
+ * Юпитера, а сама Ио гаснет, уходя в конус за планетой, — без единой
+ * строчки про то, кто чей спутник. Солнце пропускается: оно и есть
+ * источник, а самопересечение снимается по индексу.
+ */
+float eclipseMask(vec3 p, vec3 L, float selfIdx){
+  float mask = 1.0;
+  for (int i = 1; i < BODIES; i++){
+    if (abs(float(i) - selfIdx) < 0.5) continue;
+    mask *= 1.0 - 0.97 * shadowedBy(p, L, uBody[i].xyz, uBody[i].w);
+  }
+  return mask;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Рельеф
+ * ------------------------------------------------------------------ */
+
+/**
+ * Возраст поверхности: ноль — молодая равнина, залитая лавой и оттого
+ * гладкая, единица — древнее нагорье, куда четыре миллиарда лет падало
+ * всё подряд. Кратеры и мелкий рельеф считаются только там, где им место,
+ * иначе тело выходит равномерно шершавым по всему диску, чего в системе
+ * не бывает ни у кого.
+ */
+float rockUplands(vec3 q, float detail){
+  return smoothstep(0.40, 0.60, fbm3(q * detail * 0.5 + 41.0));
+}
+
+/** Одна гребневая октава: холм складывается модулем в вал, квадрат заостряет */
+float ridge1(vec3 p){
+  float n = 1.0 - abs(vnoise(p) * 2.0 - 1.0);
+  return n * n;
+}
+
+/**
+ * Поле высот, по которому наклоняется нормаль.
+ *
+ * Октав здесь заметно меньше, чем в рисунке поверхности, и это не экономия.
+ * У fbm с обычным затуханием амплитуда падает вдвое, а частота вдвое растёт,
+ * поэтому в наклон каждая октава вносит поровну: градиент пятиоктавного поля
+ * — почти белый шум, и тело покрывается ровной шершавостью вместо кратеров.
+ * Форму задают две-три крупные октавы, а мелочь живёт в альбедо, где она
+ * рельеф не портит.
+ */
+float rockHeight(vec3 q, float detail, float lod){
+  float land = 0.25 + 0.75 * rockUplands(q, detail);
+  // Каждая следующая октава кратеров вдвое мельче и втрое слабее: иначе
+  // самая мелкая перевесит в наклоне все остальные и съест их форму
+  float h = (fbm3(q * detail * 0.7) - 0.5) * 0.85
+          - ridge1(q * detail * 1.6) * 0.85 * land
+          - ridge1(q * detail * 3.4) * 0.22 * land;
+  // Мелкие кратеры поверх крупных: включаются только вблизи
+  if (lod > 0.01) h -= ridge1(q * detail * 7.0) * 0.06 * lod * land;
+  return h;
+}
+
+/** Полное поле высот Земли: то же, что задаёт материки и снеговую линию */
+float earthHeight(vec3 q, float detail){
+  return fbm5(q * detail + 3.7);
+}
+
+/** Рельеф суши для наклона нормали: только крупные складки, без зерна */
+float earthRelief(vec3 q, float detail){
+  return fbm3(q * detail + 3.7);
+}
+
+/**
+ * Нормаль, наклонённая рельефом.
+ *
+ * Считается в собственных координатах тела: там нормаль совпадает с самой
+ * точкой на единичной сфере, и касательную пару можно построить прямо из
+ * неё, без развёртки и без швов на полюсах. Два добавочных отсчёта поля
+ * высот дают градиент, он и заваливает нормаль.
+ *
+ * Без этого кратеры остаются рисунком на гладком шаре: у них нет ни
+ * освещённой стенки, ни тени внутри, и у терминатора не появляется зерно,
+ * по которому глаз читает рельеф.
+ */
+vec3 bumpNormal(vec3 q, float detail, float lod, float amp, int style){
+  vec3 t = normalize(cross(abs(q.y) < 0.95 ? vec3(0.0, 1.0, 0.0)
+                                           : vec3(1.0, 0.0, 0.0), q));
+  vec3 b = cross(q, t);
+  float e = 0.010;
+
+  float h0, hx, hy;
+  if (style == S_EARTH){
+    h0 = earthRelief(q, detail);
+    hx = earthRelief(normalize(q + t * e), detail);
+    hy = earthRelief(normalize(q + b * e), detail);
+  } else {
+    h0 = rockHeight(q, detail, lod);
+    hx = rockHeight(normalize(q + t * e), detail, lod);
+    hy = rockHeight(normalize(q + b * e), detail, lod);
+  }
+
+  vec3 g = (t * (hx - h0) + b * (hy - h0)) / e;
+  return normalize(q - g * amp);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Альбедо по стилям
+ * ------------------------------------------------------------------ */
+
 /** Каменное тело: реголит крупными пятнами и кратеры поверх */
 vec3 rockAlbedo(vec3 q, float lat, vec3 colA, vec3 colB, float detail,
-                float contrast, float extra){
-  float base   = fbm5(q * detail);
-  float crater = ridged(q * detail * 2.3);
-  float shade  = 0.5 + (base - 0.5) * 1.6 - (crater - 0.5) * 0.9;
-  vec3  alb    = mix(colB, colA, clamp((shade - 0.5) * contrast + 0.5, 0.0, 1.0));
+                float contrast, float extra, float lod){
+  float base = fbm5(q * detail);
+  float land = rockUplands(q, detail);
+  // Те же чаши, что наклоняют нормаль: свежий выброс вокруг кратера светлее
+  // окружающего реголита, и рисунок обязан совпадать с рельефом
+  float pits = ridge1(q * detail * 1.6) * 0.6 + ridge1(q * detail * 3.4) * 0.3;
+  float shade = 0.5 + (base - 0.5) * 1.7 + pits * 0.45 * (0.25 + 0.75 * land);
+
+  // Вблизи добавляется второй масштаб: лучевые системы молодых кратеров
+  // и мелкая пестрота реголита, которую издали не разглядеть. Основную
+  // работу тут делает не альбедо, а наклон нормали, поэтому добавки скромные
+  if (lod > 0.01){
+    shade += (ridged(q * detail * 4.6) - 0.5) * 0.20 * lod * (0.3 + 0.7 * land);
+    shade += (fbm4(q * detail * 13.0) - 0.5) * 0.14 * lod;
+  }
+
+  vec3 alb = mix(colB, colA, clamp((shade - 0.5) * contrast + 0.5, 0.0, 1.0));
+
+  // Тёмные равнины: лава залила низины и застыла, и они заметно темнее
+  // исковырянных нагорий рядом. Из-за них диск перестаёт быть ровно
+  // закрашенным шаром — на Луне это моря, на Марсе Большой Сирт
+  alb = mix(alb, colB * 0.62, (1.0 - land) * 0.55);
 
   // Полярные шапки: у Марса они есть, у Меркурия extra = 0 и ветка молчит.
-  // Граница проходит по широте, но гуляет вместе с рельефом — ровного круга
-  // у шапки не бывает
+  // Граница идёт по широте, но рвётся о рельеф на двух масштабах сразу —
+  // ровного круга у шапки не бывает, а клочья инея за её краем доходят
+  // до средних широт
   if (extra > 0.0){
-    float edge = 1.24 - 0.40 * extra;
-    float cap  = smoothstep(edge, edge + 0.26, abs(lat) + 0.3 * (base - 0.5));
-    alb = mix(alb, vec3(0.93, 0.95, 0.97), cap * 0.92);
+    float edge  = 1.40 - 0.56 * extra;
+    float wob   = (base - 0.5) * 0.22 + (fbm4(q * detail * 3.1) - 0.5) * 0.14;
+    float cap   = smoothstep(edge, edge + 0.26, abs(lat) + wob);
+    // Шапка не сплошная: между полями инея проступает грунт, а за её краем
+    // остаются отдельные клочья на дне кратеров
+    float patch = smoothstep(0.42, 0.60, fbm4(q * detail * 4.5 + 7.0));
+    alb = mix(alb, vec3(0.93, 0.95, 0.97), cap * (0.45 + 0.55 * patch) * 0.94);
   }
   return alb;
 }
@@ -58,16 +190,38 @@ vec3 rockAlbedo(vec3 q, float lat, vec3 colA, vec3 colB, float detail,
  * полосами, а не превращаются в пятна.
  */
 vec3 gasAlbedo(vec3 q, float lat, float lon, float time, vec3 colA, vec3 colB,
-               float detail, float contrast, float extra){
-  // Шум растянут вдоль пояса и сжат поперёк: струя размывает границу вдоль,
-  // но не поперёк, иначе полосы расплылись бы в пятна
-  float turb  = fbm4(q * vec3(1.1, 6.5, 1.1) + vec3(0.0, time * 0.02, 0.0));
-  float bands = sin(lat * detail * 2.4 + (turb - 0.5) * 1.3);
-  float t     = clamp(0.5 + 0.5 * bands * (0.35 + contrast), 0.0, 1.0);
-  vec3  alb   = mix(colB, colA, t);
+               float detail, float contrast, float extra, float lod){
+  // Сдвиг широты шумом, растянутым вдоль пояса: граница идёт не по
+  // параллели, а гуляет вокруг неё волнами — это и есть фестоны, по
+  // которым газовый гигант отличается от крашеного мяча
+  float warp = fbm4(q * vec3(2.4, 9.5, 2.4) + vec3(0.0, time * 0.03, 0.0)) - 0.5;
+  float turb = fbm4(q * vec3(1.1, 6.5, 1.1) + vec3(0.0, time * 0.02, 0.0));
+  float lw   = lat + warp * 0.085;
+
+  // Две частоты поясов: широкие зоны и узкие струи внутри них
+  float wide   = sin(lw * detail * 2.4 + (turb - 0.5) * 1.1);
+  float narrow = sin(lw * detail * 5.9 + (turb - 0.5) * 2.4 + 1.7);
+  float bands  = wide + 0.34 * narrow;
+
+  float t   = clamp(0.5 + 0.5 * bands * (0.5 + contrast), 0.0, 1.0);
+  vec3  alb = mix(colB, colA, t);
 
   // Мелкая рябь вдоль пояса: без неё гигант выглядит крашеным
   alb *= 0.9 + 0.2 * fbm4(q * vec3(detail * 0.7, detail * 3.0, detail * 0.7));
+
+  // Овалы на границах поясов: сдвиг соседних струй срывает газ в вихри,
+  // и они садятся именно туда, где производная поясов наибольшая
+  float shear = 1.0 - abs(wide);
+  float eddy  = fbm4(q * vec3(detail * 2.2, detail * 9.0, detail * 2.2) + 31.0);
+  alb = mix(alb, colA * 1.12, smoothstep(0.60, 0.78, eddy) * shear * 0.45);
+  alb = mix(alb, colB * 0.82, smoothstep(0.60, 0.78, 1.0 - eddy) * shear * 0.35);
+
+  // Вблизи — ещё один масштаб завихрений внутри самих поясов
+  if (lod > 0.01){
+    float fine = fbm4(q * vec3(detail * 3.0, detail * 15.0, detail * 3.0)
+                      + vec3(0.0, time * 0.05, 0.0));
+    alb *= 1.0 + (fine - 0.5) * 0.34 * lod;
+  }
 
   // Большое красное пятно: вихрь в южном полушарии, медленно дрейфующий
   // по долготе относительно самих поясов
@@ -75,62 +229,211 @@ vec3 gasAlbedo(vec3 q, float lat, float lon, float time, vec3 colA, vec3 colB,
     float dlon = mod(lon - time * 0.03 + PI, TAU) - PI;
     vec2  d    = vec2(dlon * 0.34, lat + 0.36);
     float swirl = fbm3(q * 9.0) - 0.5;
-    float spot = smoothstep(0.19, 0.05, length(d) + swirl * 0.05);
+    float r     = length(d) + swirl * 0.05;
+    float spot  = smoothstep(0.19, 0.05, r);
     alb = mix(alb, vec3(0.78, 0.30, 0.16), spot * extra);
     alb = mix(alb, vec3(0.90, 0.55, 0.34), spot * extra * (0.4 + swirl));
+    // Светлый вал по краю вихря: газ, вытолкнутый им из пояса
+    alb = mix(alb, vec3(0.95, 0.88, 0.76),
+              smoothstep(0.22, 0.19, r) * smoothstep(0.16, 0.19, r) * extra * 0.7);
   }
   return alb;
 }
 
-/** Земля: океан, материки, снег к полюсам и облачный слой поверх */
+/**
+ * Земля: океан, материки, снег к полюсам и облачный слой поверх.
+ *
+ * Всё здесь держится на контрасте, а не на рисунке. Снятая из космоса
+ * Земля тёмная и резкая: почти чёрный океан, поверх него белые облака
+ * с провалами до воды и рыжая полоса пустынь по тропикам. Стоит смягчить
+ * любую из трёх границ — берег, кромку облака или снеговую линию, — и
+ * диск расплывается в голубое молоко, где не читается уже ничего.
+ */
 vec3 earthAlbedo(vec3 q, float lat, float time, vec3 ocean, vec3 land,
-                 float detail, float extra, out float water, out float clouds){
-  float h    = fbm5(q * detail + 3.7);
-  float mask = smoothstep(0.49, 0.53, h);
+                 float detail, float extra, float lod,
+                 out float water, out float clouds, out float lights){
+  float h = earthHeight(q, detail);
+
+  // Берег рвётся о шум на двух масштабах. Ровная изолиния fbm читается
+  // кляксой; у настоящего материка на любом приближении находятся заливы,
+  // полуострова и острова, и узнаётся он именно по ним
+  float edge = h + (fbm4(q * detail * 5.0 + 17.0) - 0.5) * 0.070
+                 + (fbm3(q * detail * 15.0 + 5.0) - 0.5) * 0.024;
+  // Полоса перехода узкая: широкая размывает берег в дымку
+  float mask = smoothstep(0.506, 0.514, edge);
   water = 1.0 - mask;
 
-  vec3 alb = mix(land, vec3(0.44, 0.38, 0.24), smoothstep(0.53, 0.72, h));
-  alb = mix(alb, vec3(0.30, 0.44, 0.20), smoothstep(0.60, 0.52, h) * 0.4);
-  alb = mix(ocean * (0.75 + 0.5 * h), alb, mask);
+  // Суша: широту здесь видно лучше, чем шум. Пустыни лежат двумя поясами
+  // по обе стороны от экватора, тайга — у полярного круга, и рыжий Сахары
+  // на снимке заметнее всей остальной географии вместе взятой
+  float dry = smoothstep(0.15, 0.33, abs(lat))
+            * (1.0 - smoothstep(0.42, 0.64, abs(lat)));
+  // Но не по всей параллели: на широте Сахары лежит и муссонная зелень
+  dry = clamp(dry * (0.30 + 1.5 * fbm3(q * detail * 1.7 + 9.0)), 0.0, 1.0);
 
-  // Снег ложится по широте, но граница гуляет вместе с рельефом
-  float snow = smoothstep(1.02, 1.32, abs(lat) + (h - 0.5) * 0.5);
-  alb = mix(alb, vec3(0.90, 0.93, 0.96), snow);
+  vec3 alb = mix(land, vec3(0.54, 0.40, 0.23), dry);
+  alb = mix(alb, vec3(0.05, 0.08, 0.04), smoothstep(0.62, 1.00, abs(lat)));
+  // Выше линии леса — голый камень
+  alb = mix(alb, vec3(0.30, 0.27, 0.23), smoothstep(0.60, 0.74, h));
 
-  // Облака идут своим слоем и медленно обгоняют поверхность
-  float cl = fbm5(q * (detail * 1.3) + vec3(time * 0.012, 0.0, -time * 0.006));
-  clouds = smoothstep(0.54 - 0.16 * extra, 0.74, cl) * (0.35 + 0.65 * extra);
+  // Океан: глубокая вода почти чёрная и светлеет только над шельфом —
+  // узкой каймой у самого берега, а не половиной диска. На снимках из
+  // космоса открытая вода темнее всего, что на планете есть, и именно
+  // на её фоне облака выглядят белыми
+  vec3 sea = ocean * (0.34 + 0.62 * smoothstep(0.36, 0.505, h));
+  // Бирюзой отмель светится в тропиках, где дно белое и вода тёплая;
+  // северный берег такой каймы не даёт, и обводить ею весь глобус нельзя
+  float shelf = smoothstep(0.492, 0.508, edge)
+              * (0.18 + 0.82 * (1.0 - smoothstep(0.30, 0.72, abs(lat))));
+  sea = mix(sea, vec3(0.05, 0.27, 0.42), shelf * 0.7);
+  alb = mix(sea, alb, mask);
+
+  // Вблизи — пестрота суши: пустыни, леса и горные хребты
+  if (lod > 0.01){
+    float biome = fbm4(q * detail * 6.0 + 23.0);
+    alb = mix(alb, alb * vec3(1.34, 1.06, 0.60), mask * smoothstep(0.55, 0.74, biome) * lod);
+    alb = mix(alb, alb * vec3(0.62, 0.82, 0.55), mask * smoothstep(0.46, 0.28, biome) * lod);
+  }
+
+  // Снег ложится по широте, но граница гуляет вместе с рельефом. Начинается
+  // он у полярного круга: сдвинешь ниже — и белым затянет обе трети диска
+  float snow = smoothstep(1.16, 1.44, abs(lat) + (h - 0.5) * 0.42);
+  // Горы выше снеговой линии белеют и в тропиках
+  snow = max(snow, smoothstep(0.72, 0.84, h) * 0.55);
+  alb = mix(alb, vec3(0.92, 0.94, 0.97), snow);
+
+  // Огни городов жмутся к низинам у побережья: в горах и в глубине
+  // материка их почти нет, а ровная россыпь по всей суше читается сором
+  // на объективе. Наружу уходит только плотность — светит уже затенение
+  lights = mask * (1.0 - snow)
+         * smoothstep(0.60, 0.535, h)
+         * smoothstep(0.46, 0.68, fbm3(q * detail * 2.4 + 31.0))
+         * smoothstep(0.52, 0.74, fbm4(q * 24.0));
+
+  // Облака идут своим слоем и медленно обгоняют поверхность. Волокна
+  // берутся сдвигом координат вдоль долготы: сплошной шум дал бы вату
+  vec3 cq = q * (detail * 2.0) + vec3(time * 0.012, 0.0, -time * 0.006);
+  float swirl = fbm3(cq * 0.5) - 0.5;
+  float cl = fbm5(cq + vec3(swirl * 1.5, 0.0, swirl * 1.5));
+
+  // Облачность идёт поясами: сплошная у экватора, где сходятся пассаты,
+  // рваная в штормовых широтах и почти пустая над субтропиками — по этим
+  // трём полосам планета и узнаётся с расстояния
+  float e = lat * 3.4;
+  float s = (abs(lat) - 0.44) * 4.2;
+  float gate = 0.60 - 0.15 * exp(-e * e)
+                    - 0.11 * smoothstep(0.60, 1.05, abs(lat))
+                    + 0.09 * exp(-s * s);
+  // Порог узкий: у облака есть кромка, и сквозь разрывы видно воду
+  clouds = smoothstep(gate, gate + 0.12, cl) * (0.45 + 0.55 * extra);
+
+  // Вблизи кромка распадается на отдельные волокна и ячейки
+  if (lod > 0.01){
+    float fine = fbm4(cq * 3.2 + 41.0) - 0.5;
+    clouds = clamp(clouds + fine * 0.6 * lod * smoothstep(0.02, 0.4, clouds),
+                   0.0, 1.0);
+  }
   alb = mix(alb, vec3(0.97, 0.98, 1.0), clouds);
 
   return alb;
 }
 
-/** Ледяной гигант: ровная метановая дымка, редкие тёмные шторма */
-vec3 iceAlbedo(vec3 q, float lat, vec3 colA, vec3 colB, float detail,
-               float contrast, float extra){
-  float turb  = fbm4(q * vec3(1.2, 3.4, 1.2));
-  float bands = sin(lat * detail * 1.8 + (turb - 0.5) * 2.2);
-  vec3  alb   = mix(colB, colA, clamp(0.5 + 0.5 * bands * contrast, 0.0, 1.0));
+/**
+ * Координаты, сжатые поперёк параллелей.
+ *
+ * Шум в них меняется быстро по широте и почти не меняется по долготе,
+ * поэтому любое пятно выходит вытянутым вдоль параллели. Газовым гигантам
+ * это нужно всем: ветер растаскивает облако вдоль пояса задолго до того,
+ * как оно успеет округлиться.
+ *
+ * Считается по настоящей оси тела, а не по мировой вертикали. У Юпитера
+ * разница невелика, а Нептун наклонён на двадцать восемь градусов, и
+ * растяжка вдоль игрека уехала бы у него поперёк собственных поясов.
+ */
+vec3 zonal(vec3 q, vec3 axis, float along, float across){
+  float a = dot(q, axis);
+  return (q - axis * a) * across + axis * (a * along);
+}
+
+/**
+ * Ледяной гигант: ровная метановая дымка с широтными поясами.
+ *
+ * У Нептуна самый быстрый ветер системы, и всё строение его атмосферы
+ * вытянуто вдоль параллелей: тёмный овал вихря, белые перья метанового
+ * льда над ним, светлый воротник у полюса. Изотропные кляксы, разбросанные
+ * по диску, читаются плесенью на шаре, а не облаками, поэтому и пятно
+ * стоит на своей широте, и перья сжаты поперёк неё.
+ *
+ * Урану достаётся тот же код с extra = 0: без вихря и перьев остаётся
+ * ровно то, чем он и выглядит, — гладкий бирюзовый шар почти без примет.
+ */
+vec3 iceAlbedo(vec3 q, vec3 axis, float lat, float lon, float time,
+               vec3 colA, vec3 colB,
+               float detail, float contrast, float extra, float lod){
+  // Границы поясов гуляют вдоль параллели, но не поперёк
+  float turb  = fbm4(zonal(q, axis, 4.6, 1.1)) - 0.5;
+  float lw    = lat + turb * 0.07;
+  float bands = sin(lw * detail * 1.5) + 0.34 * sin(lw * detail * 3.9 + 1.2);
+  vec3  alb   = mix(colB, colA, clamp(0.5 + 0.42 * bands * contrast, 0.0, 1.0));
+
+  // Экватор темнее, полюс светлее: метан лежит так на обоих ледяных
+  // гигантах, и на этом перепаде диск перестаёт быть ровным кругом
+  alb *= 1.0 - 0.17 * (1.0 - smoothstep(0.0, 0.55, abs(lat)));
+  alb = mix(alb, alb * 1.14 + vec3(0.02, 0.03, 0.03),
+            smoothstep(0.80, 1.40, abs(lat)));
+
+  // Дымка неоднородна даже там, где поясов почти нет
+  alb *= 0.96 + 0.08 * fbm4(zonal(q, axis, 4.4, 1.2) * detail
+                            + vec3(0.0, time * 0.015, 0.0));
 
   if (extra > 0.0){
-    float storm = fbm4(q * 3.2 + 11.0);
-    // Тёмное пятно и белые перья над ним — как у Нептуна
-    alb = mix(alb, colB * 0.55, smoothstep(0.62, 0.78, storm) * extra);
-    alb = mix(alb, vec3(0.92, 0.95, 1.0),
-              smoothstep(0.70, 0.86, fbm4(q * 6.0 - 4.0)) * extra * 0.5);
+    // Большое тёмное пятно: один вихрь южного полушария, а не сыпь по
+    // всему диску. Овал вытянут вдоль параллели и дрейфует по долготе
+    float dlon = mod(lon - time * 0.05 + PI, TAU) - PI;
+    vec2  d    = vec2(dlon * 0.30, lat + 0.38);
+    float r    = length(d) + (fbm3(q * 5.0) - 0.5) * 0.045;
+    float spot = smoothstep(0.23, 0.06, r);
+    alb = mix(alb, colB * 0.30, spot * extra);
+
+    // Белые перья метанового льда. Держатся в средних широтах, а гуще
+    // всего — по краю вихря, где газ выталкивает вверх
+    float cirrus = fbm4(zonal(q, axis, 9.0, 0.9) * detail
+                        + vec3(0.0, time * 0.04, 0.0));
+    float zone = smoothstep(0.14, 0.36, abs(lat))
+               * (1.0 - smoothstep(0.95, 1.30, abs(lat)));
+    zone = max(zone * 0.5,
+               smoothstep(0.31, 0.20, r) * smoothstep(0.15, 0.21, r) * 1.3);
+    alb = mix(alb, vec3(0.93, 0.96, 1.0),
+              smoothstep(0.58, 0.80, cirrus) * zone * extra * 0.9);
+  }
+
+  if (lod > 0.01){
+    float wisp = fbm4(zonal(q, axis, 14.0, 2.0) * detail + 5.0);
+    alb = mix(alb, vec3(0.90, 0.95, 1.0),
+              smoothstep(0.68, 0.84, wisp) * lod * 0.22);
   }
   return alb;
 }
 
 /** Венера: сплошная пелена, закрученная сдвигом долготы по широте */
 vec3 cloudAlbedo(vec3 q, float lat, float time, vec3 colA, vec3 colB,
-                 float detail, float contrast){
+                 float detail, float contrast, float lod){
   vec3  w    = rotAxis(q, vec3(0.0, 1.0, 0.0), sin(lat) * 1.6 + time * 0.01);
   float veil = fbm5(w * detail * 1.8);
   float fine = fbm4(w * detail * 5.0);
   float t    = clamp(0.5 + (veil - 0.5) * (1.0 + contrast * 2.0)
                          + (fine - 0.5) * 0.35, 0.0, 1.0);
-  return mix(colB, colA, t);
+  vec3 alb = mix(colB, colA, t);
+
+  // Тёмная поперечная «галочка», развёрнутая к экватору: у Венеры её
+  // видно только в ультрафиолете, но без неё пелена мертва
+  float chev = fbm4(w * vec3(detail * 1.2, detail * 4.0, detail * 1.2) + 13.0);
+  alb = mix(alb, colB * 0.86, smoothstep(0.58, 0.74, chev) * 0.35);
+
+  if (lod > 0.01){
+    alb *= 1.0 + (fbm4(w * detail * 12.0) - 0.5) * 0.22 * lod;
+  }
+  return alb;
 }
 
 /**
@@ -140,16 +443,26 @@ vec3 cloudAlbedo(vec3 q, float lat, float time, vec3 colA, vec3 colB,
  * фон и утащить за собой bloom, иначе звезда выглядит жёлтым кругом.
  */
 vec3 sunSurface(vec3 q, vec3 n, vec3 rd, float time, vec3 colA, vec3 colB,
-                float detail){
+                float detail, float lod){
   float gran = fbm4(q * detail * 3.2 + vec3(0.0, time * 0.05, 0.0));
   float fine = fbm4(q * detail * 9.0 - time * 0.03);
   float t    = clamp(0.35 + 0.75 * gran + 0.25 * fine, 0.0, 1.0);
 
+  // Вблизи проступает сама супергрануляция: ячейки конвекции размером
+  // с планету, из которых сложена фотосфера
+  if (lod > 0.01){
+    float cells = ridged(q * detail * 16.0 + vec3(0.0, time * 0.08, 0.0));
+    t = clamp(t + (cells - 0.5) * 0.28 * lod, 0.0, 1.0);
+  }
+
   vec3 col = mix(colA, colB, smoothstep(0.35, 0.9, t));
 
-  // Пятна: холодные области, где конвекция придавлена полем
-  float spot = smoothstep(0.60, 0.74, fbm3(q * 2.6 + 5.0));
-  col *= 1.0 - 0.66 * spot;
+  // Пятна: холодные области, где конвекция придавлена полем. Тень в центре
+  // и полутень вокруг неё — у пятна есть строение
+  float spotF = fbm3(q * 2.6 + 5.0);
+  float penum = smoothstep(0.58, 0.70, spotF);
+  float umbra = smoothstep(0.68, 0.76, spotF);
+  col *= 1.0 - 0.38 * penum - 0.44 * umbra;
 
   // Край диска темнее центра: луч зрения уходит в более холодные слои
   float limb = pow(clamp(dot(n, -rd), 0.0, 1.0), 0.42);
@@ -174,9 +487,25 @@ vec3 atmoTint(int style, vec3 colA){
 float atmoGain(int style){
   if (style == S_EARTH) return 1.15;
   if (style == S_GAS)   return 0.55;
-  if (style == S_ICE)   return 0.85;
+  // У ледяного гиганта метан свет не рассеивает, а съедает: на снимках
+  // Нептуна край диска темнее середины, и светлый ободок вокруг него
+  // превратил бы планету в ёлочный шар
+  if (style == S_ICE)   return 0.30;
   if (style == S_CLOUD) return 0.75;
   return 0.06;
+}
+
+/**
+ * Насколько размыт терминатор. У тела с атмосферой солнце садится долго:
+ * воздух светит, когда сам грунт уже в тени. У голого камня граница света
+ * и тени острая, и рваной её делает только рельеф.
+ */
+float twilight(int style){
+  if (style == S_EARTH) return 0.16;
+  if (style == S_CLOUD) return 0.14;
+  if (style == S_GAS)   return 0.22;
+  if (style == S_ICE)   return 0.20;
+  return 0.03;
 }
 
 /**
@@ -184,10 +513,12 @@ float atmoGain(int style){
  *
  * lightMask гасит прямой свет там, где точку накрыла тень колец: считать
  * её умеет только сцена, знающая про кольцевую плоскость, поэтому она
- * приходит снаружи готовым числом.
+ * приходит снаружи готовым числом. selfIdx нужен затмениям — по нему тело
+ * не загораживает само себя.
  */
 vec3 shadeBody(vec3 p, vec3 n, vec3 rd, vec3 center, vec3 colA, vec3 colB,
-               vec4 surf, vec4 axisSpin, float lightMask, float time){
+               vec4 surf, vec4 axisSpin, float lightMask, float lod,
+               float selfIdx, float time){
   int   style    = int(surf.w + 0.5);
   float detail   = surf.x;
   float contrast = surf.y;
@@ -202,20 +533,40 @@ vec3 shadeBody(vec3 p, vec3 n, vec3 rd, vec3 center, vec3 colA, vec3 colB,
   vec3  e2  = cross(axis, e1);
   float lon = atan(dot(q, e2), dot(q, e1));
 
-  if (style == S_SUN) return sunSurface(q, n, rd, time, colA, colB, detail);
+  if (style == S_SUN)
+    return sunSurface(q, n, rd, time, colA, colB, detail, lod);
 
-  float water = 0.0, clouds = 0.0;
+  float water = 0.0, clouds = 0.0, lights = 0.0;
   vec3  alb;
   if (style == S_ROCK){
-    alb = rockAlbedo(q, lat, colA, colB, detail, contrast, extra);
+    alb = rockAlbedo(q, lat, colA, colB, detail, contrast, extra, lod);
   } else if (style == S_GAS){
-    alb = gasAlbedo(q, lat, lon, time, colA, colB, detail, contrast, extra);
+    alb = gasAlbedo(q, lat, lon, time, colA, colB, detail, contrast, extra, lod);
   } else if (style == S_EARTH){
-    alb = earthAlbedo(q, lat, time, colA, colB, detail, extra, water, clouds);
+    alb = earthAlbedo(q, lat, time, colA, colB, detail, extra, lod,
+                      water, clouds, lights);
   } else if (style == S_ICE){
-    alb = iceAlbedo(q, lat, colA, colB, detail, contrast, extra);
+    alb = iceAlbedo(q, axis, lat, lon, time, colA, colB,
+                    detail, contrast, extra, lod);
   } else {
-    alb = cloudAlbedo(q, lat, time, colA, colB, detail, contrast);
+    alb = cloudAlbedo(q, lat, time, colA, colB, detail, contrast, lod);
+  }
+
+  // Рельеф наклоняет нормаль. Считается в собственной системе тела и
+  // возвращается в мировую тем же поворотом, что и увёл в неё нормаль.
+  // Газовым гигантам и пелене Венеры наклонять нечего: там нет твёрдой
+  // поверхности, а есть слой облаков
+  vec3 nl = n;
+  if (lod > 0.01){
+    if (style == S_ROCK){
+      nl = rotAxis(bumpNormal(q, detail, lod, 0.045 * lod, style),
+                   axis, axisSpin.w);
+    } else if (style == S_EARTH){
+      // Только суша: океан гладкий, и рябь на нём убила бы блик
+      float amp = 0.045 * lod * (1.0 - water) * (1.0 - clouds);
+      if (amp > 0.001)
+        nl = rotAxis(bumpNormal(q, detail, lod, amp, style), axis, axisSpin.w);
+    }
   }
 
   // Свет идёт из начала координат: там Солнце и больше ничего
@@ -223,8 +574,17 @@ vec3 shadeBody(vec3 p, vec3 n, vec3 rd, vec3 center, vec3 colA, vec3 colB,
   float dist  = length(toSun);
   vec3  L     = toSun / max(dist, 0.001);
 
-  float ndl  = dot(n, L);
-  float diff = smoothstep(-0.07, 0.42, ndl) * lightMask;
+  // Затмения соседями и тень колец гасят прямой свет одинаково
+  float shade = lightMask * eclipseMask(p, L, selfIdx);
+
+  float ndl  = dot(nl, L);
+  float tw   = twilight(style);
+  // Ламберт, завёрнутый за терминатор на ширину атмосферы: у Земли солнце
+  // садится долго, у голого камня граница острая и рвётся только рельефом.
+  // Показатель ниже единицы — поправка на обратное рассеяние: и реголит,
+  // и облака отдают свет назад, к источнику, сильнее гладкой сферы
+  float lam  = clamp((ndl + tw) / (1.0 + tw), 0.0, 1.0);
+  float diff = pow(lam, 0.75) * shade;
   float att  = sunFalloff(dist);
 
   vec3 col = alb * diff * att;
@@ -232,27 +592,34 @@ vec3 shadeBody(vec3 p, vec3 n, vec3 rd, vec3 center, vec3 colA, vec3 colB,
   col += alb * 0.018;
 
   // Блик: гладкая вода и метановая дымка, но не пыль и не камень
-  float shine = (style == S_EARTH) ? water * 0.75 * (1.0 - clouds)
-              : (style == S_ICE)   ? 0.22
+  float shine = (style == S_EARTH) ? water * 1.2 * (1.0 - clouds)
+              : (style == S_ICE)   ? 0.09
               : 0.0;
   if (shine > 0.0){
     vec3  h    = normalize(L - rd);
-    float spec = pow(clamp(dot(n, h), 0.0, 1.0), 44.0);
-    col += vec3(1.0, 0.97, 0.9) * spec * shine * diff * att;
+    // Вода отражает в лоб около двух процентов, а вскользь — почти всё.
+    // Без этой поправки блик разливается по полдиска ровным белым пятном:
+    // ни один показатель степени его не соберёт, потому что там, где на
+    // диск смотрят прямо, отражать по-настоящему нечего
+    float fres = (style == S_EARTH)
+               ? 0.02 + 0.98 * pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), 5.0)
+               : 1.0;
+    float spec = pow(clamp(dot(nl, h), 0.0, 1.0), 90.0);
+    col += vec3(1.0, 0.97, 0.9) * spec * fres * shine * diff * att;
   }
 
   // Огни городов: только суша, только ночь и только сквозь разрывы облаков
   if (style == S_EARTH){
     float night = smoothstep(0.06, -0.22, ndl);
-    float grid  = smoothstep(0.55, 0.78, fbm4(q * 26.0));
-    col += vec3(1.0, 0.74, 0.38) * (1.0 - water) * (1.0 - clouds)
-         * night * grid * 0.16;
+    col += vec3(1.0, 0.76, 0.42) * lights * (1.0 - clouds) * night * 0.22;
   }
 
-  // Атмосферный ободок: тем ярче, чем ближе край диска и чем он освещённее
+  // Атмосферный ободок: тем ярче, чем ближе край диска и чем он освещённее.
+  // Нормаль берётся геометрическая — воздух лежит поверх рельефа и о его
+  // неровностях ничего не знает
   float fres = pow(1.0 - clamp(dot(n, -rd), 0.0, 1.0), 3.2);
-  float rim  = fres * smoothstep(-0.35, 0.55, ndl) * atmoGain(style);
-  col += atmoTint(style, colA) * rim * att * 0.55;
+  float rim  = fres * smoothstep(-0.35, 0.55, dot(n, L)) * atmoGain(style);
+  col += atmoTint(style, colA) * rim * att * 0.55 * max(shade, 0.25);
 
   return col;
 }

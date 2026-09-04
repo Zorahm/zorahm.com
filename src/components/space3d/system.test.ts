@@ -4,15 +4,35 @@ import { OVERVIEW_DIST } from "./orbit";
 import {
   BELTS,
   BELT_COUNT,
+  BELT_GAP_SLOTS,
+  EARTH_ORBIT,
   RING_COUNT,
   SYSTEM_3D,
   SYSTEM_RADIUS,
   Surface,
+  beltGapSlots,
+  sceneOrbit,
 } from "./system";
 
 describe("композиция трассированной сцены", () => {
   it("тот же набор и порядок тел, что и на точечной сцене", () => {
     expect(SYSTEM_3D.map((b) => b.id)).toEqual(SPACE_STRUCTURE.map((b) => b.id));
+  });
+
+  it("радиус орбиты — корень из настоящего расстояния", () => {
+    expect(sceneOrbit(0)).toBe(0);
+    expect(sceneOrbit(1)).toBe(EARTH_ORBIT);
+    // Сжатие одно на всех: сравнение двух орбит переживает его под корнем
+    expect(sceneOrbit(4) / sceneOrbit(1)).toBeCloseTo(2, 9);
+
+    for (const body of SYSTEM_3D) {
+      expect(body.orbit, body.id).toBeCloseTo(sceneOrbit(body.au), 9);
+    }
+  });
+
+  it("порядок орбит на сцене тот же, что и в природе", () => {
+    const byAu = [...SYSTEM_3D].sort((a, b) => a.au - b.au);
+    expect(byAu.map((b) => b.id)).toEqual(SYSTEM_3D.map((b) => b.id));
   });
 
   it("Солнце стоит в центре, орбиты растут наружу", () => {
@@ -95,6 +115,36 @@ describe("пояса мелких тел", () => {
       expect(belt.cell, belt.id).toBeGreaterThan(0);
       expect(belt.density, belt.id).toBeGreaterThan(0);
       expect(belt.density, belt.id).toBeLessThan(1);
+      expect(belt.inner, belt.id).toBeCloseTo(sceneOrbit(belt.span[0]), 9);
+      expect(belt.outer, belt.id).toBeCloseTo(sceneOrbit(belt.span[1]), 9);
+    }
+  });
+
+  it("щели Кирквуда есть только там, где до вещества дотягивается Юпитер", () => {
+    const asteroid = BELTS.find((b) => b.id === "asteroid")!;
+    expect(asteroid.gaps.length).toBeGreaterThan(0);
+    expect(BELTS.find((b) => b.id === "kuiper")!.gaps).toEqual([]);
+
+    // Щель вне пояса — это не щель: резонанс обязан попадать в вещество
+    for (const au of asteroid.gaps) {
+      expect(au, `щель ${au}`).toBeGreaterThan(asteroid.span[0]);
+      expect(au, `щель ${au}`).toBeLessThan(asteroid.span[1]);
+    }
+  });
+
+  it("щели приходят шейдеру долями ширины пояса, пустые места — мимо", () => {
+    for (const belt of BELTS) {
+      const slots = beltGapSlots(belt);
+      expect(slots, belt.id).toHaveLength(BELT_GAP_SLOTS);
+      slots.forEach((u, i) => {
+        if (i < belt.gaps.length) {
+          expect(u, `${belt.id} ${i}`).toBeGreaterThan(0);
+          expect(u, `${belt.id} ${i}`).toBeLessThan(1);
+        } else {
+          // Колокол щели в этом месте уже неотличим от нуля
+          expect(u, `${belt.id} ${i}`).toBeLessThan(0);
+        }
+      });
     }
   });
 

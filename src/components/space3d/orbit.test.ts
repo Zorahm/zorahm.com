@@ -85,6 +85,19 @@ describe("спутники", () => {
     }
   });
 
+  it("у каждого свой рисунок поверхности", () => {
+    for (const moon of MOONS) {
+      expect(moon.detail, moon.parent).toBeGreaterThan(0);
+      expect(moon.contrast, moon.parent).toBeGreaterThan(0);
+    }
+    // Гладкий лёд Европы против исковырянной Каллисто — крайние случаи,
+    // и порядок между ними обязан сохраняться
+    const jovian = MOONS.filter((m) => m.parent === "jupiter");
+    const europa = jovian[1];
+    const callisto = jovian[3];
+    expect(europa.contrast).toBeLessThan(callisto.contrast);
+  });
+
   it("галилеевы идут в резонансе 4:2:1", () => {
     const [io, europa, ganymede] = MOONS.filter((m) => m.parent === "jupiter");
     expect(io.rate / europa.rate).toBeCloseTo(2, 6);

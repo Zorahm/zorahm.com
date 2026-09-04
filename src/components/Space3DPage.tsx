@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getBodies,
   getUi,
@@ -15,8 +15,10 @@ import {
 import type { Stats } from "./space3d/renderer";
 import {
   DEFAULT_PARAMS,
+  releaseRoam,
   resetScene,
   resetView,
+  roamKey,
   selectBody3d,
   setParam,
   toggleAuto,
@@ -66,9 +68,37 @@ export function Space3DPage({ lang }: { lang: Lang }) {
   const fpsRef = useRef<HTMLElement>(null);
   const resRef = useRef<HTMLElement>(null);
 
+  /**
+   * Экран сборки. Три состояния, а не два: между «собралось» и «убрано»
+   * лежит полсекунды затухания, и всё это время экран обязан оставаться
+   * в разметке — иначе он не растворится, а исчезнет щелчком.
+   */
+  const [build, setBuild] = useState<"running" | "fading" | "done">("running");
+  /** Долгая ли сборка. По ней показывается объяснение, см. ниже */
+  const [slow, setSlow] = useState(false);
+
   // Уходя со страницы, возвращаем сцену к обзору: состояние живёт в модуле
   // и само по себе не сбросится
   useEffect(() => resetScene, []);
+
+  // На быстрой видеокарте сборка укладывается в пару секунд, и объясняться
+  // не за что: строка про минуту ожидания сама по себе тревожит. Она ждёт
+  // ровно столько, сколько ждёт терпеливый зритель
+  useEffect(() => {
+    if (build !== "running") return;
+    const timer = window.setTimeout(() => setSlow(true), 4000);
+    return () => window.clearTimeout(timer);
+  }, [build]);
+
+  useEffect(() => {
+    if (build !== "fading") return;
+    const timer = window.setTimeout(() => setBuild("done"), 600);
+    return () => window.clearTimeout(timer);
+  }, [build]);
+
+  const onSettled = useCallback(() => {
+    setBuild((phase) => (phase === "running" ? "fading" : phase));
+  }, []);
 
   const onStats = useCallback(({ fps, width, height }: Stats) => {
     if (fpsRef.current) fpsRef.current.textContent = fps.toFixed(0);
@@ -76,13 +106,22 @@ export function Space3DPage({ lang }: { lang: Lang }) {
   }, []);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    // Ползунки живут своей клавиатурой, кнопки — пробелом
+    const typing = (e: KeyboardEvent) => {
       const node = e.target as HTMLElement | null;
-      // Ползунки живут своей клавиатурой, кнопки — пробелом
-      if (node instanceof HTMLInputElement) return;
-      if (e.key === " " && node instanceof HTMLButtonElement) return;
+      return (
+        node instanceof HTMLInputElement ||
+        (e.key === " " && node instanceof HTMLButtonElement)
+      );
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (typing(e)) return;
 
       const key = e.key.toLowerCase();
+      // Полёт разбирает свои клавиши сам и держит их до отпускания
+      if (roamKey(key, true)) return;
+
       if (key === "escape") selectBody3d(-1);
       else if (key === "h") toggleHidden();
       else if (key === "r") resetView();
@@ -95,15 +134,49 @@ export function Space3DPage({ lang }: { lang: Lang }) {
       }
     };
 
+    const onKeyUp = (e: KeyboardEvent) => roamKey(e.key.toLowerCase(), false);
+
+    // Уход с вкладки не отпускает клавиши: без этого зажатая W улетала бы
+    // в бесконечность, пока страница висит в фоне
+    const onBlur = () => releaseRoam();
+
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
+    };
   }, []);
 
   const ui_ = hidden ? `${styles.ui} ${styles.gone}` : styles.ui;
 
   return (
     <div className={styles.host}>
-      <Scene3D label={t.description} error={t.error} onStats={onStats} />
+      <Scene3D
+        label={t.description}
+        error={t.error}
+        onStats={onStats}
+        onSettled={onSettled}
+      />
+
+      {build !== "done" && (
+        <div
+          className={`${styles.loading} ${build === "fading" ? styles.loadingGone : ""}`}
+          role="status"
+          aria-live="polite"
+        >
+          <p className={styles.loadingTitle}>{t.loading.title}</p>
+          <div className={styles.loadingBar} aria-hidden="true" />
+          <p
+            className={`${styles.loadingNote} ${slow ? styles.shown : ""}`}
+            aria-hidden={!slow}
+          >
+            {t.loading.note}
+          </p>
+        </div>
+      )}
 
       <div className={`${ui_} ${styles.brand}`}>
         <Link href={langPath(lang)} className={styles.mark}>
@@ -138,8 +211,9 @@ export function Space3DPage({ lang }: { lang: Lang }) {
               без мыши сцену не покрутить, а без хоткеев — вполне */}
           <span className={styles.keys}>
             {" · "}
-            <kbd>H</kbd> {t.keys.hide} · <kbd>R</kbd> {t.keys.reset} ·{" "}
-            <kbd>Space</kbd> {t.keys.auto} · <kbd>F</kbd> {t.keys.fullscreen}
+            <kbd>WASD</kbd> {t.keys.roam} · <kbd>H</kbd> {t.keys.hide} ·{" "}
+            <kbd>R</kbd> {t.keys.reset} · <kbd>Space</kbd> {t.keys.auto} ·{" "}
+            <kbd>F</kbd> {t.keys.fullscreen}
           </span>
         </p>
 

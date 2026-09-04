@@ -62,6 +62,7 @@ export const enUi: UiStrings = {
     reset: "Reset",
     hint: "Drag to orbit · Scroll to zoom · Click a body",
     keys: {
+      roam: "fly",
       hide: "interface",
       reset: "reset",
       auto: "auto-orbit",
@@ -72,7 +73,11 @@ export const enUi: UiStrings = {
     back: "Back to the system",
     dotsView: "Dots view",
     scaleNote:
-      "Proportions are artistic: at true scale Mercury would be a single pixel and Neptune far outside the frame.",
+      "Body sizes are artistic; distances are the square root of the real ones — at true scale Mercury would be a single pixel and Neptune thirty Earth orbits out, far outside the frame.",
+    loading: {
+      title: "Building the scene",
+      note: "The whole system is one shader, and your graphics driver has to build it. On a slow machine that takes up to a minute — after which every frame is ray-traced in full.",
+    },
     error:
       "WebGL is not available in this browser. Enable hardware acceleration and reload.",
   },

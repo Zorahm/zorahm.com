@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createRenderer, type Stats } from "./renderer";
+import { createRenderer, type Renderer, type Stats } from "./renderer";
 import { bodyAt, selectBody3d, turnCamera, view3d, zoomCamera } from "./state";
 import styles from "./Scene3D.module.css";
 
@@ -20,34 +20,56 @@ export default function Scene3D({
   label,
   error,
   onStats,
+  onSettled,
 }: {
   label: string;
   error: string;
   onStats?: (stats: Stats) => void;
+  /** Сцена пошла или отказалась: страница снимает экран сборки */
+  onSettled?: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dragRef = useRef({ active: false, x: 0, y: 0, travel: 0 });
   const pinchRef = useRef(0);
   const statsRef = useRef(onStats);
+  const settledRef = useRef(onSettled);
   const [failed, setFailed] = useState(false);
 
-  // Колбэк живёт в ссылке: рендер создаётся один раз и не должен
+  // Колбэки живут в ссылках: рендер создаётся один раз и не должен
   // пересоздаваться из-за новой функции на каждый рендер страницы
   useEffect(() => {
     statsRef.current = onStats;
-  }, [onStats]);
+    settledRef.current = onSettled;
+  }, [onStats, onSettled]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const renderer = createRenderer(
-      canvas,
-      (stats) => statsRef.current?.(stats),
-      () => setFailed(true),
+    let renderer: Renderer | null = null;
+    // Создание рендера отложено на два кадра. Отдать программы драйверу
+    // стоит недорого, но не бесплатно, а экран сборки к этому моменту
+    // обязан быть на экране: показывать его после заминки поздно
+    const wait = requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        renderer = createRenderer(
+          canvas,
+          (stats) => statsRef.current?.(stats),
+          () => {
+            setFailed(true);
+            settledRef.current?.();
+          },
+          () => settledRef.current?.(),
+        );
+        // Без WebGL рендера не будет вовсе, и ждать его тоже незачем
+        if (!renderer) settledRef.current?.();
+      }),
     );
-    if (!renderer) return;
-    return () => renderer.dispose();
+
+    return () => {
+      cancelAnimationFrame(wait);
+      renderer?.dispose();
+    };
   }, []);
 
   // Колесо и щипок слушаются вручную: React вешает пассивный обработчик,
