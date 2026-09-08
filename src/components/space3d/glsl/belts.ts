@@ -24,38 +24,35 @@ uniform vec4 uBelt[BELT_SETS];
 /** rgb — цвет вещества, a — размер ячейки решётки */
 uniform vec4 uBeltLook[BELT_SETS];
 /**
- * Места щелей Кирквуда в долях ширины пояса. Считаются снаружи из настоящих
- * радиусов резонансов; свободные места забиты единицей с запасом, и колокол
- * там уже неотличим от нуля
+ * Щели и навалы: места, полуширины и величины, все в долях ширины пояса.
+ * Считаются снаружи из настоящих радиусов резонансов; в пустых местах
+ * величина нулевая, и колокол там ни на что не влияет
  */
-uniform vec3 uBeltGap[BELT_SETS];
-
-/** Колокол единичной высоты — им вырезаются щели */
-float bell(float x, float w){
-  float u = x / w;
-  return exp(-u * u);
-}
+uniform vec4 uBeltAt[BELT_SETS];
+uniform vec4 uBeltWide[BELT_SETS];
+uniform vec4 uBeltAmount[BELT_SETS];
 
 /**
  * Плотность пояса по радиусу.
  *
- * Края размыты, середина гуще, а поперёк идут щели Кирквуда: там период
- * обращения кратен юпитерианскому, и вещество оттуда выметено. Именно они
- * отличают пояс от кольца — без них остаётся ровная баранка.
+ * Края обрезаны почти отвесно, а между ними идёт рисунок из резонансов —
+ * им пояс и отличается от кольца. Щель и навал здесь одно и то же с разным
+ * знаком, потому что причина у них одна: там, где резонанс раскачивает
+ * орбиту, вещества нет (щели Кирквуда), а там, где удерживает, его больше
+ * обычного (плутино на 2:3 с Нептуном).
  *
- * Глубина у щелей разная: резонанс 3:1 выметает полосу почти начисто,
- * 5:2 и 7:3 слабее и уже.
+ * Четыре колокола считаются разом, покомпонентно: в скалярном виде это
+ * были бы четыре экспоненты подряд на каждый отсчёт луча.
  */
-float beltProfile(float r, float inner, float outer, vec3 gap){
+float beltProfile(float r, float inner, float outer,
+                  vec4 at, vec4 wide, vec4 amount){
   float u = (r - inner) / max(outer - inner, 1e-4);
-  float edge = smoothstep(0.0, 0.20, u) * (1.0 - smoothstep(0.80, 1.0, u));
+  // Оба края пояса — это резонансы, а не осыпь: у астероидного 4:1 и 2:1,
+  // у Койпера пустота ниже 39 а.е. и обрыв на 1:2. Размывать их незачем
+  float edge = smoothstep(0.0, 0.05, u) * (1.0 - smoothstep(0.90, 1.0, u));
 
-  float cut = 1.0
-            - 0.80 * bell(u - gap.x, 0.040)
-            - 0.62 * bell(u - gap.y, 0.030)
-            - 0.48 * bell(u - gap.z, 0.024);
-
-  return edge * max(cut, 0.0);
+  vec4 d = (vec4(u) - at) / max(wide, 1e-4);
+  return max(edge * (1.0 + dot(amount, exp(-d * d))), 0.0);
 }
 
 /**
@@ -167,7 +164,9 @@ vec3 beltLight(vec3 ro, vec3 rd, float tMax, float time){
     // времени: дрожащий каждый кадр шум читался бы как рябь
     float jit   = hash31(vec3(gl_FragCoord.xy, 3.7));
     float cell  = uBeltLook[b].a;
-    vec3  gap   = uBeltGap[b];
+    vec4  at    = uBeltAt[b];
+    vec4  wide  = uBeltWide[b];
+    vec4  amt   = uBeltAmount[b];
     float trans = 1.0;
     vec3  acc   = vec3(0.0);
 
@@ -180,7 +179,7 @@ vec3 beltLight(vec3 ro, vec3 rd, float tMax, float time){
       if (r < inner || r > outer) continue;
 
       float lift = 1.0 - smoothstep(0.0, halfH, abs(p.y));
-      float prof = beltProfile(r, inner, outer, gap) * lift;
+      float prof = beltProfile(r, inner, outer, at, wide, amt) * lift;
       if (prof <= 0.001) continue;
 
       // Камень не мельчает на экране бесконечно: ниже пикселя пояс начал бы

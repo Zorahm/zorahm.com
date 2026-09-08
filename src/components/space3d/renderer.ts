@@ -18,7 +18,7 @@ import {
   SPHERE_COUNT,
   SYSTEM_3D,
   Surface,
-  beltGapSlots,
+  beltFeatureSlots,
   bodyIndex,
 } from "./system";
 
@@ -395,11 +395,16 @@ export function createRenderer(
   // Пояса неподвижны: вращение камней шейдер считает сам от времени
   const beltBuf = new Float32Array(Math.max(1, BELTS.length) * 4);
   const beltLookBuf = new Float32Array(Math.max(1, BELTS.length) * 4);
-  const beltGapBuf = new Float32Array(Math.max(1, BELTS.length) * 3);
+  const beltAtBuf = new Float32Array(Math.max(1, BELTS.length) * 4);
+  const beltWideBuf = new Float32Array(Math.max(1, BELTS.length) * 4);
+  const beltAmountBuf = new Float32Array(Math.max(1, BELTS.length) * 4);
   BELTS.forEach((belt, k) => {
     beltBuf.set([belt.inner, belt.outer, belt.height, belt.density], k * 4);
     beltLookBuf.set([...belt.color, belt.cell], k * 4);
-    beltGapBuf.set(beltGapSlots(belt), k * 3);
+    const feature = beltFeatureSlots(belt);
+    beltAtBuf.set(feature.at, k * 4);
+    beltWideBuf.set(feature.width, k * 4);
+    beltAmountBuf.set(feature.amount, k * 4);
   });
 
   ringed.forEach(({ body, index }, k) => {
@@ -521,7 +526,9 @@ export function createRenderer(
     gl.uniform1fv(u.uRingOwner, ringOwnerBuf);
     gl.uniform4fv(u.uBelt, beltBuf);
     gl.uniform4fv(u.uBeltLook, beltLookBuf);
-    gl.uniform3fv(u.uBeltGap, beltGapBuf);
+    gl.uniform4fv(u.uBeltAt, beltAtBuf);
+    gl.uniform4fv(u.uBeltWide, beltWideBuf);
+    gl.uniform4fv(u.uBeltAmount, beltAmountBuf);
     drawQuad();
 
     /* --- проход 2: яркая часть в половинном разрешении --- */

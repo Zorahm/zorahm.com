@@ -4,13 +4,13 @@ import { OVERVIEW_DIST } from "./orbit";
 import {
   BELTS,
   BELT_COUNT,
-  BELT_GAP_SLOTS,
+  BELT_FEATURE_SLOTS,
   EARTH_ORBIT,
   RING_COUNT,
   SYSTEM_3D,
   SYSTEM_RADIUS,
   Surface,
-  beltGapSlots,
+  beltFeatureSlots,
   sceneOrbit,
 } from "./system";
 
@@ -120,29 +120,50 @@ describe("пояса мелких тел", () => {
     }
   });
 
-  it("щели Кирквуда есть только там, где до вещества дотягивается Юпитер", () => {
-    const asteroid = BELTS.find((b) => b.id === "asteroid")!;
-    expect(asteroid.gaps.length).toBeGreaterThan(0);
-    expect(BELTS.find((b) => b.id === "kuiper")!.gaps).toEqual([]);
-
-    // Щель вне пояса — это не щель: резонанс обязан попадать в вещество
-    for (const au of asteroid.gaps) {
-      expect(au, `щель ${au}`).toBeGreaterThan(asteroid.span[0]);
-      expect(au, `щель ${au}`).toBeLessThan(asteroid.span[1]);
+  it("у каждого пояса есть рисунок из резонансов, и он лежит внутри", () => {
+    for (const belt of BELTS) {
+      expect(belt.features.length, belt.id).toBeGreaterThan(0);
+      expect(belt.features.length, belt.id).toBeLessThanOrEqual(
+        BELT_FEATURE_SLOTS,
+      );
+      for (const f of belt.features) {
+        // Резонанс вне пояса ничего в нём не делает
+        expect(f.au, `${belt.id}: ${f.why}`).toBeGreaterThan(belt.span[0]);
+        expect(f.au, `${belt.id}: ${f.why}`).toBeLessThan(belt.span[1]);
+        expect(f.width, `${belt.id}: ${f.why}`).toBeGreaterThan(0);
+        expect(f.amount, `${belt.id}: ${f.why}`).not.toBe(0);
+      }
     }
   });
 
-  it("щели приходят шейдеру долями ширины пояса, пустые места — мимо", () => {
+  it("у астероидного щели, у Койпера ещё и навалы", () => {
+    const asteroid = BELTS.find((b) => b.id === "asteroid")!;
+    const kuiper = BELTS.find((b) => b.id === "kuiper")!;
+
+    // Юпитер только выметает: удерживать вещество на резонансе в главном
+    // поясе некому, и все особенности там отрицательные
+    expect(asteroid.features.every((f) => f.amount < 0)).toBe(true);
+    // У Нептуна и то и другое: 2:3 держит плутино, 40–42 выметена начисто
+    expect(kuiper.features.some((f) => f.amount > 0)).toBe(true);
+    expect(kuiper.features.some((f) => f.amount < 0)).toBe(true);
+  });
+
+  it("особенности приходят шейдеру долями ширины пояса, пустые места — нулём", () => {
     for (const belt of BELTS) {
-      const slots = beltGapSlots(belt);
-      expect(slots, belt.id).toHaveLength(BELT_GAP_SLOTS);
-      slots.forEach((u, i) => {
-        if (i < belt.gaps.length) {
+      const { at, width, amount } = beltFeatureSlots(belt);
+      for (const slot of [at, width, amount]) {
+        expect(slot, belt.id).toHaveLength(BELT_FEATURE_SLOTS);
+      }
+      at.forEach((u, i) => {
+        expect(width[i], `${belt.id} ${i}`).toBeGreaterThan(0);
+        if (i < belt.features.length) {
           expect(u, `${belt.id} ${i}`).toBeGreaterThan(0);
           expect(u, `${belt.id} ${i}`).toBeLessThan(1);
+          // Щель уже пояса, иначе она его не щель, а край
+          expect(width[i], `${belt.id} ${i}`).toBeLessThan(0.5);
         } else {
-          // Колокол щели в этом месте уже неотличим от нуля
-          expect(u, `${belt.id} ${i}`).toBeLessThan(0);
+          // Колокол в пустом месте считается, но ни на что не влияет
+          expect(amount[i], `${belt.id} ${i}`).toBe(0);
         }
       });
     }
