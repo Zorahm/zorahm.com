@@ -101,6 +101,8 @@ export type UiStrings = {
   space: SpaceStrings;
   /** Страница /space-3d */
   space3d: Space3DStrings;
+  /** Страница /gargantua */
+  gargantua: GargantuaStrings;
   /** Страница /spirit */
   spirit: SpiritStrings;
 };
@@ -227,6 +229,46 @@ export type Space3DStrings = {
     note: string;
   };
   /** Экран отказа, когда WebGL недоступен */
+  error: string;
+};
+
+/**
+ * Strings of the /gargantua page.
+ *
+ * The page borrows the instrument-panel interface of /space-3d — frame rate,
+ * parameter sliders, hot keys — but there is only one object in the scene
+ * and nothing to select, so the set of strings is shorter by everything that
+ * had to do with picking a body.
+ */
+export type GargantuaStrings = {
+  title: string;
+  description: string;
+  /** The line under the mark: what this page is */
+  subtitle: string;
+  /** Heading of the parameter panel */
+  panel: string;
+  /** Slider labels */
+  params: {
+    steps: string;
+    bright: string;
+    spin: string;
+    lens: string;
+    glow: string;
+  };
+  autoOrbit: string;
+  reset: string;
+  /** Pointer hint */
+  hint: string;
+  /** What the H, R, Space and F keys do */
+  keys: {
+    hide: string;
+    reset: string;
+    auto: string;
+    fullscreen: string;
+  };
+  /** Footnote under the panel: what in the picture is physics and what is not */
+  note: string;
+  /** The screen shown when WebGL is unavailable */
   error: string;
 };
 

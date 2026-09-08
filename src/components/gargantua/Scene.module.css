@@ -1,0 +1,32 @@
+/* The canvas fills the window: the page above it does not scroll, so a
+   pointer event lands where it looks like it lands */
+.canvas {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100dvh;
+  cursor: grab;
+  /* Browser gestures are off: the wheel and the pinch belong to the scene */
+  touch-action: none;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+/* The failure screen takes the place of the scene: without WebGL there is
+   nothing to show */
+.error {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  max-width: 46ch;
+  margin: 0 auto;
+  text-align: center;
+  color: #7c8899;
+  font-size: 14px;
+  line-height: 1.7;
+}

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Unbounded } from "next/font/google";
 import {
   SITE_URL,
+  gargantuaPath,
   getUi,
   langPath,
   space3dPath,
@@ -144,6 +145,27 @@ export function buildSpace3DMetadata(lang: Lang): Metadata {
     space3d.title,
     space3d.description,
   );
+}
+
+/**
+ * Metadata of the /gargantua page.
+ *
+ * The page is not published yet: it is missing from the sitemap and from
+ * llms.txt, and nothing on the site links to it. Until it is, the crawlers
+ * are told to leave it alone — an unfinished page that got indexed is far
+ * more work to take back than to keep out.
+ */
+export function buildGargantuaMetadata(lang: Lang): Metadata {
+  const { gargantua } = getUi(lang);
+  return {
+    ...buildPageMetadata(
+      lang,
+      gargantuaPath,
+      gargantua.title,
+      gargantua.description,
+    ),
+    robots: { index: false, follow: false },
+  };
 }
 
 /** Метаданные страницы /spirit */

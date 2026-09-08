@@ -81,6 +81,32 @@ export const enUi: UiStrings = {
     error:
       "WebGL is not available in this browser. Enable hardware acceleration and reload.",
   },
+  gargantua: {
+    title: "Gargantua",
+    description:
+      "An interactive black hole: every ray is integrated along a geodesic of the Schwarzschild metric, so the ring of light, the disk folded over the hole and the bent sky all come out of one equation.",
+    subtitle: "Schwarzschild geodesic ray-tracer",
+    panel: "Parameters",
+    params: {
+      steps: "Quality",
+      bright: "Disk brightness",
+      spin: "Disk rotation",
+      lens: "Lensing",
+      glow: "Glow",
+    },
+    autoOrbit: "Auto-orbit",
+    reset: "Reset",
+    hint: "Drag to orbit · Scroll to zoom",
+    keys: {
+      hide: "interface",
+      reset: "reset",
+      auto: "auto-orbit",
+      fullscreen: "fullscreen",
+    },
+    note: "The geometry is honest: the light is bent by the Schwarzschild metric, and the disk is beamed and reddened by its own orbital speed. The gas is not — nobody simulates it, it is noise that flows the way Kepler says it should.",
+    error:
+      "WebGL is not available in this browser. Enable hardware acceleration and reload.",
+  },
   spirit: {
     title: "Spirit",
     description:

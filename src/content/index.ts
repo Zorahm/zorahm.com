@@ -61,6 +61,10 @@ export const spacePath = (lang: Lang) =>
 export const space3dPath = (lang: Lang) =>
   lang === "en" ? "/space-3d" : `/${lang}/space-3d`;
 
+/** Path to the black hole. Not linked from anywhere yet — see the page */
+export const gargantuaPath = (lang: Lang) =>
+  lang === "en" ? "/gargantua" : `/${lang}/gargantua`;
+
 /** Путь к записке о 23 августа 2026 */
 export const spiritPath = (lang: Lang) =>
   lang === "en" ? "/spirit" : `/${lang}/spirit`;
