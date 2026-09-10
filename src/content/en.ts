@@ -17,6 +17,12 @@ export const enUi: UiStrings = {
   siteDescription:
     "I work with artificial intelligence: I build systems, take models apart, and write about how all of it reshapes the world around us.",
   switchLanguage: "Переключиться на русский",
+  motionDisclaimer: {
+    eyebrow: "Before you continue",
+    title: "This site moves",
+    body: "ZorahM is built from halftone dot fields that keep drifting and pulsing across the screen. That can strain the eyes, and it may be worse if you have photosensitive epilepsy, vestibular disorders, or motion sensitivity. If that's you, it's best to leave now — or skip the site altogether if you already know.",
+    accept: "Understood, continue",
+  },
   notFound: {
     eyebrow: "Error 404 — signal lost",
     title: "Page not found",

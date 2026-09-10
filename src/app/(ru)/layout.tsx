@@ -1,4 +1,5 @@
 import "../globals.css";
+import { MotionDisclaimer } from "@/components/MotionDisclaimer";
 import { buildMetadata, fontClassName, viewport } from "../shared";
 
 export const metadata = buildMetadata("ru");
@@ -11,7 +12,10 @@ export default function RuLayout({
 }) {
   return (
     <html lang="ru" className={fontClassName}>
-      <body>{children}</body>
+      <body>
+        <MotionDisclaimer lang="ru" />
+        {children}
+      </body>
     </html>
   );
 }

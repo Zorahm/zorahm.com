@@ -1,4 +1,5 @@
 import "../globals.css";
+import { MotionDisclaimer } from "@/components/MotionDisclaimer";
 import { buildMetadata, fontClassName, viewport } from "../shared";
 
 export const metadata = buildMetadata("en");
@@ -11,7 +12,10 @@ export default function EnLayout({
 }) {
   return (
     <html lang="en" className={fontClassName}>
-      <body>{children}</body>
+      <body>
+        <MotionDisclaimer lang="en" />
+        {children}
+      </body>
     </html>
   );
 }

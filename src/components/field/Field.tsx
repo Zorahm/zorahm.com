@@ -2,6 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { FRAME_STRUCTURE } from "@/content";
+import { useMotionAck } from "@/lib/motionAck";
 import { Halftone, type FieldFrame } from "./Halftone";
 import styles from "./Field.module.css";
 
@@ -11,12 +12,18 @@ import styles from "./Field.module.css";
  *
  * По умолчанию показывает ленту главной страницы; служебные страницы передают
  * свой набор фигур.
+ *
+ * Не рендерится, пока не принят дисклеймер о движении: до согласия сцена
+ * не должна крутиться даже за непрозрачным экраном поверх неё.
  */
 export default function Field({
   frames = FRAME_STRUCTURE,
 }: {
   frames?: readonly FieldFrame[];
 }) {
+  const acknowledged = useMotionAck();
+  if (!acknowledged) return null;
+
   return (
     <>
       <div className={styles.field} aria-hidden="true">

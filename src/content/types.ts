@@ -77,6 +77,14 @@ export type ScreenText = {
   status: string;
 };
 
+/** Предупреждение о движущемся поле точек, один раз при первом визите */
+export type MotionDisclaimerStrings = {
+  eyebrow: string;
+  title: string;
+  body: string;
+  accept: string;
+};
+
 /** Строки интерфейса вне кадров */
 export type UiStrings = {
   /** Название языка в переключателе */
@@ -89,6 +97,8 @@ export type UiStrings = {
   siteTitle: string;
   /** Подпись ссылки на другой язык для скринридеров */
   switchLanguage: string;
+  /** Предупреждение о движении, показанное до согласия из localStorage */
+  motionDisclaimer: MotionDisclaimerStrings;
   /** Страница 404 */
   notFound: ScreenText;
   /** Она же после того, как нашли маскота */
