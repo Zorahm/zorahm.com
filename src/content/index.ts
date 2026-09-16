@@ -14,6 +14,7 @@ export {
   SPIRIT_SOURCES,
   SPIRIT_DAY,
   SPIRIT_MATCH_COUNT,
+  SPIRIT_TEAM,
 } from "./spirit";
 
 const TEXTS = { en: enFrames, ru: ruFrames } as const;
@@ -47,6 +48,31 @@ export function getSpiritMatches(lang: Lang): SpiritMatch[] {
     ...texts[structure.id],
   }));
 }
+
+/** Intl locale behind each site language: British day-month order for English */
+const LOCALE: Record<Lang, string> = { en: "en-GB", ru: "ru-RU" };
+
+/**
+ * An ISO day in words: "6 September", "6 сентября". Formatted rather than
+ * translated, so a dictionary cannot drift from the date in the structure.
+ * UTC on purpose: a date-only ISO string means midnight UTC, and formatting it
+ * in any zone west of that would show the day before.
+ */
+export const formatDay = (iso: string, lang: Lang) =>
+  new Intl.DateTimeFormat(LOCALE[lang], {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(iso));
+
+/** Days between two ISO days as a signed count: "+14 days", "+14 дней" */
+export const formatDaysAfter = (from: string, to: string, lang: Lang) =>
+  new Intl.NumberFormat(LOCALE[lang], {
+    style: "unit",
+    unit: "day",
+    unitDisplay: "long",
+    signDisplay: "always",
+  }).format(Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000));
 
 export const getUi = (lang: Lang): UiStrings => UI[lang];
 

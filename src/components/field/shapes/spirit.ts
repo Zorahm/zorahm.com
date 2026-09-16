@@ -4,19 +4,19 @@ import type { Shape } from "./common";
 const TILT = 0.62;
 
 /**
- * Фигура страницы /spirit: два пути, сошедшиеся в одной точке.
+ * The /spirit figure: two paths that meet at one point.
  *
- * Вторая орбита — зеркало первой по горизонтали, поэтому пересекаются они
- * ровно на горизонтальной оси. Из этого же следует и вся анимация: точке,
- * идущей по первой орбите, достаточно попасть на ось, чтобы встретиться со
- * своим отражением, — момент встречи не нужно ни считать, ни подгонять
- * фазами.
+ * The second orbit mirrors the first across the horizontal axis, so the two
+ * cross exactly on that axis. The whole animation follows from it: a point
+ * running along the first orbit only has to reach the axis to meet its own
+ * reflection — the moment of meeting needs neither computing nor phase tuning.
  *
- * Ось выбрана горизонтальной не из красоты: записка лежит узкой колонкой по
- * центру, и узлы на вертикальной оси уходили бы прямо под текст.
+ * The axis is horizontal for the page's sake: the note reads left to right,
+ * its trophies strung along a date line, and the figure lies the same way
+ * instead of cutting across it.
  *
- * Ничего заимствованного здесь нет: ни знаков, ни эмблем, ни кубков. Только
- * те же точки, из которых собран весь сайт.
+ * Nothing here is borrowed: no marks, no emblems, no trophies. Only the same
+ * dots the rest of the site is made of.
  */
 export const spirit: Shape = {
   id: "spirit",

@@ -4,8 +4,11 @@ import {
   LANGS,
   SPACE_STRUCTURE,
   SPIRIT_CITY_TITLE,
+  SPIRIT_DAY,
   SPIRIT_SOURCES,
   SPIRIT_STRUCTURE,
+  formatDay,
+  formatDaysAfter,
   getBodies,
   getContacts,
   getFrames,
@@ -193,9 +196,27 @@ describe("титулы страницы /spirit", () => {
     expect(won).toBeGreaterThan(lost);
     expect(past.source).toMatch(/^https:\/\//);
 
-    // Совпадение теряет смысл, если это тот же турнир, что и в тот день
-    const sameDay = SPIRIT_STRUCTURE.map((m) => m.event);
-    expect(sameDay).not.toContain(past.event);
+    // The coincidence means nothing if the earlier title is already on the page
+    const onPage = SPIRIT_STRUCTURE.map((m) => m.event);
+    expect(onPage).not.toContain(past.event);
+  });
+
+  it("titles run in date order and start on the day of the note", () => {
+    const dates = SPIRIT_STRUCTURE.map((m) => m.date);
+    for (const date of dates) {
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(Number.isNaN(Date.parse(date)), date).toBe(false);
+    }
+    expect(dates[0]).toBe(SPIRIT_DAY);
+    // ISO days sort as plain strings, so a sorted copy must keep the order
+    expect([...dates].sort()).toEqual(dates);
+  });
+
+  it("dates and gaps between them are written out in words", () => {
+    expect(formatDay("2026-08-23", "en")).toBe("23 August");
+    expect(formatDay("2026-08-23", "ru")).toBe("23 августа");
+    expect(formatDaysAfter("2026-08-23", "2026-09-06", "en")).toBe("+14 days");
+    expect(formatDaysAfter("2026-08-23", "2026-09-06", "ru")).toBe("+14 дней");
   });
 
   it("ссылки на источники ведут наружу по https", () => {

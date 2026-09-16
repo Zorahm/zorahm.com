@@ -116,7 +116,7 @@ export const enUi: UiStrings = {
   spirit: {
     title: "Spirit",
     description:
-      "On 23 August 2026 Team Spirit took The International in Dota 2 and the Esports World Cup in CS2 on the same day. A fan's note.",
+      "On 23 August 2026 Team Spirit took The International in Dota 2 and the Esports World Cup in CS2 on the same day — and two weeks later their CS2 roster lifted the BLAST Open Porto trophy as well. A fan's note.",
     date: "23 August 2026",
     eyebrow: "A fan's note",
     heading: "One day, two titles",
@@ -124,6 +124,7 @@ export const enUi: UiStrings = {
       "Shanghai and Paris keep different hours, and on most days that means nothing. On the twenty-third of August it meant this: two stages, two best-of-five grand finals, one organisation — and both series ended the same way.",
       "There is not much left to analyse; it is all in the tables by now. I am writing it down while I still remember how it went.",
     ],
+    runLabel: "Two weeks, three trophies",
     scoreWord: "Series",
     rosterWord: "Roster",
     coachWord: "Coach",
@@ -165,9 +166,15 @@ export const enUi: UiStrings = {
       "I have supported them long enough to know it is never calm: a fifth map, a dropped opener, a scoreline that stays level until the very end. Today it happened twice in a row, in two different games, on two different continents.",
       "Days like this usually leave one line in a record list. I wanted to keep something else as well — so here is this page.",
     ],
+    psLabel: "P.S. Two weeks later",
+    ps: [
+      "The CS2 roster did not stop at Paris. Two weeks later came BLAST Open Porto: the groups in Copenhagen, the playoffs at the Super Bock Arena — and one more trophy.",
+      "The final was against MOUZ, the team that had beaten them in the BLAST Bounty final at the start of August. This time it went the other way: Dust2 13:8, Mirage lost 11:13, then Ancient 13:3 and Nuke 13:6.",
+      "Across the whole event Spirit did not lose a single series and dropped only that one map. donk was named MVP — for the second tournament running.",
+    ],
     sourcesLabel: "Where the numbers come from",
     disclaimer:
-      "A personal fan page. Not affiliated with Team Spirit, Valve, the Esports World Cup, or any tournament organiser. Team and tournament names appear only to name what this is about; there are no logos, emblems, or event photographs here — all artwork is my own.",
+      "A personal fan page. Not affiliated with Team Spirit, Valve, the Esports World Cup, BLAST, or any tournament organiser. Team and tournament names appear only to name what this is about; there are no logos, emblems, or event photographs here — all artwork is my own.",
     home: "Home",
   },
 };
@@ -385,5 +392,10 @@ export const enSpiritMatches: Record<SpiritMatchId, SpiritMatchText> = {
     venue: "Paris",
     prize: "The Esports World Cup trophy",
     line: "FUT took the opening map; the next three all went to Spirit.",
+  },
+  porto: {
+    venue: "Porto, Super Bock Arena",
+    prize: "The BLAST Open Porto trophy",
+    line: "A rematch of the BLAST Bounty final a month earlier — this time the trophy stayed with Spirit.",
   },
 };

@@ -2,24 +2,39 @@
   position: relative;
   z-index: 3;
   min-height: 100dvh;
-  padding: clamp(96px, 16vh, 190px) var(--pad) clamp(72px, 12vh, 140px);
+  padding: clamp(88px, 14vh, 160px) var(--pad) clamp(64px, 10vh, 120px);
   display: flex;
   justify-content: center;
 }
 
 /*
- * Записка лежит одной колонкой поверх поля. Подложка полупрозрачная и с
- * размытием: точки должны читаться сквозь текст, но не мешать читать текст.
+ * The sheet spans the page, so a fixed mark and language switch would ride
+ * over its text while scrolling. Here they stay at the top and scroll away.
+ * The element in the selector outweighs the shared .hud rule whatever order
+ * the stylesheets load in.
  */
-.note {
+a.hudTop,
+nav.hudTop {
+  position: absolute;
+}
+
+/*
+ * One wide sheet over the field instead of a narrow card. The ground is
+ * translucent and blurred so the dots read through without getting in the way
+ * of the text, and a single backdrop filter for the whole page keeps the cost
+ * flat however many bands the sheet grows.
+ */
+.sheet {
+  --cell: clamp(20px, 2.6vw, 40px);
+
   position: relative;
   width: 100%;
-  max-width: 72ch;
-  padding: clamp(28px, 5vw, 56px);
+  max-width: 1480px;
   border: 1px solid var(--line);
-  background: rgba(3, 5, 10, 0.72);
+  background: rgba(3, 5, 10, 0.74);
   -webkit-backdrop-filter: blur(10px) brightness(0.6);
   backdrop-filter: blur(10px) brightness(0.6);
+  counter-reset: part;
   animation: appear 0.7s ease both;
 }
 
@@ -30,16 +45,34 @@
   }
 }
 
+/* Every row below the masthead is a band of the same hairline grid */
+.band {
+  padding: var(--cell);
+  border-top: 1px solid var(--line);
+}
+
+/* A band split into a narrow heading column and a wide text column */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
+  gap: var(--cell) calc(var(--cell) * 1.5);
+}
+
+/* Masthead: the title takes the wide column, the lead stands beside it */
 .head {
-  border-bottom: 1px solid var(--line);
-  padding-bottom: clamp(24px, 4vw, 38px);
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--cell) calc(var(--cell) * 2);
+  align-items: end;
+  padding: calc(var(--cell) * 1.6) var(--cell) calc(var(--cell) * 1.2);
 }
 
 .eyebrow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  margin: 0 0 18px;
+  gap: 8px 14px;
+  margin: 0 0 clamp(20px, 2.6vw, 34px);
   font-size: 11px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -54,52 +87,162 @@
   opacity: 0.6;
 }
 
-.date {
-  display: block;
-  font-size: 12px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+.eyebrow time {
   color: var(--dim);
-  margin-bottom: 14px;
 }
 
 .title {
+  margin: 0;
   font-family: var(--display);
   font-weight: 800;
-  line-height: 0.94;
-  letter-spacing: -0.035em;
-  margin: 0 0 26px;
-  font-size: clamp(2rem, 6.2vw, 4rem);
+  font-size: clamp(2.3rem, 5vw, 5.2rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
 }
 
-.lead {
-  margin: 0 0 16px;
+.lead p {
+  margin: 0 0 14px;
   color: #d8dfe8;
 }
 
-.lead:last-child {
+.lead p:last-child {
   margin-bottom: 0;
 }
 
-.muted {
+.lead p + p {
   color: var(--dim);
 }
 
-/* Два табло: рядом там, где хватает ширины, и друг под другом на телефоне */
+/* Labels are numbered by the sheet itself: move a band and it renumbers */
+.label {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0 0 var(--cell);
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.label::before {
+  counter-increment: part;
+  content: counter(part, decimal-leading-zero);
+  letter-spacing: 0.08em;
+  color: var(--dim);
+}
+
+.split > .label {
+  margin: 0;
+}
+
+/* The strip runs edge to edge, so its boards share the sheet's borders */
+.run {
+  padding-inline: 0;
+  padding-bottom: 0;
+}
+
+.run > .label {
+  margin-bottom: 0;
+  padding-inline: var(--cell);
+}
+
 .boards {
+  --rule: rgba(217, 164, 65, 0.45);
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  margin: clamp(28px, 5vw, 44px) 0;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
 }
 
 .board {
-  border: 1px solid var(--line);
-  padding: clamp(20px, 3vw, 28px);
-  background: rgba(232, 237, 244, 0.02);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 var(--cell) var(--cell);
+  border-left: 1px solid var(--line);
 }
 
-.discipline {
+.board:first-child {
+  border-left: 0;
+}
+
+/*
+ * The date line. Each stamp draws its own piece of one rule: the part before
+ * the dot reaches back to the board's edge, the part after it runs on to the
+ * next board, and together they read as a single axis.
+ */
+.stamp {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 calc(-1 * var(--cell)) clamp(16px, 2vw, 26px);
+  padding: 22px 0;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.stamp::before,
+.stamp::after {
+  content: "";
+  height: 1px;
+  background: var(--rule);
+}
+
+/* Together with the gap it puts the dot right on the board's text edge */
+.stamp::before {
+  flex: none;
+  width: calc(var(--cell) - 12px);
+}
+
+.stamp::after {
+  flex: 1;
+  min-width: 12px;
+}
+
+.board:first-child .stamp::before {
+  background: none;
+}
+
+.board:last-child .stamp::after {
+  background: linear-gradient(90deg, var(--rule), transparent);
+}
+
+/* A title from a later day: the rule turns to dashes across the gap */
+.later .stamp::before,
+.board:has(+ .later) .stamp::after {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--rule) 0 5px,
+    transparent 5px 11px
+  );
+}
+
+.dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 4px rgba(217, 164, 65, 0.16);
+}
+
+.gap {
+  color: var(--dim);
+  letter-spacing: 0.12em;
+}
+
+.event {
   margin: 0 0 4px;
   font-size: 11px;
   letter-spacing: 0.2em;
@@ -108,49 +251,75 @@
 }
 
 .venue {
-  margin: 0 0 22px;
+  margin: 0 0 clamp(18px, 2.4vw, 30px);
   font-size: 12px;
   color: var(--dim);
 }
 
-/* Счёт: столбиком, чтобы длинные названия команд не ломали строку */
+/*
+ * Scoreboard: the digits spread across the board with each side's name under
+ * its own number. The markup keeps the spoken order — team, score, opponent —
+ * and only the grid moves the names below.
+ */
 .score {
   display: grid;
-  gap: 6px;
-  margin: 0 0 10px;
-  text-align: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "digits digits"
+    "home away";
+  gap: 8px 16px;
+  margin: 0 0 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
 }
 
-.side {
-  font-size: 12px;
+.home,
+.away {
+  font-size: 11px;
+  line-height: 1.4;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.home {
+  grid-area: home;
+  color: var(--ink);
+}
+
+.away {
+  grid-area: away;
+  text-align: right;
   color: var(--dim);
 }
 
 .digits {
+  grid-area: digits;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   font-family: var(--display);
   font-weight: 800;
-  font-size: clamp(2.4rem, 8vw, 3.4rem);
-  line-height: 1;
-  letter-spacing: -0.04em;
+  font-size: clamp(3.4rem, 6vw, 5.6rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
   color: var(--dim);
 }
 
-.digits span {
-  margin: 0 0.14em;
-  color: var(--line);
-}
-
-/* Выигранная сторона — золотом; вторая цифра остаётся приглушённой */
+/* The side that won is gold; the other number stays dim */
 .won {
   font-style: normal;
   color: var(--gold);
 }
 
+.colon {
+  align-self: center;
+  font-size: 0.5em;
+  color: rgba(232, 237, 244, 0.22);
+}
+
 .format {
-  margin: 0 0 20px;
-  text-align: center;
+  margin: 0 0 18px;
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -158,11 +327,12 @@
 }
 
 .prize {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   font-family: var(--display);
   font-weight: 500;
-  letter-spacing: -0.02em;
   font-size: 1.05rem;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 
@@ -172,35 +342,38 @@
   color: #cfd7e1;
 }
 
+/* Pushed to the bottom so rosters line up across boards of uneven text */
 .roster {
-  margin: 0 0 20px;
   display: grid;
   gap: 10px;
-  border-top: 1px solid var(--line);
+  margin: auto 0 20px;
   padding-top: 16px;
+  border-top: 1px solid var(--line);
 }
 
 .roster div {
   display: grid;
-  grid-template-columns: 7em 1fr;
+  grid-template-columns: 6.5em minmax(0, 1fr);
   gap: 12px;
 }
 
 .roster dt {
+  padding-top: 2px;
   font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--dim);
-  padding-top: 2px;
 }
 
 .roster dd {
   margin: 0;
   font-size: 14px;
   color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 .source {
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -228,54 +401,82 @@
   border-color: var(--gold);
 }
 
-.block {
-  margin: clamp(32px, 5vw, 48px) 0 0;
-}
-
-.blockTitle {
-  margin: 0 0 20px;
-  font-size: 11px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--gold);
-  font-weight: 400;
-  font-family: var(--mono);
-}
-
-/* Хронология: подпись места слева, событие справа */
+/* The day as a row: one rule with a dot per step, the place above the words */
 .timeline {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 20px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  column-gap: var(--cell);
 }
 
 .timeline li {
-  display: grid;
-  grid-template-columns: 8.5em 1fr;
-  gap: 16px;
-  border-left: 1px solid var(--line);
-  padding-left: 18px;
+  position: relative;
+  padding-top: 26px;
 }
 
-.timeline p {
-  margin: 0;
-  color: #d8dfe8;
+.timeline li::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: calc(-1 * var(--cell));
+  height: 1px;
+  background: var(--line);
+}
+
+.timeline li:last-child::before {
+  right: 0;
+  background: linear-gradient(90deg, var(--line), transparent);
+}
+
+.timeline li::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  background: var(--void);
 }
 
 .mark {
+  display: block;
+  margin-bottom: 8px;
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--dim);
-  padding-top: 4px;
 }
 
-/* Отступление в сторону: то же поле записки, но с золотой линейкой слева */
-.city {
-  border-left: 1px solid var(--gold);
-  padding: 4px 0 4px 22px;
+.timeline p {
+  margin: 0;
+  font-size: 14px;
+  color: #d8dfe8;
+}
+
+/* Two cells side by side: the aside about Shanghai and the records */
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border-top: 1px solid var(--line);
+}
+
+.pair > * {
+  padding: var(--cell);
+}
+
+.pair > * + * {
+  border-left: 1px solid var(--line);
+}
+
+.body {
+  margin: 0 0 16px;
+  color: #d8dfe8;
 }
 
 .cityScore {
@@ -325,27 +526,57 @@
   opacity: 0.75;
 }
 
-.body {
-  margin: 0 0 16px;
+/* Paragraphs side by side instead of one under another */
+.columns {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: calc(var(--cell) * 1.2);
+}
+
+.columns p {
+  margin: 0;
   color: #d8dfe8;
 }
 
-.body:last-child {
-  margin-bottom: 0;
+/*
+ * The postscript was written after the note, so it is set apart from it: a
+ * gold edge, a warm wash and a heading in the display face.
+ */
+.ps {
+  background: linear-gradient(90deg, rgba(217, 164, 65, 0.08), transparent 60%);
+  box-shadow: inset 2px 0 0 var(--gold);
+}
+
+.psTitle {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(1.4rem, 2.2vw, 2.1rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-wrap: balance;
 }
 
 .foot {
-  margin-top: clamp(40px, 6vw, 60px);
-  border-top: 1px solid var(--line);
-  padding-top: clamp(28px, 4vw, 40px);
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--cell) calc(var(--cell) * 2);
+  align-items: end;
 }
 
 .sources {
-  margin: 0 0 26px;
+  margin: 0;
   padding: 0;
   list-style: none;
-  display: grid;
-  gap: 10px;
+  columns: 2 260px;
+  column-gap: var(--cell);
+}
+
+.sources li {
+  break-inside: avoid;
+  padding-bottom: 10px;
 }
 
 .sources a {
@@ -373,13 +604,13 @@
   display: inline-flex;
   align-items: baseline;
   gap: 14px;
-  margin-top: 32px;
+  margin-top: 28px;
   text-decoration: none;
   font-family: var(--display);
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--ink);
-  font-size: clamp(1.2rem, 3.2vw, 1.9rem);
+  font-size: clamp(1.2rem, 2.4vw, 1.9rem);
   border-bottom: 1px solid var(--line);
   padding-bottom: 8px;
   transition:
@@ -410,16 +641,83 @@
   outline-offset: 6px;
 }
 
-@media (max-width: 520px) {
-  .roster div,
+@media (max-width: 1100px) {
+  /* Three boards no longer fit side by side: the strip scrolls sideways */
+  .boards {
+    grid-auto-columns: min(420px, 84%);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+
+  .board {
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 900px) {
+  .head,
+  .split,
+  .foot,
+  .pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .head {
+    align-items: start;
+  }
+
+  .pair > * + * {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .columns {
+    grid-auto-flow: row;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  /* Four steps in a row get too narrow: the day turns back into a column */
+  .timeline {
+    grid-auto-flow: row;
+    row-gap: 22px;
+  }
+
   .timeline li {
-    grid-template-columns: 1fr;
-    gap: 4px;
+    padding: 0 0 0 26px;
+  }
+
+  .timeline li::before {
+    top: 16px;
+    bottom: -28px;
+    left: 4px;
+    right: auto;
+    width: 1px;
+    height: auto;
+  }
+
+  .timeline li:last-child::before {
+    display: none;
+  }
+
+  .timeline li::after {
+    top: 6px;
+  }
+}
+
+@media (max-width: 520px) {
+  .roster div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .note {
+  .sheet {
     animation: none;
   }
 }

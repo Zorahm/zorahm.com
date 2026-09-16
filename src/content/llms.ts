@@ -9,7 +9,7 @@ import {
   spacePath,
   spiritPath,
 } from "./index";
-import { SPIRIT_CITY_TITLE, SPIRIT_DAY } from "./spirit";
+import { SPIRIT_CITY_TITLE, SPIRIT_DAY, SPIRIT_TEAM } from "./spirit";
 import { LANGS, SITE_URL, type Lang } from "./types";
 
 const absolute = (lang: Lang) => new URL(langPath(lang), SITE_URL).toString();
@@ -46,8 +46,9 @@ export function buildLlmsTxt(): string {
       "each pairing a short text with a halftone figure rendered in WebGL, plus " +
       "an interactive solar system at /space where every body can be opened and " +
       "read about, the same system ray-traced in 3D at /space-3d, and a fan's " +
-      "note at /spirit about the day Team Spirit won two world titles. Available " +
-      "in English and Russian; the full text of both versions is included below.",
+      "note at /spirit about the day Team Spirit won two world titles and the " +
+      "trophy that followed two weeks later. Available in English and Russian; " +
+      "the full text of both versions is included below.",
   );
   lines.push("");
   lines.push("Crawling and indexing by AI agents is allowed.");
@@ -137,8 +138,8 @@ export function buildLlmsTxt(): string {
       lines.push(`#### ${match.discipline} — ${match.event}`);
       lines.push("");
       lines.push(
-        `Team Spirit ${match.score[0]}:${match.score[1]} ${match.opponent} ` +
-          `(${match.format}) — ${match.venue}`,
+        `${SPIRIT_TEAM} ${match.score[0]}:${match.score[1]} ${match.opponent} ` +
+          `(${match.format}) — ${match.venue}, ${match.date}`,
       );
       lines.push("");
       lines.push(`${match.prize}. ${match.line}`);
@@ -163,7 +164,7 @@ export function buildLlmsTxt(): string {
     }
     lines.push(
       `${SPIRIT_CITY_TITLE.discipline} — ${SPIRIT_CITY_TITLE.event}: ` +
-        `Team Spirit ${SPIRIT_CITY_TITLE.score[0]}:${SPIRIT_CITY_TITLE.score[1]} ` +
+        `${SPIRIT_TEAM} ${SPIRIT_CITY_TITLE.score[0]}:${SPIRIT_CITY_TITLE.score[1]} ` +
         `${SPIRIT_CITY_TITLE.opponent} · ${SPIRIT_CITY_TITLE.source}`,
     );
     lines.push("");
@@ -173,6 +174,12 @@ export function buildLlmsTxt(): string {
     }
     lines.push("");
     for (const paragraph of spirit.note) {
+      lines.push(paragraph);
+      lines.push("");
+    }
+    lines.push(`#### ${spirit.psLabel}`);
+    lines.push("");
+    for (const paragraph of spirit.ps) {
       lines.push(paragraph);
       lines.push("");
     }

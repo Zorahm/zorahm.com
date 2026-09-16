@@ -282,8 +282,8 @@ export type GargantuaStrings = {
   error: string;
 };
 
-/** Титулы на странице /spirit. Порядок — как шли финалы в тот день. */
-export type SpiritMatchId = "dota" | "cs";
+/** Titles on the /spirit page, in the order their finals ended */
+export type SpiritMatchId = "dota" | "cs" | "porto";
 
 /**
  * Неязыковая часть титула.
@@ -294,6 +294,8 @@ export type SpiritMatchId = "dota" | "cs";
  */
 export type SpiritMatchStructure = {
   id: SpiritMatchId;
+  /** Day of the grand final, ISO — the page formats it for each language */
+  date: string;
   /** Дисциплина так, как её пишут в таблице */
   discipline: string;
   event: string;
@@ -350,6 +352,8 @@ export type SpiritStrings = {
   heading: string;
   /** Вводные абзацы записки */
   lead: string[];
+  /** Label over the strip of trophies */
+  runLabel: string;
   /** Подписи внутри табло */
   scoreWord: string;
   rosterWord: string;
@@ -368,6 +372,9 @@ export type SpiritStrings = {
   /** Личная часть записки */
   noteLabel: string;
   note: string[];
+  /** Postscript about what followed the day: heading and paragraphs */
+  psLabel: string;
+  ps: string[];
   /** Ссылки и оговорка под ними */
   sourcesLabel: string;
   /** Чего на странице нет и почему */
