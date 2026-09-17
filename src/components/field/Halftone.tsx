@@ -34,15 +34,28 @@ export type FieldFrame = {
   accent: number;
 };
 
-export function Halftone({ frames }: { frames: readonly FieldFrame[] }) {
+export function Halftone({
+  frames,
+  still = false,
+}: {
+  frames: readonly FieldFrame[];
+  /**
+   * Hold the dots in place, as reduced motion does. The canvas is then
+   * expected to draw on demand, so the field asks for frames only while the
+   * scene is still appearing.
+   */
+  still?: boolean;
+}) {
   const gl = useThree((s) => s.gl);
   const size = useThree((s) => s.size);
+  const invalidate = useThree((s) => s.invalidate);
 
   const reduce = useMemo(
     () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    [],
+      still ||
+      (typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches),
+    [still],
   );
 
   const gridRef = useRef<Grid>(computeGrid(size.width, size.height));
@@ -222,12 +235,14 @@ export function Halftone({ frames }: { frames: readonly FieldFrame[] }) {
         });
         pass.bakeTexture.needsUpdate = true;
       });
+      // A canvas drawing on demand would otherwise keep the old bake on screen
+      invalidate();
     };
 
     rebake();
     // Знак Z\M запекается шрифтом: до загрузки шрифта глиф был бы чужим
     document.fonts?.ready.then(rebake).catch(() => {});
-  }, [size.width, size.height, targets, passes, points, reduce, frames]);
+  }, [size.width, size.height, targets, passes, points, reduce, frames, invalidate]);
 
   useEffect(() => {
     const currentTargets = targets;
@@ -301,6 +316,9 @@ export function Halftone({ frames }: { frames: readonly FieldFrame[] }) {
     u.uTime.value = time;
     u.uPointer.value.set(scrollState.pointerX, pointerFieldY);
     u.uPointerActive.value = scrollState.pointerActive ? 1 : 0;
+
+    // On demand, the frames of the appearance have to be asked for one by one
+    if (still && scrollState.intro < 1) invalidate();
   });
 
   return <primitive object={points.mesh} />;
