@@ -1,0 +1,707 @@
+.main {
+  --cell: clamp(20px, 2.2vw, 34px);
+  --gap: clamp(14px, 1.8vw, 28px);
+  --top: clamp(88px, 13vh, 140px);
+
+  position: relative;
+  z-index: 3;
+  padding: var(--top) var(--pad) clamp(48px, 8vh, 96px);
+  counter-reset: part;
+}
+
+.main > * {
+  max-width: 1480px;
+  margin-inline: auto;
+}
+
+/* The mark and language switch scroll away with the page, as on /spirit */
+a.hudTop,
+nav.hudTop {
+  position: absolute;
+}
+
+/*
+ * Glass: every block over the field shares one ground. It is dark enough for
+ * text, and the blur turns the dots under it into a glow instead of hiding
+ * them. The field itself only redraws while it appears, so the blur is not
+ * recomputed on every frame.
+ */
+.lead,
+.counts,
+.card,
+.rows,
+.foot {
+  border: 1px solid var(--line);
+  background: rgba(3, 5, 10, 0.62);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
+  align-content: end;
+  min-height: calc(100dvh - var(--top) - clamp(48px, 8vh, 96px));
+  animation: appear 0.7s ease backwards;
+}
+
+.eyebrow {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0 0 clamp(18px, 2.4vw, 30px);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+}
+
+/* A stamp, not a word of the heading: framed and dim */
+.draft {
+  padding: 5px 8px 4px;
+  border: 1px dashed rgba(232, 237, 244, 0.28);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  color: var(--dim);
+}
+
+.title {
+  grid-column: 1 / span 10;
+  margin: 0 0 clamp(28px, 4.4vh, 52px);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 7.2vw, 7.6rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  /* A dark halo keeps the letters clean over stray dots */
+  text-shadow: 0 0 28px rgba(3, 5, 10, 0.9);
+}
+
+.lead {
+  grid-column: 1 / span 5;
+  align-self: end;
+  padding: var(--cell);
+  box-shadow: inset 2px 0 0 var(--gold);
+}
+
+.lead p {
+  margin: 0 0 12px;
+  color: #d8dfe8;
+}
+
+.lead p:last-child {
+  margin-bottom: 0;
+}
+
+.lead p + p {
+  font-size: 13px;
+  color: var(--dim);
+}
+
+.counts {
+  grid-column: 8 / -1;
+  align-self: end;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+
+.counts div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px clamp(14px, 1.4vw, 22px);
+  border-left: 1px solid var(--line);
+}
+
+.counts div:first-child {
+  border-left: 0;
+}
+
+.counts dt {
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.counts dd {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(1.8rem, 2.8vw, 2.8rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--ink);
+}
+
+/* The first counter is the one the page is about */
+.counts div:first-child dd {
+  color: var(--gold);
+}
+
+/* ---------- Sections ---------- */
+
+.section {
+  margin-top: clamp(64px, 12vh, 140px);
+  animation: appear 0.7s 0.12s ease backwards;
+}
+
+/*
+ * Filled backwards only. An animation that keeps filling forwards stays in
+ * effect after it ends, and Chromium then cuts the blocks inside off from the
+ * field: their backdrop blur finds nothing under it and the dots show sharp.
+ */
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Labels are numbered by the page itself: move a section and it renumbers */
+.label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 var(--gap);
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-shadow: 0 0 12px var(--void), 0 0 3px var(--void);
+}
+
+.label::before {
+  counter-increment: part;
+  content: counter(part, decimal-leading-zero);
+  letter-spacing: 0.08em;
+  color: var(--dim);
+}
+
+.label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(217, 164, 65, 0.4), transparent);
+}
+
+.index {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+}
+
+.year {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+
+/* Filled dot: running; ring: being built; dim ring: only an idea */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.status i {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+}
+
+.status[data-status="live"] i {
+  background: var(--gold);
+  box-shadow: 0 0 0 3px rgba(217, 164, 65, 0.18);
+}
+
+.status[data-status="idea"] {
+  color: var(--dim);
+}
+
+.status[data-status="idea"] i {
+  border-color: var(--dim);
+}
+
+/* A link that stretches over its whole card or row */
+.stretch {
+  color: inherit;
+  text-decoration: none;
+}
+
+.stretch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- Project cards ---------- */
+
+.grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.card {
+  position: relative;
+  grid-column: span 4;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: clamp(280px, 24vw, 340px);
+  padding: var(--cell);
+  transition:
+    border-color 0.3s,
+    background-color 0.3s;
+}
+
+.featured {
+  grid-column: span 8;
+}
+
+/* Corner ticks, as on a plot frame; they close in on a linked card's hover */
+.card::before,
+.card::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 0 solid var(--gold);
+  opacity: 0.55;
+  transition:
+    opacity 0.3s,
+    width 0.3s,
+    height 0.3s;
+}
+
+.card::before {
+  top: -1px;
+  left: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.card::after {
+  right: -1px;
+  bottom: -1px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  line-height: 1;
+}
+
+.cardHead .year {
+  margin-left: auto;
+}
+
+.cardTitle {
+  margin: clamp(36px, 4.6vw, 72px) 0 12px;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 2.1vw, 2.2rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.featured .cardTitle {
+  font-size: clamp(2.1rem, 4.2vw, 4.4rem);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+
+.summary {
+  margin: 0 0 24px;
+  max-width: 52ch;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #cfd7e1;
+}
+
+.featured .summary {
+  font-size: 15px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: auto 0 0;
+  padding: 0 2.5em 0 0;
+  list-style: none;
+}
+
+.tags li {
+  padding: 6px 9px 5px;
+  border: 1px solid var(--line);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.arrow {
+  position: absolute;
+  right: var(--cell);
+  bottom: calc(var(--cell) - 2px);
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--gold);
+  transition: transform 0.3s;
+}
+
+.card:has(.stretch):hover {
+  border-color: rgba(217, 164, 65, 0.5);
+  background-color: rgba(3, 5, 10, 0.74);
+}
+
+.card:has(.stretch):hover::before,
+.card:has(.stretch):hover::after {
+  width: 22px;
+  height: 22px;
+  opacity: 1;
+}
+
+.card:hover .arrow {
+  transform: translate(3px, -3px);
+}
+
+.card:has(.stretch:focus-visible) {
+  outline: 1px solid var(--gold);
+  outline-offset: 4px;
+}
+
+/* ---------- Everything else ---------- */
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    2.6em minmax(0, 3fr) minmax(0, 5fr) minmax(0, 3fr)
+    3.2em 1.2em;
+  align-items: baseline;
+  column-gap: var(--gap);
+  padding: 20px var(--cell);
+  border-top: 1px solid var(--line);
+  transition: background-color 0.3s;
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.rowTitle {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.rowSummary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #cfd7e1;
+}
+
+.rowMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin: 0;
+}
+
+.rowTags {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+}
+
+.rowArrow {
+  font-style: normal;
+  color: var(--gold);
+  transition: transform 0.3s;
+}
+
+.row:has(.stretch):hover {
+  background-color: rgba(217, 164, 65, 0.07);
+}
+
+.row:hover .rowArrow {
+  transform: translate(3px, -3px);
+}
+
+.row:has(.stretch:focus-visible) {
+  outline: 1px solid var(--gold);
+  outline-offset: -1px;
+}
+
+/* ---------- Footer ---------- */
+
+.foot {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--cell) calc(var(--cell) * 2);
+  align-items: end;
+  padding: var(--cell);
+}
+
+.foot .label {
+  text-shadow: none;
+}
+
+.outro {
+  margin: 0 0 20px;
+  max-width: 58ch;
+  color: #d8dfe8;
+}
+
+.contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contacts a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+
+.contacts i {
+  font-style: normal;
+  color: var(--gold);
+}
+
+.contacts a:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.biglink {
+  justify-self: end;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 2.4vw, 1.9rem);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+
+.biglink i {
+  font-style: normal;
+  font-size: 0.6em;
+  color: var(--gold);
+  transition: transform 0.3s;
+}
+
+.biglink:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.biglink:hover i {
+  transform: translateX(4px);
+}
+
+.contacts a:focus-visible,
+.biglink:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 6px;
+}
+
+/* ---------- Narrower screens ---------- */
+
+@media (max-width: 1100px) {
+  .title {
+    grid-column: 1 / -1;
+  }
+
+  .lead {
+    grid-column: 1 / span 8;
+  }
+
+  .counts {
+    grid-column: 1 / -1;
+    margin-top: var(--gap);
+  }
+
+  .card {
+    grid-column: span 6;
+  }
+
+  .featured {
+    grid-column: 1 / -1;
+  }
+
+  /* The stack gives way first: the status stays, the tags move under it */
+  .row {
+    grid-template-columns: 2.6em minmax(0, 3fr) minmax(0, 4fr) minmax(0, 2fr) 3.2em 1.2em;
+  }
+
+  .rowMeta {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    min-height: calc(92dvh - var(--top));
+  }
+
+  .lead {
+    grid-column: 1 / -1;
+  }
+
+  .counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .counts div:nth-child(3) {
+    border-left: 0;
+  }
+
+  .counts div:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+
+  .card,
+  .featured {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+
+  .cardTitle {
+    margin-top: 32px;
+  }
+
+  /*
+   * A row folds into a small card: number, title and year on top, the words
+   * and the status under the title.
+   */
+  .row {
+    grid-template-columns: 2.2em minmax(0, 1fr) auto;
+    grid-template-areas:
+      "index title year"
+      ". summary summary"
+      ". meta arrow";
+    row-gap: 8px;
+  }
+
+  .row > .index {
+    grid-area: index;
+  }
+
+  .rowTitle {
+    grid-area: title;
+  }
+
+  .row > .year {
+    grid-area: year;
+  }
+
+  .rowSummary {
+    grid-area: summary;
+  }
+
+  .rowMeta {
+    grid-area: meta;
+    flex-direction: row;
+    margin-top: 4px;
+  }
+
+  .rowArrow {
+    grid-area: arrow;
+    justify-self: end;
+  }
+
+  .foot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .biglink {
+    justify-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero,
+  .section {
+    animation: none;
+  }
+
+  .card::before,
+  .card::after,
+  .arrow,
+  .rowArrow,
+  .biglink i {
+    transition: none;
+  }
+}

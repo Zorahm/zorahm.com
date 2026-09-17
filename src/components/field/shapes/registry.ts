@@ -11,6 +11,7 @@ import { mark } from "./mark";
 import { notfound } from "./notfound";
 import { waifik } from "./waifik";
 import { spirit } from "./spirit";
+import { latent } from "./latent";
 
 export const SHAPES: Record<AnyShapeId, Shape> = {
   saturn,
@@ -24,6 +25,7 @@ export const SHAPES: Record<AnyShapeId, Shape> = {
   notfound,
   waifik,
   spirit,
+  latent,
 };
 
 export type { Shape } from "./common";

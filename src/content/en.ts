@@ -1,4 +1,6 @@
 import type {
+  AiEntryId,
+  AiEntryText,
   BodyId,
   BodyText,
   FrameText,
@@ -176,6 +178,70 @@ export const enUi: UiStrings = {
     disclaimer:
       "A personal fan page. Not affiliated with Team Spirit, Valve, the Esports World Cup, BLAST, or any tournament organiser. Team and tournament names appear only to name what this is about; there are no logos, emblems, or event photographs here — all artwork is my own.",
     home: "Home",
+  },
+  ai: {
+    title: "AI",
+    description:
+      "Projects I build for artificial intelligence and around it, plus everything else on the subject.",
+    eyebrow: "AI · Index",
+    draft: "Draft",
+    heading: "AI, projects and everything else",
+    lead: [
+      "Tools, agents and experiments I build for artificial intelligence and around it — gathered in one place.",
+      "For now every entry here is a placeholder: the layout comes first, the words follow.",
+    ],
+    counts: {
+      projects: "Projects",
+      live: "Live",
+      wip: "In progress",
+      other: "Other",
+    },
+    status: {
+      live: "Live",
+      wip: "In progress",
+      idea: "Idea",
+    },
+    projectsLabel: "Projects",
+    otherLabel: "Everything else",
+    outro:
+      "Want to build something together, or have a question about one of the projects? Write to me.",
+    home: "Home",
+  },
+};
+
+export const enAiEntries: Record<AiEntryId, AiEntryText> = {
+  alpha: {
+    title: "Project Alpha",
+    summary:
+      "The lead project. Two or three lines on what it does, who it is for and which problem it takes off someone's plate — the text is a placeholder.",
+  },
+  beta: {
+    title: "Project Beta",
+    summary: "One or two lines about the project: what it is and why it exists.",
+  },
+  gamma: {
+    title: "Project Gamma",
+    summary: "A short description of the tool and the task it solves.",
+  },
+  delta: {
+    title: "Project Delta",
+    summary: "An idea on its way to a prototype: what should come out of it.",
+  },
+  epsilon: {
+    title: "Project Epsilon",
+    summary: "Work in progress: where it stands and what comes next.",
+  },
+  zeta: {
+    title: "Entry Zeta",
+    summary: "A note, a prompt or a small utility — one line is enough.",
+  },
+  eta: {
+    title: "Entry Eta",
+    summary: "An experiment that never grew into a project but is worth keeping.",
+  },
+  theta: {
+    title: "Entry Theta",
+    summary: "A talk, an article or a set of instructions for agents.",
   },
 };
 

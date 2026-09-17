@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  AI_STRUCTURE,
   FRAME_STRUCTURE,
   LANGS,
   SPACE_STRUCTURE,
@@ -8,7 +9,9 @@ import {
   SPIRIT_SOURCES,
   SPIRIT_STRUCTURE,
   formatDay,
+  aiPath,
   formatDaysAfter,
+  getAiEntries,
   getBodies,
   getContacts,
   getFrames,
@@ -225,6 +228,50 @@ describe("титулы страницы /spirit", () => {
       expect(source.label.trim()).not.toBe("");
       expect(source.href).toMatch(/^https:\/\//);
     }
+  });
+});
+
+describe("entries of the /ai page", () => {
+  it("every language has the same entries in the same order", () => {
+    const ids = AI_STRUCTURE.map((e) => e.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const lang of LANGS) {
+      expect(getAiEntries(lang).map((e) => e.id)).toEqual(ids);
+    }
+  });
+
+  it("no title or summary is lost in translation", () => {
+    for (const lang of LANGS) {
+      for (const entry of getAiEntries(lang)) {
+        expect(entry.title.trim(), `${lang}/${entry.id} title`).not.toBe("");
+        expect(entry.summary.trim(), `${lang}/${entry.id} summary`).not.toBe("");
+      }
+    }
+  });
+
+  it("both groups have entries, and exactly one project takes the wide card", () => {
+    const projects = AI_STRUCTURE.filter((e) => e.group === "projects");
+    expect(projects.length).toBeGreaterThan(0);
+    expect(AI_STRUCTURE.some((e) => e.group === "other")).toBe(true);
+    expect(AI_STRUCTURE.filter((e) => e.featured)).toHaveLength(1);
+    expect(projects.find((e) => e.featured)).toBeDefined();
+  });
+
+  it("entries carry a stack and link out over https", () => {
+    for (const entry of AI_STRUCTURE) {
+      expect(entry.tags.length, `${entry.id} tags`).toBeGreaterThan(0);
+      for (const tag of entry.tags) {
+        expect(tag.trim(), `${entry.id} tag`).not.toBe("");
+      }
+      if (entry.href !== undefined) {
+        expect(entry.href, `${entry.id} href`).toMatch(/^https:\/\//);
+      }
+    }
+  });
+
+  it("English lives at the root, Russian under /ru", () => {
+    expect(aiPath("en")).toBe("/ai");
+    expect(aiPath("ru")).toBe("/ru/ai");
   });
 });
 

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Unbounded } from "next/font/google";
 import {
   SITE_URL,
+  aiPath,
   gargantuaPath,
   getUi,
   langPath,
@@ -172,4 +173,21 @@ export function buildGargantuaMetadata(lang: Lang): Metadata {
 export function buildSpiritMetadata(lang: Lang): Metadata {
   const { spirit } = getUi(lang);
   return buildPageMetadata(lang, spiritPath, spirit.title, spirit.description);
+}
+
+/**
+ * Metadata of the /ai page.
+ *
+ * The page is not finished: every entry on it is a placeholder so far. Until
+ * it is, the crawlers are told to leave it alone, and it is missing from the
+ * sitemap and from llms.txt, with nothing on the site linking to it — an
+ * unfinished page that got indexed is far more work to take back than to
+ * keep out.
+ */
+export function buildAiMetadata(lang: Lang): Metadata {
+  const { ai } = getUi(lang);
+  return {
+    ...buildPageMetadata(lang, aiPath, ai.title, ai.description),
+    robots: { index: false, follow: false },
+  };
 }

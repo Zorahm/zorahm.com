@@ -18,7 +18,7 @@ export type ShapeId =
  * Фигуры вне ленты кадров: живут на служебных страницах и потому не требуют
  * ни текстов кадра, ни места в FRAME_STRUCTURE.
  */
-export type ExtraShapeId = "notfound" | "waifik" | "spirit";
+export type ExtraShapeId = "notfound" | "waifik" | "spirit" | "latent";
 
 export type AnyShapeId = ShapeId | ExtraShapeId;
 
@@ -115,6 +115,8 @@ export type UiStrings = {
   gargantua: GargantuaStrings;
   /** Страница /spirit */
   spirit: SpiritStrings;
+  /** The /ai page */
+  ai: AiStrings;
 };
 
 /** Тела на странице /space. Порядок — от Солнца наружу. */
@@ -379,5 +381,71 @@ export type SpiritStrings = {
   sourcesLabel: string;
   /** Чего на странице нет и почему */
   disclaimer: string;
+  home: string;
+};
+
+/** Entries of the /ai page. Placeholders for now, named after Greek letters */
+export type AiEntryId =
+  | "alpha"
+  | "beta"
+  | "gamma"
+  | "delta"
+  | "epsilon"
+  | "zeta"
+  | "eta"
+  | "theta";
+
+/** Where an entry stands: running, being built, or still an idea */
+export type AiStatus = "live" | "wip" | "idea";
+
+/**
+ * Language-independent part of an entry. The stack is written the way the
+ * tools name themselves, so it does not get translated.
+ */
+export type AiEntryStructure = {
+  id: AiEntryId;
+  /** Projects go into cards, everything else into a list under them */
+  group: "projects" | "other";
+  status: AiStatus;
+  year: number;
+  tags: string[];
+  /** Where the entry lives; without it the entry is not a link */
+  href?: string;
+  /** The one project that takes a wide card */
+  featured?: boolean;
+};
+
+/** Language part of an entry */
+export type AiEntryText = {
+  title: string;
+  /** One or two lines about what it is */
+  summary: string;
+};
+
+export type AiEntry = AiEntryStructure & AiEntryText;
+
+/** Strings of the /ai page */
+export type AiStrings = {
+  title: string;
+  description: string;
+  eyebrow: string;
+  /** Marker beside the eyebrow while the entries are placeholders */
+  draft: string;
+  heading: string;
+  /** Lead paragraphs; the second one is dimmed */
+  lead: string[];
+  /** Captions of the counters under the heading */
+  counts: {
+    projects: string;
+    live: string;
+    wip: string;
+    other: string;
+  };
+  /** Status names */
+  status: Record<AiStatus, string>;
+  projectsLabel: string;
+  otherLabel: string;
+  /** Closing line above the contacts */
+  outro: string;
   home: string;
 };

@@ -1,12 +1,21 @@
-import { enBodies, enFrames, enSpiritMatches, enUi } from "./en";
-import { ruBodies, ruFrames, ruSpiritMatches, ruUi } from "./ru";
+import { AI_STRUCTURE } from "./ai";
+import { enAiEntries, enBodies, enFrames, enSpiritMatches, enUi } from "./en";
+import { ruAiEntries, ruBodies, ruFrames, ruSpiritMatches, ruUi } from "./ru";
 import { SPACE_STRUCTURE } from "./space";
 import { SPIRIT_STRUCTURE } from "./spirit";
 import { FRAME_STRUCTURE } from "./structure";
-import type { Body, Frame, Lang, SpiritMatch, UiStrings } from "./types";
+import type {
+  AiEntry,
+  Body,
+  Frame,
+  Lang,
+  SpiritMatch,
+  UiStrings,
+} from "./types";
 
 export * from "./types";
 export { FRAME_STRUCTURE } from "./structure";
+export { AI_STRUCTURE } from "./ai";
 export { SPACE_STRUCTURE, BODY_COUNT } from "./space";
 export {
   SPIRIT_STRUCTURE,
@@ -20,6 +29,7 @@ export {
 const TEXTS = { en: enFrames, ru: ruFrames } as const;
 const BODIES = { en: enBodies, ru: ruBodies } as const;
 const SPIRIT = { en: enSpiritMatches, ru: ruSpiritMatches } as const;
+const AI = { en: enAiEntries, ru: ruAiEntries } as const;
 const UI: Record<Lang, UiStrings> = { en: enUi, ru: ruUi };
 
 /** Собирает кадры языка: композиция из структуры, тексты из словаря */
@@ -44,6 +54,15 @@ export function getBodies(lang: Lang): Body[] {
 export function getSpiritMatches(lang: Lang): SpiritMatch[] {
   const texts = SPIRIT[lang];
   return SPIRIT_STRUCTURE.map((structure) => ({
+    ...structure,
+    ...texts[structure.id],
+  }));
+}
+
+/** Entries of the /ai page: facts from the structure, words from the dictionary */
+export function getAiEntries(lang: Lang): AiEntry[] {
+  const texts = AI[lang];
+  return AI_STRUCTURE.map((structure) => ({
     ...structure,
     ...texts[structure.id],
   }));
@@ -94,6 +113,9 @@ export const gargantuaPath = (lang: Lang) =>
 /** Путь к записке о 23 августа 2026 */
 export const spiritPath = (lang: Lang) =>
   lang === "en" ? "/spirit" : `/${lang}/spirit`;
+
+/** Path to the AI projects page. Not published yet — see its metadata */
+export const aiPath = (lang: Lang) => (lang === "en" ? "/ai" : `/${lang}/ai`);
 
 export const otherLang = (lang: Lang): Lang => (lang === "en" ? "ru" : "en");
 
