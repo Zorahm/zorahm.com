@@ -148,25 +148,15 @@ export function buildSpace3DMetadata(lang: Lang): Metadata {
   );
 }
 
-/**
- * Metadata of the /gargantua page.
- *
- * The page is not published yet: it is missing from the sitemap and from
- * llms.txt, and nothing on the site links to it. Until it is, the crawlers
- * are told to leave it alone — an unfinished page that got indexed is far
- * more work to take back than to keep out.
- */
+/** Metadata of the /gargantua page */
 export function buildGargantuaMetadata(lang: Lang): Metadata {
   const { gargantua } = getUi(lang);
-  return {
-    ...buildPageMetadata(
-      lang,
-      gargantuaPath,
-      gargantua.title,
-      gargantua.description,
-    ),
-    robots: { index: false, follow: false },
-  };
+  return buildPageMetadata(
+    lang,
+    gargantuaPath,
+    gargantua.title,
+    gargantua.description,
+  );
 }
 
 /** Метаданные страницы /spirit */

@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { buildLlmsTxt } from "./llms";
-import { LANGS, SITE_URL, getFrames, getUi, langPath } from "./index";
+import {
+  LANGS,
+  SITE_URL,
+  aiPath,
+  gargantuaPath,
+  getFrames,
+  getUi,
+  langPath,
+  space3dPath,
+  spacePath,
+  spiritPath,
+} from "./index";
 
 const txt = buildLlmsTxt();
 
@@ -18,6 +29,20 @@ describe("llms.txt", () => {
   it("ссылается на обе языковые версии по абсолютным адресам", () => {
     for (const lang of LANGS) {
       expect(txt).toContain(new URL(langPath(lang), SITE_URL).toString());
+    }
+  });
+
+  it("links every published page in both languages", () => {
+    for (const path of [spacePath, space3dPath, gargantuaPath, spiritPath]) {
+      for (const lang of LANGS) {
+        expect(txt).toContain(new URL(path(lang), SITE_URL).toString());
+      }
+    }
+  });
+
+  it("keeps the unfinished /ai page out", () => {
+    for (const lang of LANGS) {
+      expect(txt).not.toContain(new URL(aiPath(lang), SITE_URL).toString());
     }
   });
 

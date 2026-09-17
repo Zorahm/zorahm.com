@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import {
   LANGS,
   SITE_URL,
+  gargantuaPath,
   langPath,
   space3dPath,
   spacePath,
@@ -23,6 +24,7 @@ const ROUTES: Route[] = [
   { path: langPath, priority: (lang) => (lang === "en" ? 1 : 0.8) },
   { path: spacePath, priority: (lang) => (lang === "en" ? 0.7 : 0.6) },
   { path: space3dPath, priority: (lang) => (lang === "en" ? 0.6 : 0.5) },
+  { path: gargantuaPath, priority: (lang) => (lang === "en" ? 0.5 : 0.4) },
   { path: spiritPath, priority: (lang) => (lang === "en" ? 0.5 : 0.4) },
 ];
 

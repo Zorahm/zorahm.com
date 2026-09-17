@@ -1,4 +1,5 @@
 import {
+  gargantuaPath,
   getBodies,
   getContacts,
   getFrames,
@@ -16,6 +17,8 @@ const absolute = (lang: Lang) => new URL(langPath(lang), SITE_URL).toString();
 const spaceUrl = (lang: Lang) => new URL(spacePath(lang), SITE_URL).toString();
 const space3dUrl = (lang: Lang) =>
   new URL(space3dPath(lang), SITE_URL).toString();
+const gargantuaUrl = (lang: Lang) =>
+  new URL(gargantuaPath(lang), SITE_URL).toString();
 const spiritUrl = (lang: Lang) => new URL(spiritPath(lang), SITE_URL).toString();
 
 const LANG_TITLE: Record<Lang, string> = {
@@ -45,7 +48,8 @@ export function buildLlmsTxt(): string {
     "Personal site of ZorahM. A single scroll-driven page told in eight frames, " +
       "each pairing a short text with a halftone figure rendered in WebGL, plus " +
       "an interactive solar system at /space where every body can be opened and " +
-      "read about, the same system ray-traced in 3D at /space-3d, and a fan's " +
+      "read about, the same system ray-traced in 3D at /space-3d, a black hole " +
+      "ray-traced along Schwarzschild geodesics at /gargantua, and a fan's " +
       "note at /spirit about the day Team Spirit won two world titles and the " +
       "trophy that followed two weeks later. Available in English and Russian; " +
       "the full text of both versions is included below.",
@@ -71,6 +75,12 @@ export function buildLlmsTxt(): string {
     lines.push(
       `- [${getUi(lang).space3d.title} — ${LANG_TITLE[lang]}](${space3dUrl(lang)}): ` +
         getUi(lang).space3d.description,
+    );
+  }
+  for (const lang of LANGS) {
+    lines.push(
+      `- [${getUi(lang).gargantua.title} — ${LANG_TITLE[lang]}](${gargantuaUrl(lang)}): ` +
+        getUi(lang).gargantua.description,
     );
   }
   for (const lang of LANGS) {
