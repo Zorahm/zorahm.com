@@ -117,6 +117,8 @@ export type UiStrings = {
   spirit: SpiritStrings;
   /** The /ai page */
   ai: AiStrings;
+  /** The /games page */
+  games: GamesStrings;
 };
 
 /** Тела на странице /space. Порядок — от Солнца наружу. */
@@ -445,6 +447,66 @@ export type AiStrings = {
   status: Record<AiStatus, string>;
   projectsLabel: string;
   otherLabel: string;
+  /** Closing line above the contacts */
+  outro: string;
+  home: string;
+};
+
+/** Games on the /games page */
+export type GameId = "rail-rush";
+
+/**
+ * Language-independent part of a game. The model and the setup are written
+ * the way their makers name them, so they do not get translated.
+ */
+export type GameStructure = {
+  id: GameId;
+  year: number;
+  /** The model that built the game */
+  model: string;
+  /** Where and how the model ran */
+  setup: string;
+  /** Stack, as the tools name themselves */
+  tags: string[];
+  /** Where the game is played, on this site */
+  href: string;
+};
+
+/** Language part of a game */
+export type GameText = {
+  title: string;
+  /** What the game is and how it was made */
+  summary: string;
+  /** How many prompts it took, in words */
+  prompts: string;
+};
+
+export type Game = GameStructure & GameText;
+
+/** Strings of the /games page */
+export type GamesStrings = {
+  title: string;
+  description: string;
+  eyebrow: string;
+  heading: string;
+  /** Lead paragraphs; the second one is dimmed */
+  lead: string[];
+  /** Captions of the counters under the heading */
+  counts: {
+    games: string;
+    models: string;
+  };
+  gamesLabel: string;
+  /** Status of a game that can be played right here */
+  playable: string;
+  /** Captions of a game's facts */
+  facts: {
+    model: string;
+    setup: string;
+    prompts: string;
+  };
+  /** Call to action on a game card */
+  play: string;
   /** Closing line above the contacts */
   outro: string;
   home: string;

@@ -1,6 +1,8 @@
 import {
+  gamesPath,
   gargantuaPath,
   getBodies,
+  getGames,
   getContacts,
   getFrames,
   getSpiritMatches,
@@ -20,6 +22,7 @@ const space3dUrl = (lang: Lang) =>
 const gargantuaUrl = (lang: Lang) =>
   new URL(gargantuaPath(lang), SITE_URL).toString();
 const spiritUrl = (lang: Lang) => new URL(spiritPath(lang), SITE_URL).toString();
+const gamesUrl = (lang: Lang) => new URL(gamesPath(lang), SITE_URL).toString();
 
 const LANG_TITLE: Record<Lang, string> = {
   en: "English",
@@ -51,7 +54,8 @@ export function buildLlmsTxt(): string {
       "read about, the same system ray-traced in 3D at /space-3d, a black hole " +
       "ray-traced along Schwarzschild geodesics at /gargantua, and a fan's " +
       "note at /spirit about the day Team Spirit won two world titles and the " +
-      "trophy that followed two weeks later. Available in English and Russian; " +
+      "trophy that followed two weeks later, and /games, browser games made " +
+      "by AI models to test how far a model gets on its own. Available in English and Russian; " +
       "the full text of both versions is included below.",
   );
   lines.push("");
@@ -87,6 +91,12 @@ export function buildLlmsTxt(): string {
     lines.push(
       `- [${getUi(lang).spirit.title} — ${LANG_TITLE[lang]}](${spiritUrl(lang)}): ` +
         getUi(lang).spirit.description,
+    );
+  }
+  for (const lang of LANGS) {
+    lines.push(
+      `- [${getUi(lang).games.title} — ${LANG_TITLE[lang]}](${gamesUrl(lang)}): ` +
+        getUi(lang).games.description,
     );
   }
   lines.push("");
@@ -195,6 +205,29 @@ export function buildLlmsTxt(): string {
     }
     lines.push(spirit.disclaimer);
     lines.push("");
+
+    const games = getUi(lang).games;
+    lines.push(`### ${games.heading}`);
+    lines.push("");
+    lines.push(`Source: ${gamesUrl(lang)}`);
+    lines.push("");
+    for (const paragraph of games.lead) {
+      lines.push(paragraph);
+      lines.push("");
+    }
+    for (const game of getGames(lang)) {
+      lines.push(`#### ${game.title}`);
+      lines.push("");
+      lines.push(
+        `${games.facts.model}: ${game.model} · ${games.facts.setup}: ${game.setup} · ` +
+          `${games.facts.prompts}: ${game.prompts}`,
+      );
+      lines.push("");
+      lines.push(game.summary);
+      lines.push("");
+      lines.push(`${games.play}: ${new URL(game.href, SITE_URL).toString()}`);
+      lines.push("");
+    }
   }
 
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";

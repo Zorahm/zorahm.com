@@ -4,7 +4,9 @@ import {
   LANGS,
   SITE_URL,
   aiPath,
+  gamesPath,
   gargantuaPath,
+  getGames,
   getFrames,
   getUi,
   langPath,
@@ -33,9 +35,25 @@ describe("llms.txt", () => {
   });
 
   it("links every published page in both languages", () => {
-    for (const path of [spacePath, space3dPath, gargantuaPath, spiritPath]) {
+    for (const path of [
+      spacePath,
+      space3dPath,
+      gargantuaPath,
+      spiritPath,
+      gamesPath,
+    ]) {
       for (const lang of LANGS) {
         expect(txt).toContain(new URL(path(lang), SITE_URL).toString());
+      }
+    }
+  });
+
+  it("tells which model made each game, in both languages", () => {
+    for (const lang of LANGS) {
+      for (const game of getGames(lang)) {
+        expect(txt).toContain(game.summary);
+        expect(txt).toContain(game.model);
+        expect(txt).toContain(new URL(game.href, SITE_URL).toString());
       }
     }
   });

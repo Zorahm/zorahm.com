@@ -1,0 +1,146 @@
+/*
+ * Only what /games adds to the look it borrows from AiPage.module.css.
+ */
+
+/* Two counters, not four: they sit in the right third of the hero */
+.counts {
+  grid-column: 9 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/*
+ * A game takes the whole row: what it is on the left, how it was made on
+ * the right, split by a hairline.
+ */
+.game {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--cell) calc(var(--cell) * 2);
+  min-height: clamp(320px, 30vw, 420px);
+}
+
+.about {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* The title of the only card on the page reads as a second heading */
+.about h3 {
+  font-size: clamp(2.4rem, 5.4vw, 5.6rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--cell);
+  padding-left: calc(var(--cell) * 2);
+  border-left: 1px solid var(--line);
+}
+
+.facts {
+  margin: 0;
+}
+
+.facts div {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.facts div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.facts dt {
+  margin-bottom: 8px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+/* The model is what the page is about, so it gets the accent */
+.facts div:first-child dd {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(1.1rem, 1.6vw, 1.5rem);
+  letter-spacing: -0.02em;
+  color: var(--gold);
+}
+
+.play {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+  letter-spacing: -0.02em;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+
+.play i {
+  font-style: normal;
+  font-size: 0.6em;
+  color: var(--gold);
+  transition: transform 0.3s;
+}
+
+.game:hover .play {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.game:hover .play i {
+  transform: translateX(4px);
+}
+
+@media (max-width: 1100px) {
+  .counts {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .game {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .side {
+    padding: var(--cell) 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .play {
+    align-self: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play,
+  .play i {
+    transition: none;
+  }
+}

@@ -4,6 +4,8 @@ import type {
   BodyId,
   BodyText,
   FrameText,
+  GameId,
+  GameText,
   ShapeId,
   SpiritMatchId,
   SpiritMatchText,
@@ -206,6 +208,41 @@ export const enUi: UiStrings = {
     outro:
       "Want to build something together, or have a question about one of the projects? Write to me.",
     home: "Home",
+  },
+  games: {
+    title: "Games",
+    description:
+      "Browser games made by AI models, each one a test of how far a model gets on its own.",
+    eyebrow: "Games · Model tests",
+    heading: "Games made by models",
+    lead: [
+      "Browser games that double as a test bench: I give a model one task and see how far it gets on its own.",
+      "Each card says which model made the game, in what setup, and how much of it came from the first attempt.",
+    ],
+    counts: {
+      games: "Games",
+      models: "Models",
+    },
+    gamesLabel: "Games",
+    playable: "Playable",
+    facts: {
+      model: "Model",
+      setup: "Setup",
+      prompts: "Prompts",
+    },
+    play: "Play",
+    outro:
+      "Played it and have thoughts, or want to see a model take on another game? Write to me.",
+    home: "Home",
+  },
+};
+
+export const enGames: Record<GameId, GameText> = {
+  "rail-rush": {
+    title: "Rail Rush",
+    summary:
+      "A 3D endless runner along railway tracks: dodge trains, run over their roofs, grab power-ups and stay ahead of a patrol robot and its robo-dog. The whole game came out of a single prompt — graphics, menus, heroes, behaviour, the procedural music and sound. The prompts after it only fixed small things and barely touched the first version.",
+    prompts: "One for the game, a few for small fixes",
   },
 };
 

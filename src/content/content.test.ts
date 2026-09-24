@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   AI_STRUCTURE,
   FRAME_STRUCTURE,
+  GAMES_STRUCTURE,
   LANGS,
   SPACE_STRUCTURE,
   SPIRIT_CITY_TITLE,
@@ -11,10 +12,12 @@ import {
   formatDay,
   aiPath,
   formatDaysAfter,
+  gamesPath,
   getAiEntries,
   getBodies,
   getContacts,
   getFrames,
+  getGames,
   getSpiritMatches,
   getUi,
   langPath,
@@ -272,6 +275,42 @@ describe("entries of the /ai page", () => {
   it("English lives at the root, Russian under /ru", () => {
     expect(aiPath("en")).toBe("/ai");
     expect(aiPath("ru")).toBe("/ru/ai");
+  });
+});
+
+describe("games of the /games page", () => {
+  it("every language has the same games in the same order", () => {
+    const ids = GAMES_STRUCTURE.map((g) => g.id);
+    expect(ids.length).toBeGreaterThan(0);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const lang of LANGS) {
+      expect(getGames(lang).map((g) => g.id)).toEqual(ids);
+    }
+  });
+
+  it("no title, summary or prompt count is lost in translation", () => {
+    for (const lang of LANGS) {
+      for (const game of getGames(lang)) {
+        for (const key of ["title", "summary", "prompts"] as const) {
+          expect(game[key].trim(), `${lang}/${game.id} ${key}`).not.toBe("");
+        }
+      }
+    }
+  });
+
+  it("every game names its model and is played on this site under /games", () => {
+    for (const game of GAMES_STRUCTURE) {
+      expect(game.model.trim(), `${game.id} model`).not.toBe("");
+      expect(game.setup.trim(), `${game.id} setup`).not.toBe("");
+      // A trailing slash: the build loads its assets by absolute paths, but
+      // nginx only finds the directory's index.html with it
+      expect(game.href).toBe(`/games/${game.id}/`);
+    }
+  });
+
+  it("English lives at the root, Russian under /ru", () => {
+    expect(gamesPath("en")).toBe("/games");
+    expect(gamesPath("ru")).toBe("/ru/games");
   });
 });
 

@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Unbounded } from "next/font/google";
 import {
   SITE_URL,
   aiPath,
+  gamesPath,
   gargantuaPath,
   getUi,
   langPath,
@@ -180,4 +181,10 @@ export function buildAiMetadata(lang: Lang): Metadata {
     ...buildPageMetadata(lang, aiPath, ai.title, ai.description),
     robots: { index: false, follow: false },
   };
+}
+
+/** Metadata of the /games page */
+export function buildGamesMetadata(lang: Lang): Metadata {
+  const { games } = getUi(lang);
+  return buildPageMetadata(lang, gamesPath, games.title, games.description);
 }

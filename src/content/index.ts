@@ -1,6 +1,21 @@
 import { AI_STRUCTURE } from "./ai";
-import { enAiEntries, enBodies, enFrames, enSpiritMatches, enUi } from "./en";
-import { ruAiEntries, ruBodies, ruFrames, ruSpiritMatches, ruUi } from "./ru";
+import {
+  enAiEntries,
+  enBodies,
+  enFrames,
+  enGames,
+  enSpiritMatches,
+  enUi,
+} from "./en";
+import { GAMES_STRUCTURE } from "./games";
+import {
+  ruAiEntries,
+  ruBodies,
+  ruFrames,
+  ruGames,
+  ruSpiritMatches,
+  ruUi,
+} from "./ru";
 import { SPACE_STRUCTURE } from "./space";
 import { SPIRIT_STRUCTURE } from "./spirit";
 import { FRAME_STRUCTURE } from "./structure";
@@ -8,6 +23,7 @@ import type {
   AiEntry,
   Body,
   Frame,
+  Game,
   Lang,
   SpiritMatch,
   UiStrings,
@@ -16,6 +32,7 @@ import type {
 export * from "./types";
 export { FRAME_STRUCTURE } from "./structure";
 export { AI_STRUCTURE } from "./ai";
+export { GAMES_STRUCTURE } from "./games";
 export { SPACE_STRUCTURE, BODY_COUNT } from "./space";
 export {
   SPIRIT_STRUCTURE,
@@ -30,6 +47,7 @@ const TEXTS = { en: enFrames, ru: ruFrames } as const;
 const BODIES = { en: enBodies, ru: ruBodies } as const;
 const SPIRIT = { en: enSpiritMatches, ru: ruSpiritMatches } as const;
 const AI = { en: enAiEntries, ru: ruAiEntries } as const;
+const GAMES = { en: enGames, ru: ruGames } as const;
 const UI: Record<Lang, UiStrings> = { en: enUi, ru: ruUi };
 
 /** Собирает кадры языка: композиция из структуры, тексты из словаря */
@@ -63,6 +81,15 @@ export function getSpiritMatches(lang: Lang): SpiritMatch[] {
 export function getAiEntries(lang: Lang): AiEntry[] {
   const texts = AI[lang];
   return AI_STRUCTURE.map((structure) => ({
+    ...structure,
+    ...texts[structure.id],
+  }));
+}
+
+/** Games of the /games page: facts from the structure, words from the dictionary */
+export function getGames(lang: Lang): Game[] {
+  const texts = GAMES[lang];
+  return GAMES_STRUCTURE.map((structure) => ({
     ...structure,
     ...texts[structure.id],
   }));
@@ -116,6 +143,10 @@ export const spiritPath = (lang: Lang) =>
 
 /** Path to the AI projects page. Not published yet — see its metadata */
 export const aiPath = (lang: Lang) => (lang === "en" ? "/ai" : `/${lang}/ai`);
+
+/** Path to the games page. The games themselves are one build for both languages */
+export const gamesPath = (lang: Lang) =>
+  lang === "en" ? "/games" : `/${lang}/games`;
 
 export const otherLang = (lang: Lang): Lang => (lang === "en" ? "ru" : "en");
 
