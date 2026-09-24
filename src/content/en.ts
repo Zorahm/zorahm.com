@@ -14,7 +14,6 @@ import type {
 
 export const enUi: UiStrings = {
   langName: "EN",
-  frameWord: "Frame",
   contactsLabel: "Contacts",
   contactEmail: "Email",
   siteTitle: "ZorahM — AI and the world",
@@ -235,6 +234,43 @@ export const enUi: UiStrings = {
       "Played it and have thoughts, or want to see a model take on another game? Write to me.",
     home: "Home",
   },
+  home: {
+    write: "Get in touch",
+    heroHint: "Hover over Saturn and the dots respond. Click to open the Solar System.",
+    index: {
+      eyebrow: "Index",
+      heading: "What's here",
+      lead: "Experiments, scenes and notes. Hover a row and its card opens on the right.",
+      open: "Open section",
+    },
+    sections: {
+      games: { name: "Games", line: "Browser games built by models", tag: "Model tests" },
+      space: { name: "Space", line: "The Solar System in dots", tag: "Dots" },
+      space3d: { name: "Space 3D", line: "A system traced with rays", tag: "Shader" },
+      gargantua: { name: "Gargantua", line: "An interactive black hole", tag: "Schwarzschild" },
+      spirit: { name: "Spirit", line: "A fan's note", tag: "23.08.2026" },
+    },
+    frames: {
+      eyebrow: "Seven frames",
+      heading: "From noise to the world",
+      tabsLabel: "Frames",
+      prev: "Previous frame",
+      next: "Next frame",
+      upNext: "Up next: ",
+      last: "That's the last frame",
+      toContacts: "To the contacts",
+    },
+    contact: {
+      eyebrow: "Contact",
+    },
+  },
+  shell: {
+    navLabel: "Sections",
+    themeLight: "Light theme",
+    themeDark: "Dark theme",
+    copy: "Copy",
+    copied: "Copied",
+  },
 };
 
 export const enGames: Record<GameId, GameText> = {
@@ -290,10 +326,6 @@ export const enFrames: Record<ShapeId, FrameText> = {
     body: [
       {
         text: "I work with artificial intelligence: I build systems, take models apart, and write about how all of it reshapes the world around us.",
-      },
-      {
-        text: "This page is one long frame. The dots reassemble while you scroll.",
-        muted: true,
       },
     ],
   },

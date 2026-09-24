@@ -3,6 +3,7 @@ import {
   AI_STRUCTURE,
   FRAME_STRUCTURE,
   GAMES_STRUCTURE,
+  HOME_SECTIONS,
   LANGS,
   SPACE_STRUCTURE,
   SPIRIT_CITY_TITLE,
@@ -13,6 +14,7 @@ import {
   aiPath,
   formatDaysAfter,
   gamesPath,
+  gargantuaPath,
   getAiEntries,
   getBodies,
   getContacts,
@@ -22,6 +24,7 @@ import {
   getUi,
   langPath,
   otherLang,
+  space3dPath,
   spacePath,
   spiritPath,
 } from "./index";
@@ -381,5 +384,39 @@ describe("маршруты и контакты", () => {
     expect(getContacts("ru").map((c) => c.href)).toEqual(
       getContacts("en").map((c) => c.href),
     );
+  });
+});
+
+describe("home index", () => {
+  const paths = {
+    games: gamesPath,
+    space: spacePath,
+    space3d: space3dPath,
+    gargantua: gargantuaPath,
+    spirit: spiritPath,
+  } as const;
+
+  it("leads to the same addresses as the shared path helpers", () => {
+    for (const lang of LANGS) {
+      for (const section of HOME_SECTIONS) {
+        expect(section.path(lang)).toBe(paths[section.id](lang));
+      }
+    }
+  });
+
+  it("keeps the unpublished /ai page out", () => {
+    for (const lang of LANGS) {
+      const all = HOME_SECTIONS.map((s) => s.path(lang));
+      expect(all).not.toContain(aiPath(lang));
+    }
+  });
+
+  it("has a line and a tag for every section in every language", () => {
+    for (const lang of LANGS) {
+      const { sections } = getUi(lang).home;
+      expect(Object.keys(sections).sort()).toEqual(
+        HOME_SECTIONS.map((s) => s.id).sort(),
+      );
+    }
   });
 });

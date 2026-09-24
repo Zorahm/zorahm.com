@@ -33,6 +33,7 @@ export * from "./types";
 export { FRAME_STRUCTURE } from "./structure";
 export { AI_STRUCTURE } from "./ai";
 export { GAMES_STRUCTURE } from "./games";
+export { HOME_SECTIONS, type HomeSectionStructure } from "./home";
 export { SPACE_STRUCTURE, BODY_COUNT } from "./space";
 export {
   SPIRIT_STRUCTURE,

@@ -89,8 +89,6 @@ export type MotionDisclaimerStrings = {
 export type UiStrings = {
   /** Название языка в переключателе */
   langName: string;
-  /** Подпись счётчика кадров в HUD */
-  frameWord: string;
   contactsLabel: string;
   contactEmail: string;
   siteDescription: string;
@@ -119,6 +117,10 @@ export type UiStrings = {
   ai: AiStrings;
   /** The /games page */
   games: GamesStrings;
+  /** The home page */
+  home: HomeStrings;
+  /** Header, footer and contacts shared by pages on the ecosystem design */
+  shell: ShellStrings;
 };
 
 /** Тела на странице /space. Порядок — от Солнца наружу. */
@@ -510,4 +512,54 @@ export type GamesStrings = {
   /** Closing line above the contacts */
   outro: string;
   home: string;
+};
+
+/** Sections the home page index points to. /ai stays out until it is published */
+export type HomeSectionId = "games" | "space" | "space3d" | "gargantua" | "spirit";
+
+/** Strings of the shared page shell */
+export type ShellStrings = {
+  /** Main navigation of the header */
+  navLabel: string;
+  /** Theme switch, named after the theme it turns on */
+  themeLight: string;
+  themeDark: string;
+  /** Copy button next to the email address */
+  copy: string;
+  copied: string;
+};
+
+/** Strings of the home page */
+export type HomeStrings = {
+  /** The one primary action of the first screen */
+  write: string;
+  /** What the dotted Saturn on the first screen does */
+  heroHint: string;
+  index: {
+    eyebrow: string;
+    heading: string;
+    lead: string;
+    /** Link from the preview card to the section */
+    open: string;
+  };
+  /** Short name, line and mono tag of each section in the index */
+  sections: Record<HomeSectionId, { name: string; line: string; tag: string }>;
+  frames: {
+    eyebrow: string;
+    heading: string;
+    /** Accessible name of the frame tabs */
+    tabsLabel: string;
+    prev: string;
+    next: string;
+    /** Put before the next frame's title: "Up next: " */
+    upNext: string;
+    /** Shown on the last frame instead of the next title */
+    last: string;
+    /** Link from the contact frame down to the contacts */
+    toContacts: string;
+  };
+  /** The contact block; its heading and text come from the contact frame */
+  contact: {
+    eyebrow: string;
+  };
 };

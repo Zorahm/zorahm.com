@@ -42,6 +42,14 @@ export const viewport: Viewport = {
   themeColor: "#03050A",
 };
 
+/** Pages on the ecosystem design are paper, not night sky: the chrome follows their theme */
+export const ecoViewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4efe6" },
+    { media: "(prefers-color-scheme: dark)", color: "#16130f" },
+  ],
+};
+
 const OG_LOCALE: Record<Lang, string> = {
   en: "en_US",
   ru: "ru_RU",
