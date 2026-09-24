@@ -1,49 +1,45 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   gamesPath,
-  getContacts,
+  getFrames,
   getGames,
   getUi,
   langPath,
   otherLang,
+  type GameId,
   type Lang,
 } from "@/content";
-import { useStageDriver } from "@/lib/scroll";
-import type { FieldFrame } from "./field/Halftone";
-import hud from "./Hud.module.css";
-import base from "./AiPage.module.css";
+import { ContactBlock } from "./eco/ContactBlock";
+import { DotPlate } from "./eco/DotPlate";
+import { EcoShell } from "./eco/EcoShell";
+import { ArrowLeftIcon, PlayIcon } from "./eco/icons";
+import type { PlateShape } from "./eco/plate";
+import eco from "./eco/eco.module.css";
 import styles from "./GamesPage.module.css";
-
-// WebGL only lives in the browser; there is nothing to render on the server
-const Field = dynamic(() => import("./field/Field"), { ssr: false });
-
-/** One still figure behind the whole page */
-const FRAMES: readonly FieldFrame[] = [{ id: "ripple", accent: 0.85 }];
 
 /** Counters and indices are set in two digits: 01, 04 */
 const twoDigits = (n: number) => String(n).padStart(2, "0");
+
+/** The dotted figure on each game's card; the games ship no screenshots */
+const COVERS: Record<GameId, PlateShape> = {
+  "rail-rush": "rails",
+};
 
 /**
  * The /games page: browser games made by AI models, each one doubling as a
  * test of the model that made it.
  *
- * It shares the glass-over-the-field look of /ai and borrows its styles; only
- * the game card, which carries the model's facts, is its own.
- *
  * A game is a separate static build under public/, not a Next route, so its
- * link is a plain <a>: the client router would look for a page that is not
+ * links are plain <a>: the client router would look for a page that is not
  * there.
  */
 export function GamesPage({ lang }: { lang: Lang }) {
   const ui = getUi(lang);
   const page = ui.games;
-  const other = otherLang(lang);
-  const otherUi = getUi(other);
-
   const games = getGames(lang);
+  const contact = getFrames(lang).find((frame) => frame.contacts);
 
   const counts = [
     { label: page.counts.games, value: games.length },
@@ -53,143 +49,107 @@ export function GamesPage({ lang }: { lang: Lang }) {
     },
   ];
 
-  useStageDriver(0);
-
   return (
-    <>
-      <Field frames={FRAMES} still />
+    <EcoShell lang={lang} otherHref={gamesPath(otherLang(lang))} current="games">
+      <section className={`${eco.section} ${styles.hero}`}>
+        <div className={styles.heroText}>
+          <Link href={langPath(lang)} className={styles.back}>
+            <ArrowLeftIcon />
+            {page.home}
+          </Link>
+          <p className={eco.label}>{page.eyebrow}</p>
+          <h1 className={`${eco.displayXl} ${styles.title}`}>{page.heading}</h1>
+          {page.lead.map((text, index) => (
+            <p key={index} className={`${eco.body} ${index > 0 ? eco.muted : ""}`}>
+              {text}
+            </p>
+          ))}
 
-      <Link
-        href={langPath(lang)}
-        className={`${hud.hud} ${hud.mark} ${base.hudTop}`}
-      >
-        Z<span>\</span>M
-      </Link>
-
-      <nav
-        className={`${hud.hud} ${hud.lang} ${base.hudTop}`}
-        aria-label={ui.switchLanguage}
-      >
-        <span className={hud.langActive} aria-current="page">
-          {ui.langName}
-        </span>
-        <span className={hud.langSep} aria-hidden="true">
-          /
-        </span>
-        <Link href={gamesPath(other)} hrefLang={other} lang={other}>
-          {otherUi.langName}
-        </Link>
-      </nav>
-
-      <main className={base.main}>
-        <header className={base.hero}>
-          <p className={base.eyebrow}>
-            <span>{page.eyebrow}</span>
-          </p>
-
-          <h1 className={base.title}>{page.heading}</h1>
-
-          <div className={base.lead}>
-            {page.lead.map((text, index) => (
-              <p key={index}>{text}</p>
-            ))}
-          </div>
-
-          <dl className={`${base.counts} ${styles.counts}`}>
+          <dl className={styles.counts}>
             {counts.map((count) => (
-              <div key={count.label}>
-                <dt>{count.label}</dt>
-                <dd>{twoDigits(count.value)}</dd>
+              <div key={count.label} className={styles.count}>
+                <dt className={eco.label}>{count.label}</dt>
+                <dd className={styles.countValue}>{twoDigits(count.value)}</dd>
               </div>
             ))}
           </dl>
-        </header>
+        </div>
 
-        <section className={base.section}>
-          <h2 className={base.label}>{page.gamesLabel}</h2>
+        <div className={styles.heroPlate}>
+          <DotPlate shape="ripple" accent={0.85} cols={30} rows={20} lens />
+        </div>
+      </section>
 
-          <ol className={base.grid}>
-            {games.map((game, index) => (
-              <li key={game.id} className={`${base.card} ${styles.game}`}>
-                <div className={styles.about}>
-                  <p className={base.cardHead}>
-                    <span className={base.index}>{twoDigits(index + 1)}</span>
-                    <span className={base.status} data-status="live">
+      <section className={eco.section}>
+        <h2 className={eco.label}>{page.gamesLabel}</h2>
+
+        <ol className={styles.list}>
+          {games.map((game, index) => (
+            <li key={game.id}>
+              <article className={styles.card}>
+                <a
+                  href={game.href}
+                  className={styles.cover}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                >
+                  <DotPlate shape={COVERS[game.id]} accent={1} cols={30} rows={20} lens />
+                </a>
+
+                <div className={styles.info}>
+                  <p className={styles.cardHead}>
+                    <span className={eco.code}>{twoDigits(index + 1)}</span>
+                    <span className={`${eco.label} ${styles.status}`}>
                       <i aria-hidden="true" />
                       {page.playable}
                     </span>
-                    <span className={base.year}>{game.year}</span>
+                    <span className={`${eco.code} ${styles.year}`}>{game.year}</span>
                   </p>
 
-                  <h3 className={base.cardTitle}>
-                    <a className={base.stretch} href={game.href}>
-                      {game.title}
-                    </a>
-                  </h3>
-                  <p className={base.summary}>{game.summary}</p>
+                  <h3 className={eco.displayL}>{game.title}</h3>
+                  <p className={eco.body}>{game.summary}</p>
 
-                  <ul className={base.tags}>
+                  <ul className={styles.tags}>
                     {game.tags.map((tag) => (
                       <li key={tag}>{tag}</li>
                     ))}
                   </ul>
-                </div>
 
-                <div className={styles.side}>
                   <dl className={styles.facts}>
                     <div>
-                      <dt>{page.facts.model}</dt>
+                      <dt className={eco.label}>{page.facts.model}</dt>
                       <dd>{game.model}</dd>
                     </div>
                     <div>
-                      <dt>{page.facts.setup}</dt>
+                      <dt className={eco.label}>{page.facts.setup}</dt>
                       <dd>{game.setup}</dd>
                     </div>
                     <div>
-                      <dt>{page.facts.prompts}</dt>
+                      <dt className={eco.label}>{page.facts.prompts}</dt>
                       <dd>{game.prompts}</dd>
                     </div>
                   </dl>
 
-                  <span className={styles.play} aria-hidden="true">
-                    {page.play}
-                    <i>→</i>
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <footer className={`${base.section} ${base.foot}`}>
-          <div>
-            <h2 className={base.label}>{ui.contactsLabel}</h2>
-            <p className={base.outro}>{page.outro}</p>
-            <ul className={base.contacts}>
-              {getContacts(lang).map((contact) => {
-                const external = contact.href.startsWith("http");
-                return (
-                  <li key={contact.href}>
-                    <a
-                      href={contact.href}
-                      target={external ? "_blank" : undefined}
-                      rel={external ? "noreferrer" : undefined}
-                    >
-                      {contact.label}
-                      <i aria-hidden="true">↗</i>
+                  <div className={eco.actions}>
+                    <a href={game.href} className={eco.primary}>
+                      <PlayIcon />
+                      {page.play}
+                      <span className={styles.srOnly}> — {game.title}</span>
                     </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                  </div>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-          <Link href={langPath(lang)} className={base.biglink}>
-            {page.home}
-            <i aria-hidden="true">→</i>
-          </Link>
-        </footer>
-      </main>
-    </>
+      <ContactBlock
+        lang={lang}
+        eyebrow={ui.contactsLabel}
+        heading={contact?.title ?? ui.contactsLabel}
+        body={[page.outro]}
+      />
+    </EcoShell>
   );
 }
