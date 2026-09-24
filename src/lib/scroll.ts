@@ -1,23 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { create } from "zustand";
-import {
-  clamp,
-  damp,
-  measureStage,
-  type SectionBox,
-} from "@/components/field/stage";
+import { damp } from "@/components/field/stage";
 
 /**
- * Разделение по температуре данных.
- *
- * Горячее (stagePos, положение курсора) меняется каждый кадр. Прогонять это
- * через React — 60 перерендеров в секунду, поэтому оно живёт в обычном
- * мутируемом объекте, который WebGL читает напрямую в useFrame.
- *
- * Холодное (номер кадра, процент прокрутки) — целые числа, меняются редко.
- * Им React подходит, и HUD подписан на них через zustand.
+ * Stage position and pointer change every frame. Pushing them through React
+ * would mean 60 renders a second, so they live in a plain mutable object that
+ * WebGL reads directly in useFrame.
  */
 export const scrollState = {
   stagePos: 0,
@@ -29,16 +18,6 @@ export const scrollState = {
   pointerY: -9999,
   pointerActive: false,
 };
-
-type HudStore = {
-  frameIndex: number;
-  percent: number;
-};
-
-export const useHudStore = create<HudStore>(() => ({
-  frameIndex: 0,
-  percent: 0,
-}));
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
@@ -108,56 +87,6 @@ function useFieldLoop(readTarget: () => number, onSettled?: () => void) {
       window.removeEventListener("pointerleave", onPointerLeave);
     };
   }, []);
-}
-
-/** Драйвер ленты кадров: позицию сцены задаёт прокрутка секций */
-export function useScrollDriver(frameCount: number) {
-  const boxesRef = useRef<SectionBox[]>([]);
-
-  useEffect(() => {
-    const measureSections = () => {
-      boxesRef.current = Array.from(
-        document.querySelectorAll<HTMLElement>("[data-frame]"),
-      ).map((el) => ({ top: el.offsetTop, height: el.offsetHeight }));
-    };
-
-    measureSections();
-    // Шрифты приезжают позже и меняют высоту секций
-    document.fonts?.ready.then(measureSections).catch(() => {});
-    window.addEventListener("resize", measureSections, { passive: true });
-
-    return () => window.removeEventListener("resize", measureSections);
-  }, [frameCount]);
-
-  useFieldLoop(
-    () =>
-      frameCount === 0
-        ? 0
-        : measureStage(window.scrollY, window.innerHeight, boxesRef.current),
-    () => {
-      if (frameCount === 0) return;
-
-      const scrollable = document.body.scrollHeight - window.innerHeight;
-      const progress = clamp(
-        scrollable > 0 ? window.scrollY / scrollable : 0,
-        0,
-        1,
-      );
-
-      const frameIndex = clamp(
-        Math.round(scrollState.stagePos),
-        0,
-        frameCount - 1,
-      );
-      const percent = Math.round(progress * 100);
-
-      // Пишем в React только когда целые значения реально сменились
-      const hud = useHudStore.getState();
-      if (hud.frameIndex !== frameIndex || hud.percent !== percent) {
-        useHudStore.setState({ frameIndex, percent });
-      }
-    },
-  );
 }
 
 /**

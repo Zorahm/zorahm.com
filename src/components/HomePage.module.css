@@ -1,15 +1,321 @@
-.main {
-  position: relative;
-  z-index: 2;
+/* Home-only layout; tokens, type and shared blocks live in eco/eco.module.css */
+
+/* Hero */
+
+.hero {
+  flex-direction: row;
+  align-items: center;
+  gap: 48px;
 }
 
-.footer {
-  padding: 0 var(--pad) 60px;
-  text-align: center;
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--dim);
-  position: relative;
-  z-index: 2;
+.heroText {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 572px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.heroActions {
+  padding-top: 8px;
+}
+
+.heroHint {
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.saturn {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 660px;
+  margin-left: auto;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Index */
+
+.indexBody {
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+}
+
+.indexList {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.indexList li {
+  border-bottom: 1px solid var(--line);
+}
+
+.indexRow {
+  height: 80px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.indexRow:hover {
+  background: var(--paper-sunken);
+}
+
+.indexRowOn {
+  background: var(--paper-raised);
+}
+
+.indexNumber {
+  width: 24px;
+  flex-shrink: 0;
+  font-family: var(--code);
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--ink-muted);
+}
+
+.indexMarker {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.indexRowOn .indexMarker {
+  background: var(--vermilion);
+}
+
+.indexTitle {
+  width: 180px;
+  flex-shrink: 0;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 28px;
+}
+
+.indexLine {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink-muted);
+}
+
+.indexTag {
+  flex-shrink: 0;
+}
+
+.preview {
+  width: 440px;
+  flex-shrink: 0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.previewPlate {
+  background: var(--paper-sunken);
+  border-radius: 4px;
+}
+
+.previewMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.previewBody {
+  min-height: 104px;
+}
+
+/* Frames */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab {
+  height: 44px;
+  min-width: 52px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--code);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+
+.tab:hover {
+  background: var(--paper-sunken);
+}
+
+.tabOn,
+.tabOn:hover {
+  border-color: var(--vermilion);
+  background: var(--vermilion);
+  color: var(--on-vermilion);
+}
+
+.storyBody {
+  display: flex;
+  gap: 48px;
+  align-items: stretch;
+}
+
+.storyText {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.storyCount {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 44px;
+  color: var(--ink-muted);
+}
+
+.storyCount span {
+  color: var(--line-strong);
+}
+
+.stepper {
+  margin-top: auto;
+  padding-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepperHint {
+  padding-left: 16px;
+}
+
+.storyPlate {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 640px;
+  padding: 20px;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+/* Hover hints mean nothing without a mouse */
+@media (hover: none) {
+  .heroHint {
+    display: none;
+  }
+}
+
+/* Narrower screens */
+
+@media (max-width: 1200px) {
+  .indexLine {
+    display: none;
+  }
+
+  .preview {
+    width: 380px;
+  }
+}
+
+@media (max-width: 960px) {
+  .hero,
+  .storyBody {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* The figure leads on a narrow screen, the text follows */
+  .saturn {
+    order: -1;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .heroText {
+    max-width: none;
+  }
+
+  /* No room for the preview: rows lead straight to the section */
+  .preview {
+    display: none;
+  }
+
+  .indexRowOn {
+    background: transparent;
+  }
+
+  .indexRowOn .indexMarker {
+    background: transparent;
+  }
+
+  .storyPlate {
+    order: -1;
+    max-width: none;
+    padding: 12px;
+  }
+
+  .storyText {
+    padding: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .indexRow {
+    height: 64px;
+    padding: 0 8px;
+    gap: 16px;
+  }
+
+  .indexTitle {
+    width: auto;
+    flex-grow: 1;
+  }
+
+  .indexMarker {
+    display: none;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    width: 100%;
+    gap: 4px;
+  }
+
+  .tab {
+    min-width: 0;
+    padding: 0;
+  }
+
+  .stepperHint {
+    padding-left: 8px;
+  }
 }
