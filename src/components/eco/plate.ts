@@ -294,3 +294,16 @@ export function lensPull(dx: number, dy: number, radius: number) {
   return g * g;
 }
 
+/** Periods of the two slow waves that make a plate breathe, in seconds */
+const BREATH_PERIODS = [11, 17] as const;
+
+/**
+ * Ambient swell of one dot at time `t` seconds, -1..1. Two long waves cross
+ * the plate at different angles and speeds, so the motion never repeats
+ * visibly, and neighbouring dots move together instead of flickering.
+ */
+export function breath(i: number, j: number, t: number) {
+  const a = (2 * Math.PI * t) / BREATH_PERIODS[0] - (i * 0.16 + j * 0.1);
+  const b = (2 * Math.PI * t) / BREATH_PERIODS[1] + (i * 0.06 - j * 0.19);
+  return 0.5 * Math.sin(a) + 0.5 * Math.sin(b);
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPlate, lensPull, type PlateShape } from "./plate";
+import { breath, buildPlate, lensPull, type PlateShape } from "./plate";
 
 const SHAPES: PlateShape[] = [
   "saturn", "noise", "network", "eye", "globe", "ripple", "github", "mark", "rails", "spirit",
@@ -50,4 +50,12 @@ describe("home plates", () => {
     expect(lensPull(1, 1, 4)).toBeGreaterThan(lensPull(2, 2, 4));
   });
 
+  it("breathes within -1..1 and changes slowly", () => {
+    for (let t = 0; t < 40; t += 0.37) {
+      const now = breath(7, 4, t);
+      expect(Math.abs(now)).toBeLessThanOrEqual(1);
+      // One frame at 60 fps moves a dot by a tiny fraction of its range
+      expect(Math.abs(breath(7, 4, t + 1 / 60) - now)).toBeLessThan(0.01);
+    }
+  });
 });

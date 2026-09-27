@@ -1,8 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useMotionAck } from "@/lib/motionAck";
 import { useScheme } from "./EcoShell";
-import { EMPTY, buildPlate, clamp01, lensPull, type Plate, type PlateShape } from "./plate";
+import {
+  EMPTY,
+  breath,
+  buildPlate,
+  clamp01,
+  lensPull,
+  type Plate,
+  type PlateShape,
+} from "./plate";
 
 /** How far the pointer's swell reaches, in cells */
 const LENS_RADIUS = 4.5;
@@ -10,6 +19,11 @@ const LENS_RADIUS = 4.5;
 const LENS_ACCENT = 0.6;
 /** Share of the gap to the target a dot closes per second, as a rate */
 const EASE = 9;
+/**
+ * How much the ambient waves change a dot's ink, as a share of it. Kept low
+ * and slow on purpose: the plate should feel alive, not draw the eye.
+ */
+const BREATH = 0.16;
 
 type Lens = { x: number; y: number } | null;
 
@@ -25,8 +39,12 @@ const BLANK: Plate = {
  * takes its height from the grid's aspect ratio. A new shape does not replace the old one:
  * every dot eases to its new size, so figures flow into each other.
  *
- * With `lens`, dots under a mouse pointer swell. The loop only runs while
- * something is still moving and stops once every dot has settled.
+ * Dots breathe: two slow waves drift across the plate and gently change
+ * their size. The loop runs only while the plate is on screen. Before the
+ * visitor has acknowledged the motion disclaimer, and with reduced motion,
+ * there is no breathing and the loop stops once every dot settles.
+ *
+ * With `lens`, dots under a mouse pointer swell.
  *
  * Colours come from the page's --ink and --vermilion, re-read whenever the
  * shell's colour scheme changes.
@@ -47,6 +65,7 @@ export function DotPlate({
   className?: string;
 }) {
   const scheme = useScheme();
+  const acknowledged = useMotionAck();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const live = useRef({
     current: new Float32Array(1),
@@ -58,6 +77,11 @@ export function DotPlate({
     raf: 0,
     last: 0,
     reduce: false,
+    /** Motion acknowledged and not reduced: the plate may breathe */
+    breathe: false,
+    visible: false,
+    /** Breathing clock in seconds; it only advances while frames are drawn */
+    time: 0,
     kick: () => {},
   });
 
@@ -83,11 +107,13 @@ export function DotPlate({
     const draw = (now: number) => {
       const dt = state.last ? Math.min((now - state.last) / 1000, 0.1) : 1 / 60;
       state.last = now;
+      const breathing = state.breathe && state.visible;
+      if (breathing) state.time += dt;
       const { target, current } = state;
       const step = state.reduce ? 1 : 1 - Math.exp(-EASE * dt);
       const dpr = window.devicePixelRatio || 1;
       const cell = state.cell;
-      let moving = false;
+      let moving = breathing;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, cell * target.cols, cell * target.rows);
@@ -109,7 +135,9 @@ export function DotPlate({
           if (Math.abs(gap) > 0.002) moving = true;
           current[n] += gap * step;
 
-          const value = current[n];
+          const value = breathing
+            ? current[n] * (1 + BREATH * breath(i, j, state.time))
+            : current[n];
           if (value < EMPTY) continue;
           const radius = Math.max(1, cell * 0.46 * Math.sqrt(value));
           ctx.fillStyle = hot ? state.vermilion : state.ink;
@@ -143,12 +171,27 @@ export function DotPlate({
     observer.observe(canvas);
     resize();
 
+    // Breathing off screen would only burn battery
+    const sight = new IntersectionObserver(([entry]) => {
+      state.visible = entry.isIntersecting;
+      state.kick();
+    });
+    sight.observe(canvas);
+
     return () => {
       observer.disconnect();
+      sight.disconnect();
       cancelAnimationFrame(state.raf);
       state.raf = 0;
     };
   }, []);
+
+  useEffect(() => {
+    const state = live.current;
+    state.breathe =
+      acknowledged && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    state.kick();
+  }, [acknowledged]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
