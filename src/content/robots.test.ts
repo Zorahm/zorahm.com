@@ -37,6 +37,7 @@ describe("robots.txt", () => {
     expect(group).toContain("User-Agent: GPTBot");
     expect(group).toContain("Allow: /");
     expect(group).toContain("Allow: /llms.txt");
+    expect(group).toContain("Allow: /llms-full.txt");
     expect(group?.some((line) => line.startsWith("Disallow:"))).toBe(false);
   });
 

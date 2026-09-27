@@ -8,7 +8,7 @@ import type { ShapeId } from "@/content";
  */
 
 /** The field's shapes plus figures that only exist on flat plates */
-export type PlateShape = ShapeId | "rails" | "spirit";
+export type PlateShape = ShapeId | "rails" | "spirit" | "crossword" | "rules";
 
 export type Plate = {
   cols: number;
@@ -18,6 +18,43 @@ export type Plate = {
   /** 1 where the dot is painted vermilion */
   accents: Uint8Array;
 };
+
+/**
+ * Letter cells of the crossword figure. Two words run down, four across;
+ * a cell that belongs to both directions is a crossing.
+ */
+const CROSSWORD = [
+  "...#.....",
+  ".######..",
+  "...#..#..",
+  "#####.#..",
+  "...#.####",
+  "...#..#..",
+];
+
+/** A letter cell spans two dots and leaves one empty before the next */
+const CELL_PITCH = 3;
+
+/**
+ * Whole-dot index from a u/v offset. The offset lands on halves, and float
+ * error would round some halves down and others up, splitting cells.
+ */
+const toDot = (t: number) => Math.round(Math.round(t * 1000) / 1000);
+
+const isCell = (col: number, row: number) => CROSSWORD[row]?.[col] === "#";
+
+function isCrossing(col: number, row: number) {
+  const across = isCell(col - 1, row) || isCell(col + 1, row);
+  const down = isCell(col, row - 1) || isCell(col, row + 1);
+  return across && down;
+}
+
+/** Indent and length, in dots, of each line of the rules figure */
+const RULE_LINES: [number, number][] = [
+  [0, 16], [2, 19], [2, 13], [4, 20], [4, 11], [2, 17], [0, 21], [2, 9],
+];
+/** The line lit vermilion: the rule being applied right now */
+const RULE_LIT = 3;
 
 const NODES: [number, number][] = [
   [-1.2, -0.55],
@@ -181,6 +218,37 @@ export function density(
       if (hits === 1) return 0.7;
       return star;
     }
+    case "crossword": {
+      // Laid out in whole dots, not in u/v, so every cell keeps a clean gap
+      const width = CROSSWORD[0].length * CELL_PITCH - 1;
+      const height = CROSSWORD.length * CELL_PITCH - 1;
+      const x = toDot(u / k + (width - 1) / 2);
+      const y = toDot(v / k + (height - 1) / 2);
+      if (x < 0 || y < 0 || x >= width || y >= height) return star;
+      if (x % CELL_PITCH === 2 || y % CELL_PITCH === 2) return 0;
+      const col = Math.floor(x / CELL_PITCH);
+      const row = Math.floor(y / CELL_PITCH);
+      if (!isCell(col, row)) return hash(i, j) > 0.9 ? 0.05 : 0;
+      return isCrossing(col, row) ? 1 : 0.5;
+    }
+    case "rules": {
+      // Lines of text in an editor: a gutter of line numbers, words with
+      // gaps between them, one rule lit and a caret on the line below
+      const height = (RULE_LINES.length + 1) * 2 - 1;
+      const x = toDot(u / k + 13);
+      const y = toDot(v / k + (height - 1) / 2);
+      if (x < 0 || y < 0 || x > 26 || y >= height || y % 2 === 1) return star;
+      const line = y / 2;
+      if (x < 2) return 0.25;
+      if (x === 2) return 0;
+      if (line === RULE_LINES.length) return x === 4 ? 1 : x === 3 ? 0.5 : 0;
+      const [indent, length] = RULE_LINES[line];
+      const start = 3 + indent;
+      if (x < start || x >= start + length) return 0;
+      const inside = x > start && x < start + length - 1;
+      if (inside && hash(line + 17, x) < 0.16) return 0;
+      return line === RULE_LIT ? 1 : 0.55;
+    }
     case "mark": {
       // The backslash of Z\M
       if (Math.abs(u - v * 0.5) / Math.hypot(1, 0.5) < 0.2) return 1;
@@ -225,3 +293,4 @@ export function lensPull(dx: number, dy: number, radius: number) {
   const g = clamp01(1 - Math.hypot(dx, dy) / radius);
   return g * g;
 }
+

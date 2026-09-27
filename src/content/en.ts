@@ -183,29 +183,32 @@ export const enUi: UiStrings = {
   ai: {
     title: "AI",
     description:
-      "Projects I build for artificial intelligence and around it, plus everything else on the subject.",
-    eyebrow: "AI · Index",
-    draft: "Draft",
-    heading: "AI, projects and everything else",
+      "Plugins and skills that teach AI models new things: my own rules for Claude Code and a skill that lets a model build real crosswords.",
+    eyebrow: "AI · Projects",
+    heading: "Tools for models",
     lead: [
-      "Tools, agents and experiments I build for artificial intelligence and around it — gathered in one place.",
-      "For now every entry here is a placeholder: the layout comes first, the words follow.",
+      "Plugins and skills I build so that AI models work the way I need them to — mostly for Claude Code, all of it open source.",
+      "Each card says what the tool is, which agents it runs in and how to install it.",
     ],
     counts: {
       projects: "Projects",
-      live: "Live",
-      wip: "In progress",
-      other: "Other",
+      plugins: "Plugins",
+      skills: "Skills",
     },
-    status: {
-      live: "Live",
-      wip: "In progress",
-      idea: "Idea",
+    kind: {
+      plugin: "Claude Code plugin",
+      skill: "Agent skill",
     },
     projectsLabel: "Projects",
-    otherLabel: "Everything else",
+    facts: {
+      agents: "Runs in",
+      requires: "Needs",
+      install: "Install",
+    },
+    open: "Open on GitHub",
+    copyInstall: "Copy command",
     outro:
-      "Want to build something together, or have a question about one of the projects? Write to me.",
+      "Tried one of them, found a bug, or want a skill for something else? Write to me.",
     home: "Home",
   },
   games: {
@@ -244,6 +247,7 @@ export const enUi: UiStrings = {
       open: "Open section",
     },
     sections: {
+      ai: { name: "AI", line: "Plugins and skills for models", tag: "Claude Code" },
       games: { name: "Games", line: "Browser games built by models", tag: "Model tests" },
       space: { name: "Space", line: "The Solar System in dots", tag: "Dots" },
       space3d: { name: "Space 3D", line: "A system traced with rays", tag: "Shader" },
@@ -283,38 +287,19 @@ export const enGames: Record<GameId, GameText> = {
 };
 
 export const enAiEntries: Record<AiEntryId, AiEntryText> = {
-  alpha: {
-    title: "Project Alpha",
-    summary:
-      "The lead project. Two or three lines on what it does, who it is for and which problem it takes off someone's plate — the text is a placeholder.",
+  zowork: {
+    title: "ZoWork",
+    summary: [
+      "My personal Claude Code plugin: the rules I write code by, packed so that every session starts with them. A hook puts them in from the first message — what outranks a spec, English for code and for any text a model reads, git done my way.",
+      "Skills come with it too: solo-git for commits and pushes without pull requests, prompt-guides that keeps Anthropic's prompting guides for every model cached locally, and antigravity for handing research to another agent. It fits one person's habits, so take what suits you.",
+    ],
   },
-  beta: {
-    title: "Project Beta",
-    summary: "One or two lines about the project: what it is and why it exists.",
-  },
-  gamma: {
-    title: "Project Gamma",
-    summary: "A short description of the tool and the task it solves.",
-  },
-  delta: {
-    title: "Project Delta",
-    summary: "An idea on its way to a prototype: what should come out of it.",
-  },
-  epsilon: {
-    title: "Project Epsilon",
-    summary: "Work in progress: where it stands and what comes next.",
-  },
-  zeta: {
-    title: "Entry Zeta",
-    summary: "A note, a prompt or a small utility — one line is enough.",
-  },
-  eta: {
-    title: "Entry Eta",
-    summary: "An experiment that never grew into a project but is worth keeping.",
-  },
-  theta: {
-    title: "Entry Theta",
-    summary: "A talk, an article or a set of instructions for agents.",
+  "crossword-skill": {
+    title: "Crossword Skill",
+    summary: [
+      "A skill that teaches an AI model to make crosswords: it picks words on a topic or takes yours, lays them out on a grid with as many crossings as it can, checks the result and renders the puzzle or its solution. In any language.",
+      "A model cannot do this on its own: it tries to keep cell coordinates in its head, and the grid falls apart — letters clash, words run into each other. So the spatial part goes to deterministic Python scripts, and the model stays the coordinator: it chooses the words and one of the placements the scripts offer.",
+    ],
   },
 };
 

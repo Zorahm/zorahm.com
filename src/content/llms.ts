@@ -1,10 +1,12 @@
 import {
+  aiPath,
   gamesPath,
   gargantuaPath,
+  getAiEntries,
   getBodies,
-  getGames,
   getContacts,
   getFrames,
+  getGames,
   getSpiritMatches,
   getUi,
   langPath,
@@ -15,88 +17,119 @@ import {
 import { SPIRIT_CITY_TITLE, SPIRIT_DAY, SPIRIT_TEAM } from "./spirit";
 import { LANGS, SITE_URL, type Lang } from "./types";
 
-const absolute = (lang: Lang) => new URL(langPath(lang), SITE_URL).toString();
-const spaceUrl = (lang: Lang) => new URL(spacePath(lang), SITE_URL).toString();
-const space3dUrl = (lang: Lang) =>
-  new URL(space3dPath(lang), SITE_URL).toString();
-const gargantuaUrl = (lang: Lang) =>
-  new URL(gargantuaPath(lang), SITE_URL).toString();
-const spiritUrl = (lang: Lang) => new URL(spiritPath(lang), SITE_URL).toString();
-const gamesUrl = (lang: Lang) => new URL(gamesPath(lang), SITE_URL).toString();
-
 const LANG_TITLE: Record<Lang, string> = {
   en: "English",
   ru: "Русский",
 };
 
+const url = (path: string) => new URL(path, SITE_URL).toString();
+
+export const LLMS_FULL_PATH = "/llms-full.txt";
+
+type Page = {
+  path: (lang: Lang) => string;
+  title: (lang: Lang) => string;
+  description: (lang: Lang) => string;
+};
+
+/** Every page of the site, in the order of the header's navigation */
+const PAGES: Page[] = [
+  {
+    path: langPath,
+    title: (lang) => getUi(lang).siteTitle,
+    description: (lang) => getUi(lang).siteDescription,
+  },
+  {
+    path: aiPath,
+    title: (lang) => getUi(lang).ai.title,
+    description: (lang) => getUi(lang).ai.description,
+  },
+  {
+    path: gamesPath,
+    title: (lang) => getUi(lang).games.title,
+    description: (lang) => getUi(lang).games.description,
+  },
+  {
+    path: spacePath,
+    title: (lang) => getUi(lang).space.title,
+    description: (lang) => getUi(lang).space.description,
+  },
+  {
+    path: space3dPath,
+    title: (lang) => getUi(lang).space3d.title,
+    description: (lang) => getUi(lang).space3d.description,
+  },
+  {
+    path: gargantuaPath,
+    title: (lang) => getUi(lang).gargantua.title,
+    description: (lang) => getUi(lang).gargantua.description,
+  },
+  {
+    path: spiritPath,
+    title: (lang) => getUi(lang).spirit.title,
+    description: (lang) => getUi(lang).spirit.description,
+  },
+];
+
+/** Collapses the blank lines pushed around empty parts and ends with one newline */
+const finish = (lines: string[]) =>
+  lines.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
+
 /**
- * llms.txt по формату llmstxt.org: заголовок, краткое описание в цитате,
- * затем разделы со ссылками.
+ * llms.txt in the llmstxt.org format: a title, a summary in a quote, then
+ * sections of links. It is the index only: which pages exist, what the AI
+ * projects and the games are, and how to get in touch. The text of the pages
+ * lives in llms-full.txt, so an agent reads it only when it needs it.
  *
- * Содержимое страницы рисуется в WebGL и раскрывается по скроллу, поэтому
- * весь текст продублирован здесь в готовом виде — краулеру не нужно исполнять
- * страницу, чтобы понять, о чём сайт.
- *
- * Собирается из тех же словарей, что и сама страница: иначе файл тихо
- * устаревал бы после каждой правки текстов.
+ * Built from the same dictionaries as the pages themselves, so it cannot go
+ * stale after an edit to the texts.
  */
 export function buildLlmsTxt(): string {
+  const en = getUi("en");
   const lines: string[] = [];
 
   lines.push("# ZorahM");
   lines.push("");
-  lines.push(`> ${getUi("en").siteDescription}`);
+  lines.push(`> ${en.siteDescription}`);
   lines.push("");
   lines.push(
-    "Personal site of ZorahM. A single scroll-driven page told in eight frames, " +
-      "each pairing a short text with a halftone figure rendered in WebGL, plus " +
-      "an interactive solar system at /space where every body can be opened and " +
-      "read about, the same system ray-traced in 3D at /space-3d, a black hole " +
-      "ray-traced along Schwarzschild geodesics at /gargantua, and a fan's " +
-      "note at /spirit about the day Team Spirit won two world titles and the " +
-      "trophy that followed two weeks later, and /games, browser games made " +
-      "by AI models to test how far a model gets on its own. Available in English and Russian; " +
-      "the full text of both versions is included below.",
+    "ZorahM's personal site about artificial intelligence: plugins and skills " +
+      "for AI models, browser games made by models, interactive space scenes " +
+      "and a fan's note. Every page exists in English at the root and in " +
+      "Russian under /ru.",
   );
   lines.push("");
-  lines.push("Crawling and indexing by AI agents is allowed.");
+  lines.push(
+    `The full text of every page, in both languages, is in ${url(LLMS_FULL_PATH)}. ` +
+      "Crawling and indexing by AI agents is allowed.",
+  );
   lines.push("");
 
   lines.push("## Pages");
   lines.push("");
-  for (const lang of LANGS) {
+  for (const page of PAGES) {
     lines.push(
-      `- [${LANG_TITLE[lang]}](${absolute(lang)}): ${getUi(lang).siteTitle}`,
+      `- [${page.title("en")}](${url(page.path("en"))}): ${page.description("en")} ` +
+        `${LANG_TITLE.ru}: [${page.title("ru")}](${url(page.path("ru"))})`,
     );
   }
-  for (const lang of LANGS) {
+  lines.push("");
+
+  lines.push("## AI projects");
+  lines.push("");
+  for (const entry of getAiEntries("en")) {
     lines.push(
-      `- [${getUi(lang).space.title} — ${LANG_TITLE[lang]}](${spaceUrl(lang)}): ` +
-        getUi(lang).space.description,
+      `- [${entry.title}](${entry.href}): ${en.ai.kind[entry.kind]}. ${entry.summary[0]}`,
     );
   }
-  for (const lang of LANGS) {
+  lines.push("");
+
+  lines.push("## Games");
+  lines.push("");
+  for (const game of getGames("en")) {
     lines.push(
-      `- [${getUi(lang).space3d.title} — ${LANG_TITLE[lang]}](${space3dUrl(lang)}): ` +
-        getUi(lang).space3d.description,
-    );
-  }
-  for (const lang of LANGS) {
-    lines.push(
-      `- [${getUi(lang).gargantua.title} — ${LANG_TITLE[lang]}](${gargantuaUrl(lang)}): ` +
-        getUi(lang).gargantua.description,
-    );
-  }
-  for (const lang of LANGS) {
-    lines.push(
-      `- [${getUi(lang).spirit.title} — ${LANG_TITLE[lang]}](${spiritUrl(lang)}): ` +
-        getUi(lang).spirit.description,
-    );
-  }
-  for (const lang of LANGS) {
-    lines.push(
-      `- [${getUi(lang).games.title} — ${LANG_TITLE[lang]}](${gamesUrl(lang)}): ` +
-        getUi(lang).games.description,
+      `- [${game.title}](${url(game.href)}): made by ${game.model} in ${game.setup}. ` +
+        game.summary,
     );
   }
   lines.push("");
@@ -104,131 +137,212 @@ export function buildLlmsTxt(): string {
   lines.push("## Contact");
   lines.push("");
   for (const contact of getContacts("en")) {
-    const href = contact.href.replace(/^mailto:/, "");
-    lines.push(`- ${contact.label}: ${href}`);
+    lines.push(`- ${contact.label}: ${contact.href.replace(/^mailto:/, "")}`);
   }
   lines.push("");
 
-  for (const lang of LANGS) {
-    lines.push(`## Full text — ${LANG_TITLE[lang]}`);
-    lines.push("");
-    lines.push(`Source: ${absolute(lang)}`);
-    lines.push("");
+  lines.push("## Optional");
+  lines.push("");
+  lines.push(
+    `- [Full text](${url(LLMS_FULL_PATH)}): every page in English and Russian, ` +
+      "grouped by language, then by page",
+  );
 
-    for (const frame of getFrames(lang)) {
-      lines.push(`### ${frame.eyebrow} — ${frame.title}`);
-      lines.push("");
-      for (const paragraph of frame.body) {
-        lines.push(paragraph.text);
-        lines.push("");
-      }
-      if (frame.cta) {
-        lines.push(`Link: ${frame.cta.href}`);
-        lines.push("");
-      }
-    }
+  return finish(lines);
+}
 
-    lines.push(`### ${getUi(lang).space.title}`);
+/** Header of one page in the full text: its name, address and summary */
+function pageHead(lines: string[], title: string, path: string, description?: string) {
+  lines.push(`### ${title}`);
+  lines.push("");
+  lines.push(`Source: ${url(path)}`);
+  lines.push("");
+  if (description) {
+    lines.push(description);
     lines.push("");
-    lines.push(`Source: ${spaceUrl(lang)}`);
-    lines.push("");
+  }
+}
 
-    for (const body of getBodies(lang)) {
-      lines.push(`#### ${body.name} — ${body.tagline}`);
-      lines.push("");
-      lines.push(body.stats.map((s) => `${s.label}: ${s.value}`).join(" · "));
-      lines.push("");
-      lines.push(body.body);
+function homeText(lines: string[], lang: Lang) {
+  // No summary: the site description is the first frame's text word for word
+  pageHead(lines, getUi(lang).siteTitle, langPath(lang));
+  for (const frame of getFrames(lang)) {
+    lines.push(`#### ${frame.eyebrow} — ${frame.title}`);
+    lines.push("");
+    for (const paragraph of frame.body) {
+      lines.push(paragraph.text);
       lines.push("");
     }
-
-    const spirit = getUi(lang).spirit;
-    lines.push(`### ${spirit.heading}`);
-    lines.push("");
-    lines.push(`Source: ${spiritUrl(lang)}`);
-    lines.push("");
-    lines.push(`${spirit.date} (${SPIRIT_DAY})`);
-    lines.push("");
-    for (const paragraph of spirit.lead) {
-      lines.push(paragraph);
-      lines.push("");
-    }
-
-    for (const match of getSpiritMatches(lang)) {
-      lines.push(`#### ${match.discipline} — ${match.event}`);
-      lines.push("");
-      lines.push(
-        `${SPIRIT_TEAM} ${match.score[0]}:${match.score[1]} ${match.opponent} ` +
-          `(${match.format}) — ${match.venue}, ${match.date}`,
-      );
-      lines.push("");
-      lines.push(`${match.prize}. ${match.line}`);
-      lines.push("");
-      lines.push(
-        `${spirit.rosterWord}: ${match.roster.join(", ")} · ` +
-          `${spirit.coachWord}: ${match.coach}`,
-      );
-      lines.push("");
-      lines.push(`${spirit.sourceWord}: ${match.source}`);
-      lines.push("");
-    }
-
-    for (const step of spirit.timeline) {
-      lines.push(`${step.mark} — ${step.text}`);
-      lines.push("");
-    }
-
-    for (const paragraph of spirit.city) {
-      lines.push(paragraph);
-      lines.push("");
-    }
-    lines.push(
-      `${SPIRIT_CITY_TITLE.discipline} — ${SPIRIT_CITY_TITLE.event}: ` +
-        `${SPIRIT_TEAM} ${SPIRIT_CITY_TITLE.score[0]}:${SPIRIT_CITY_TITLE.score[1]} ` +
-        `${SPIRIT_CITY_TITLE.opponent} · ${SPIRIT_CITY_TITLE.source}`,
-    );
-    lines.push("");
-
-    for (const fact of spirit.facts) {
-      lines.push(`- ${fact}`);
-    }
-    lines.push("");
-    for (const paragraph of spirit.note) {
-      lines.push(paragraph);
-      lines.push("");
-    }
-    lines.push(`#### ${spirit.psLabel}`);
-    lines.push("");
-    for (const paragraph of spirit.ps) {
-      lines.push(paragraph);
-      lines.push("");
-    }
-    lines.push(spirit.disclaimer);
-    lines.push("");
-
-    const games = getUi(lang).games;
-    lines.push(`### ${games.heading}`);
-    lines.push("");
-    lines.push(`Source: ${gamesUrl(lang)}`);
-    lines.push("");
-    for (const paragraph of games.lead) {
-      lines.push(paragraph);
-      lines.push("");
-    }
-    for (const game of getGames(lang)) {
-      lines.push(`#### ${game.title}`);
-      lines.push("");
-      lines.push(
-        `${games.facts.model}: ${game.model} · ${games.facts.setup}: ${game.setup} · ` +
-          `${games.facts.prompts}: ${game.prompts}`,
-      );
-      lines.push("");
-      lines.push(game.summary);
-      lines.push("");
-      lines.push(`${games.play}: ${new URL(game.href, SITE_URL).toString()}`);
+    if (frame.cta) {
+      lines.push(`Link: ${frame.cta.href}`);
       lines.push("");
     }
   }
+}
 
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
+function aiText(lines: string[], lang: Lang) {
+  const ai = getUi(lang).ai;
+  pageHead(lines, ai.heading, aiPath(lang), ai.description);
+  for (const paragraph of ai.lead) {
+    lines.push(paragraph);
+    lines.push("");
+  }
+  for (const entry of getAiEntries(lang)) {
+    lines.push(`#### ${entry.title} — ${ai.kind[entry.kind]}`);
+    lines.push("");
+    for (const paragraph of entry.summary) {
+      lines.push(paragraph);
+      lines.push("");
+    }
+    // One fact per line: the list of agents already uses the middle dot
+    lines.push(`- ${ai.facts.agents}: ${entry.agents}`);
+    lines.push(`- ${ai.facts.requires}: ${entry.requires}`);
+    lines.push("");
+    lines.push(`${ai.facts.install}:`);
+    lines.push("");
+    lines.push("```");
+    lines.push(...entry.install);
+    lines.push("```");
+    lines.push("");
+    lines.push(`GitHub: ${entry.href}`);
+    lines.push("");
+  }
+}
+
+function gamesText(lines: string[], lang: Lang) {
+  const games = getUi(lang).games;
+  pageHead(lines, games.heading, gamesPath(lang), games.description);
+  for (const paragraph of games.lead) {
+    lines.push(paragraph);
+    lines.push("");
+  }
+  for (const game of getGames(lang)) {
+    lines.push(`#### ${game.title}`);
+    lines.push("");
+    lines.push(
+      `${games.facts.model}: ${game.model} · ${games.facts.setup}: ${game.setup} · ` +
+        `${games.facts.prompts}: ${game.prompts}`,
+    );
+    lines.push("");
+    lines.push(game.summary);
+    lines.push("");
+    lines.push(`${games.play}: ${url(game.href)}`);
+    lines.push("");
+  }
+}
+
+function spaceText(lines: string[], lang: Lang) {
+  const space = getUi(lang).space;
+  pageHead(lines, space.title, spacePath(lang), space.description);
+  for (const body of getBodies(lang)) {
+    lines.push(`#### ${body.name} — ${body.tagline}`);
+    lines.push("");
+    lines.push(body.stats.map((s) => `${s.label}: ${s.value}`).join(" · "));
+    lines.push("");
+    lines.push(body.body);
+    lines.push("");
+  }
+}
+
+/** Interactive scenes with no text of their own beyond the summary */
+function sceneTexts(lines: string[], lang: Lang) {
+  const { space3d, gargantua } = getUi(lang);
+  pageHead(lines, space3d.title, space3dPath(lang), space3d.description);
+  pageHead(lines, gargantua.title, gargantuaPath(lang), gargantua.description);
+}
+
+function spiritText(lines: string[], lang: Lang) {
+  const spirit = getUi(lang).spirit;
+  pageHead(lines, spirit.heading, spiritPath(lang), spirit.description);
+  lines.push(`${spirit.date} (${SPIRIT_DAY})`);
+  lines.push("");
+  for (const paragraph of spirit.lead) {
+    lines.push(paragraph);
+    lines.push("");
+  }
+
+  for (const match of getSpiritMatches(lang)) {
+    lines.push(`#### ${match.discipline} — ${match.event}`);
+    lines.push("");
+    lines.push(
+      `${SPIRIT_TEAM} ${match.score[0]}:${match.score[1]} ${match.opponent} ` +
+        `(${match.format}) — ${match.venue}, ${match.date}`,
+    );
+    lines.push("");
+    lines.push(`${match.prize}. ${match.line}`);
+    lines.push("");
+    lines.push(
+      `${spirit.rosterWord}: ${match.roster.join(", ")} · ` +
+        `${spirit.coachWord}: ${match.coach}`,
+    );
+    lines.push("");
+    lines.push(`${spirit.sourceWord}: ${match.source}`);
+    lines.push("");
+  }
+
+  for (const step of spirit.timeline) {
+    lines.push(`${step.mark} — ${step.text}`);
+    lines.push("");
+  }
+
+  lines.push(`#### ${spirit.cityLabel}`);
+  lines.push("");
+  for (const paragraph of spirit.city) {
+    lines.push(paragraph);
+    lines.push("");
+  }
+  lines.push(
+    `${SPIRIT_CITY_TITLE.discipline} — ${SPIRIT_CITY_TITLE.event}: ` +
+      `${SPIRIT_TEAM} ${SPIRIT_CITY_TITLE.score[0]}:${SPIRIT_CITY_TITLE.score[1]} ` +
+      `${SPIRIT_CITY_TITLE.opponent} · ${SPIRIT_CITY_TITLE.source}`,
+  );
+  lines.push("");
+
+  for (const fact of spirit.facts) {
+    lines.push(`- ${fact}`);
+  }
+  lines.push("");
+  for (const paragraph of spirit.note) {
+    lines.push(paragraph);
+    lines.push("");
+  }
+  lines.push(`#### ${spirit.psLabel}`);
+  lines.push("");
+  for (const paragraph of spirit.ps) {
+    lines.push(paragraph);
+    lines.push("");
+  }
+  lines.push(spirit.disclaimer);
+  lines.push("");
+}
+
+/**
+ * llms-full.txt: the text of every page, so a crawler does not need to run
+ * the pages to read them — much of the site is drawn on canvases and in
+ * WebGL. Grouped by language first, then by page in the order of the
+ * header's navigation.
+ */
+export function buildLlmsFullTxt(): string {
+  const lines: string[] = [];
+
+  lines.push("# ZorahM — full text");
+  lines.push("");
+  lines.push(
+    `> Every page of ${SITE_URL} in English and Russian, as plain text. ` +
+      `The short index is at ${url("/llms.txt")}.`,
+  );
+  lines.push("");
+
+  for (const lang of LANGS) {
+    lines.push(`## ${LANG_TITLE[lang]}`);
+    lines.push("");
+    homeText(lines, lang);
+    aiText(lines, lang);
+    gamesText(lines, lang);
+    spaceText(lines, lang);
+    sceneTexts(lines, lang);
+    spiritText(lines, lang);
+  }
+
+  return finish(lines);
 }

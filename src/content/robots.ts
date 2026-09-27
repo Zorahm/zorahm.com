@@ -65,7 +65,7 @@ export const ROBOTS_GROUPS: Group[] = [
   {
     note: ["AI crawlers are welcome, and named one by one on purpose."],
     agents: AI_AGENTS,
-    allow: ["/", "/llms.txt"],
+    allow: ["/", "/llms.txt", "/llms-full.txt"],
   },
   {
     // GigaExplorator is the search crawler of GigaChat, Sber's neural network

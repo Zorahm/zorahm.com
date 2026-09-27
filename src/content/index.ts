@@ -142,7 +142,7 @@ export const gargantuaPath = (lang: Lang) =>
 export const spiritPath = (lang: Lang) =>
   lang === "en" ? "/spirit" : `/${lang}/spirit`;
 
-/** Path to the AI projects page. Not published yet — see its metadata */
+/** Path to the AI projects page */
 export const aiPath = (lang: Lang) => (lang === "en" ? "/ai" : `/${lang}/ai`);
 
 /** Path to the games page. The games themselves are one build for both languages */

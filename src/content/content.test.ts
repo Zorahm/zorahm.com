@@ -250,28 +250,24 @@ describe("entries of the /ai page", () => {
     for (const lang of LANGS) {
       for (const entry of getAiEntries(lang)) {
         expect(entry.title.trim(), `${lang}/${entry.id} title`).not.toBe("");
-        expect(entry.summary.trim(), `${lang}/${entry.id} summary`).not.toBe("");
+        expect(entry.summary.length, `${lang}/${entry.id} summary`).toBeGreaterThan(0);
+        for (const text of entry.summary) {
+          expect(text.trim(), `${lang}/${entry.id} summary`).not.toBe("");
+        }
       }
     }
   });
 
-  it("both groups have entries, and exactly one project takes the wide card", () => {
-    const projects = AI_STRUCTURE.filter((e) => e.group === "projects");
-    expect(projects.length).toBeGreaterThan(0);
-    expect(AI_STRUCTURE.some((e) => e.group === "other")).toBe(true);
-    expect(AI_STRUCTURE.filter((e) => e.featured)).toHaveLength(1);
-    expect(projects.find((e) => e.featured)).toBeDefined();
-  });
-
-  it("entries carry a stack and link out over https", () => {
+  it("projects carry a stack, an install command and a link to GitHub", () => {
     for (const entry of AI_STRUCTURE) {
       expect(entry.tags.length, `${entry.id} tags`).toBeGreaterThan(0);
       for (const tag of entry.tags) {
         expect(tag.trim(), `${entry.id} tag`).not.toBe("");
       }
-      if (entry.href !== undefined) {
-        expect(entry.href, `${entry.id} href`).toMatch(/^https:\/\//);
-      }
+      expect(entry.agents.trim(), `${entry.id} agents`).not.toBe("");
+      expect(entry.requires.trim(), `${entry.id} requires`).not.toBe("");
+      expect(entry.install.length, `${entry.id} install`).toBeGreaterThan(0);
+      expect(entry.href, `${entry.id} href`).toMatch(/^https:\/\/github\.com\//);
     }
   });
 
@@ -389,6 +385,7 @@ describe("маршруты и контакты", () => {
 
 describe("home index", () => {
   const paths = {
+    ai: aiPath,
     games: gamesPath,
     space: spacePath,
     space3d: space3dPath,
@@ -401,13 +398,6 @@ describe("home index", () => {
       for (const section of HOME_SECTIONS) {
         expect(section.path(lang)).toBe(paths[section.id](lang));
       }
-    }
-  });
-
-  it("keeps the unpublished /ai page out", () => {
-    for (const lang of LANGS) {
-      const all = HOME_SECTIONS.map((s) => s.path(lang));
-      expect(all).not.toContain(aiPath(lang));
     }
   });
 

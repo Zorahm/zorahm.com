@@ -17,6 +17,7 @@ const prefixed = (slug: string) => (lang: Lang) =>
 
 /** Order of the index on the home page */
 export const HOME_SECTIONS: HomeSectionStructure[] = [
+  { id: "ai", path: prefixed("ai"), shape: "network", accent: 0.5 },
   { id: "games", path: prefixed("games"), shape: "github", accent: 0.4 },
   { id: "space", path: prefixed("space"), shape: "noise", accent: 0.2 },
   { id: "space3d", path: prefixed("space-3d"), shape: "globe", accent: 0.3 },

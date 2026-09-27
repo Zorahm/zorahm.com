@@ -56,7 +56,7 @@ sign) are baked once with Canvas2D into a texture and animated in the shader.
 
 ```
 src/
-  app/          two root layouts — (en) at /, (ru) at /ru — plus robots, sitemap, llms.txt
+  app/          two root layouts — (en) at /, (ru) at /ru — plus robots, sitemap, llms.txt and llms-full.txt
   content/      frame composition and per-language texts, kept separate
   components/
     field/      WebGL field: grid, frame mechanics, shaders

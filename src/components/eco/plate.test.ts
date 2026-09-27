@@ -3,6 +3,7 @@ import { buildPlate, lensPull, type PlateShape } from "./plate";
 
 const SHAPES: PlateShape[] = [
   "saturn", "noise", "network", "eye", "globe", "ripple", "github", "mark", "rails", "spirit",
+  "crossword", "rules",
 ];
 
 describe("home plates", () => {
@@ -37,9 +38,16 @@ describe("home plates", () => {
     expect(buildPlate("mark", 30, 20, 1).accents.some(Boolean)).toBe(true);
   });
 
+  it("draws the crossword's crossings solid and its cells lighter", () => {
+    const { values } = buildPlate("crossword", 30, 20, 0);
+    const levels = new Set(Array.from(values).filter((value) => value > 0.3));
+    expect(levels).toEqual(new Set([0.5, 1]));
+  });
+
   it("pulls hardest at the pointer and not at all past the radius", () => {
     expect(lensPull(0, 0, 4)).toBe(1);
     expect(lensPull(4, 0, 4)).toBe(0);
     expect(lensPull(1, 1, 4)).toBeGreaterThan(lensPull(2, 2, 4));
   });
+
 });

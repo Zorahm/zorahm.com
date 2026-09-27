@@ -388,42 +388,37 @@ export type SpiritStrings = {
   home: string;
 };
 
-/** Entries of the /ai page. Placeholders for now, named after Greek letters */
-export type AiEntryId =
-  | "alpha"
-  | "beta"
-  | "gamma"
-  | "delta"
-  | "epsilon"
-  | "zeta"
-  | "eta"
-  | "theta";
+/** Projects of the /ai page */
+export type AiEntryId = "zowork" | "crossword-skill";
 
-/** Where an entry stands: running, being built, or still an idea */
-export type AiStatus = "live" | "wip" | "idea";
+/** What a project is to the agent that runs it */
+export type AiKind = "plugin" | "skill";
 
 /**
- * Language-independent part of an entry. The stack is written the way the
- * tools name themselves, so it does not get translated.
+ * Language-independent part of a project. The stack, the agents and the
+ * install commands are written the way the tools name themselves, so they
+ * do not get translated.
  */
 export type AiEntryStructure = {
   id: AiEntryId;
-  /** Projects go into cards, everything else into a list under them */
-  group: "projects" | "other";
-  status: AiStatus;
+  kind: AiKind;
   year: number;
   tags: string[];
-  /** Where the entry lives; without it the entry is not a link */
-  href?: string;
-  /** The one project that takes a wide card */
-  featured?: boolean;
+  /** Agents the project runs in */
+  agents: string;
+  /** What it needs besides the agent */
+  requires: string;
+  /** Commands that install it, one per line */
+  install: string[];
+  /** Where the project lives */
+  href: string;
 };
 
-/** Language part of an entry */
+/** Language part of a project */
 export type AiEntryText = {
   title: string;
-  /** One or two lines about what it is */
-  summary: string;
+  /** What it is and why it exists; paragraphs after the first are dimmed */
+  summary: string[];
 };
 
 export type AiEntry = AiEntryStructure & AiEntryText;
@@ -433,22 +428,28 @@ export type AiStrings = {
   title: string;
   description: string;
   eyebrow: string;
-  /** Marker beside the eyebrow while the entries are placeholders */
-  draft: string;
   heading: string;
   /** Lead paragraphs; the second one is dimmed */
   lead: string[];
   /** Captions of the counters under the heading */
   counts: {
     projects: string;
-    live: string;
-    wip: string;
-    other: string;
+    plugins: string;
+    skills: string;
   };
-  /** Status names */
-  status: Record<AiStatus, string>;
+  /** Kind names, shown in a card's head */
+  kind: Record<AiKind, string>;
   projectsLabel: string;
-  otherLabel: string;
+  /** Captions of a project's facts */
+  facts: {
+    agents: string;
+    requires: string;
+    install: string;
+  };
+  /** Call to action on a project card */
+  open: string;
+  /** Copy button of the install commands */
+  copyInstall: string;
   /** Closing line above the contacts */
   outro: string;
   home: string;
@@ -514,8 +515,8 @@ export type GamesStrings = {
   home: string;
 };
 
-/** Sections the home page index points to. /ai stays out until it is published */
-export type HomeSectionId = "games" | "space" | "space3d" | "gargantua" | "spirit";
+/** Sections the home page index points to */
+export type HomeSectionId = "ai" | "games" | "space" | "space3d" | "gargantua" | "spirit";
 
 /** Strings of the shared page shell */
 export type ShellStrings = {

@@ -1,63 +1,74 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRef, useState } from "react";
 import {
   aiPath,
   getAiEntries,
-  getContacts,
+  getFrames,
   getUi,
   langPath,
   otherLang,
   type AiEntry,
+  type AiEntryId,
   type Lang,
 } from "@/content";
-import { useStageDriver } from "@/lib/scroll";
-import type { FieldFrame } from "./field/Halftone";
-import hud from "./Hud.module.css";
+import { ContactBlock } from "./eco/ContactBlock";
+import { DotPlate } from "./eco/DotPlate";
+import { EcoShell } from "./eco/EcoShell";
+import { ArrowLeftIcon, ArrowUpRightIcon, CheckIcon, CopyIcon } from "./eco/icons";
+import type { PlateShape } from "./eco/plate";
+import eco from "./eco/eco.module.css";
 import styles from "./AiPage.module.css";
-
-// WebGL only lives in the browser; there is nothing to render on the server
-const Field = dynamic(() => import("./field/Field"), { ssr: false });
-
-/** One still figure behind the whole page */
-const FRAMES: readonly FieldFrame[] = [{ id: "latent", accent: 0.85 }];
 
 /** Counters and indices are set in two digits: 01, 04 */
 const twoDigits = (n: number) => String(n).padStart(2, "0");
 
-/** An entry opens in a new tab: every link on the page leads off the site */
-function EntryTitle({ entry }: { entry: AiEntry }) {
-  if (!entry.href) return entry.title;
-  return (
-    <a
-      className={styles.stretch}
-      href={entry.href}
-      target="_blank"
-      rel="noreferrer"
-    >
-      {entry.title}
-    </a>
-  );
-}
+/** The dotted figure on each project's card */
+const COVERS: Record<AiEntryId, PlateShape> = {
+  zowork: "rules",
+  "crossword-skill": "crossword",
+};
 
-function Status({ entry, label }: { entry: AiEntry; label: string }) {
+/** Install commands with a button that copies all of them at once */
+function Install({ entry, lang }: { entry: AiEntry; lang: Lang }) {
+  const ui = getUi(lang);
+  const [copied, setCopied] = useState(false);
+  const timer = useRef(0);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(entry.install.join("\n"));
+    } catch {
+      return; // Nothing was copied, so nothing to confirm
+    }
+    setCopied(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(false), 1800);
+  };
+
   return (
-    <span className={styles.status} data-status={entry.status}>
-      <i aria-hidden="true" />
-      {label}
-    </span>
+    <div className={styles.install}>
+      <pre className={styles.commands}>
+        <code>{entry.install.join("\n")}</code>
+      </pre>
+      <button
+        type="button"
+        className={eco.secondarySmall}
+        onClick={copy}
+        title={ui.ai.copyInstall}
+      >
+        {copied ? <CheckIcon /> : <CopyIcon />}
+        <span aria-live="polite">{copied ? ui.shell.copied : ui.shell.copy}</span>
+        <span className={styles.srOnly}> — {entry.title}</span>
+      </button>
+    </div>
   );
 }
 
 /**
- * The /ai page: projects built for artificial intelligence and around it,
- * and everything else on the subject.
- *
- * The field here is a backdrop that has to stay visible, so there is no
- * single sheet over it as on /spirit. The page is made of separate glass
- * blocks instead: the dots read clearly in the gaps between them and as a
- * soft glow through them.
+ * The /ai page: plugins and skills that teach AI models to do something,
+ * each one open source on GitHub.
  *
  * Counters are counted from the entries, not written in the dictionaries, so
  * they cannot fall out of step with what the page lists.
@@ -65,174 +76,135 @@ function Status({ entry, label }: { entry: AiEntry; label: string }) {
 export function AiPage({ lang }: { lang: Lang }) {
   const ui = getUi(lang);
   const page = ui.ai;
-  const other = otherLang(lang);
-  const otherUi = getUi(other);
-
   const entries = getAiEntries(lang);
-  const projects = entries.filter((entry) => entry.group === "projects");
-  const rest = entries.filter((entry) => entry.group === "other");
+  const contact = getFrames(lang).find((frame) => frame.contacts);
 
   const counts = [
-    { label: page.counts.projects, value: projects.length },
+    { label: page.counts.projects, value: entries.length },
     {
-      label: page.counts.live,
-      value: entries.filter((entry) => entry.status === "live").length,
+      label: page.counts.plugins,
+      value: entries.filter((entry) => entry.kind === "plugin").length,
     },
     {
-      label: page.counts.wip,
-      value: entries.filter((entry) => entry.status === "wip").length,
+      label: page.counts.skills,
+      value: entries.filter((entry) => entry.kind === "skill").length,
     },
-    { label: page.counts.other, value: rest.length },
   ];
 
-  useStageDriver(0);
-
   return (
-    <>
-      <Field frames={FRAMES} still />
-
-      <Link
-        href={langPath(lang)}
-        className={`${hud.hud} ${hud.mark} ${styles.hudTop}`}
-      >
-        Z<span>\</span>M
-      </Link>
-
-      <nav
-        className={`${hud.hud} ${hud.lang} ${styles.hudTop}`}
-        aria-label={ui.switchLanguage}
-      >
-        <span className={hud.langActive} aria-current="page">
-          {ui.langName}
-        </span>
-        <span className={hud.langSep} aria-hidden="true">
-          /
-        </span>
-        <Link href={aiPath(other)} hrefLang={other} lang={other}>
-          {otherUi.langName}
-        </Link>
-      </nav>
-
-      <main className={styles.main}>
-        <header className={styles.hero}>
-          <p className={styles.eyebrow}>
-            <span>{page.eyebrow}</span>
-            <span className={styles.draft}>{page.draft}</span>
-          </p>
-
-          <h1 className={styles.title}>{page.heading}</h1>
-
-          <div className={styles.lead}>
-            {page.lead.map((text, index) => (
-              <p key={index}>{text}</p>
-            ))}
-          </div>
+    <EcoShell lang={lang} otherHref={aiPath(otherLang(lang))} current="ai">
+      <section className={`${eco.section} ${styles.hero}`}>
+        <div className={styles.heroText}>
+          <Link href={langPath(lang)} className={styles.back}>
+            <ArrowLeftIcon />
+            {page.home}
+          </Link>
+          <p className={eco.label}>{page.eyebrow}</p>
+          <h1 className={`${eco.displayXl} ${styles.title}`}>{page.heading}</h1>
+          {page.lead.map((text, index) => (
+            <p key={index} className={`${eco.body} ${index > 0 ? eco.muted : ""}`}>
+              {text}
+            </p>
+          ))}
 
           <dl className={styles.counts}>
             {counts.map((count) => (
-              <div key={count.label}>
-                <dt>{count.label}</dt>
-                <dd>{twoDigits(count.value)}</dd>
+              <div key={count.label} className={styles.count}>
+                <dt className={eco.label}>{count.label}</dt>
+                <dd className={styles.countValue}>{twoDigits(count.value)}</dd>
               </div>
             ))}
           </dl>
-        </header>
+        </div>
 
-        <section className={styles.section}>
-          <h2 className={styles.label}>{page.projectsLabel}</h2>
+        <div className={styles.heroPlate}>
+          <DotPlate shape="network" accent={0.85} cols={30} rows={20} lens />
+        </div>
+      </section>
 
-          <ol className={styles.grid}>
-            {projects.map((entry, index) => (
-              <li
-                key={entry.id}
-                className={
-                  entry.featured
-                    ? `${styles.card} ${styles.featured}`
-                    : styles.card
-                }
-              >
-                <p className={styles.cardHead}>
-                  <span className={styles.index}>{twoDigits(index + 1)}</span>
-                  <Status entry={entry} label={page.status[entry.status]} />
-                  <span className={styles.year}>{entry.year}</span>
-                </p>
+      <section className={eco.section}>
+        <h2 className={eco.label}>{page.projectsLabel}</h2>
 
-                <h3 className={styles.cardTitle}>
-                  <EntryTitle entry={entry} />
-                </h3>
-                <p className={styles.summary}>{entry.summary}</p>
+        <ol className={styles.list}>
+          {entries.map((entry, index) => (
+            <li key={entry.id}>
+              <article className={styles.card}>
+                <a
+                  href={entry.href}
+                  className={styles.cover}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                >
+                  <DotPlate shape={COVERS[entry.id]} accent={1} cols={30} rows={20} lens />
+                </a>
 
-                <ul className={styles.tags}>
-                  {entry.tags.map((tag) => (
-                    <li key={tag}>{tag}</li>
+                <div className={styles.info}>
+                  <p className={styles.cardHead}>
+                    <span className={eco.code}>{twoDigits(index + 1)}</span>
+                    <span className={`${eco.label} ${styles.kind}`}>
+                      <i aria-hidden="true" />
+                      {page.kind[entry.kind]}
+                    </span>
+                    <span className={`${eco.code} ${styles.year}`}>{entry.year}</span>
+                  </p>
+
+                  <h3 className={eco.displayL}>{entry.title}</h3>
+                  {entry.summary.map((text, i) => (
+                    <p key={i} className={`${eco.body} ${i > 0 ? eco.muted : ""}`}>
+                      {text}
+                    </p>
                   ))}
-                </ul>
 
-                {entry.href && (
-                  <i className={styles.arrow} aria-hidden="true">
-                    ↗
-                  </i>
-                )}
-              </li>
-            ))}
-          </ol>
-        </section>
+                  <ul className={styles.tags}>
+                    {entry.tags.map((tag) => (
+                      <li key={tag}>{tag}</li>
+                    ))}
+                  </ul>
 
-        <section className={styles.section}>
-          <h2 className={styles.label}>{page.otherLabel}</h2>
+                  <dl className={styles.facts}>
+                    <div>
+                      <dt className={eco.label}>{page.facts.agents}</dt>
+                      <dd>{entry.agents}</dd>
+                    </div>
+                    <div>
+                      <dt className={eco.label}>{page.facts.requires}</dt>
+                      <dd>{entry.requires}</dd>
+                    </div>
+                    <div>
+                      <dt className={eco.label}>{page.facts.install}</dt>
+                      <dd>
+                        <Install entry={entry} lang={lang} />
+                      </dd>
+                    </div>
+                  </dl>
 
-          <ol className={styles.rows}>
-            {rest.map((entry, index) => (
-              <li key={entry.id} className={styles.row}>
-                <span className={styles.index}>{twoDigits(index + 1)}</span>
-                <h3 className={styles.rowTitle}>
-                  <EntryTitle entry={entry} />
-                </h3>
-                <p className={styles.rowSummary}>{entry.summary}</p>
-                <p className={styles.rowMeta}>
-                  <Status entry={entry} label={page.status[entry.status]} />
-                  <span className={styles.rowTags}>
-                    {entry.tags.join(" · ")}
-                  </span>
-                </p>
-                <span className={styles.year}>{entry.year}</span>
-                <i className={styles.rowArrow} aria-hidden="true">
-                  {entry.href ? "↗" : ""}
-                </i>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <footer className={`${styles.section} ${styles.foot}`}>
-          <div>
-            <h2 className={styles.label}>{ui.contactsLabel}</h2>
-            <p className={styles.outro}>{page.outro}</p>
-            <ul className={styles.contacts}>
-              {getContacts(lang).map((contact) => {
-                const external = contact.href.startsWith("http");
-                return (
-                  <li key={contact.href}>
+                  <div className={eco.actions}>
                     <a
-                      href={contact.href}
-                      target={external ? "_blank" : undefined}
-                      rel={external ? "noreferrer" : undefined}
+                      href={entry.href}
+                      className={eco.primary}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      {contact.label}
-                      <i aria-hidden="true">↗</i>
+                      {page.open}
+                      <ArrowUpRightIcon />
+                      <span className={styles.srOnly}> — {entry.title}</span>
                     </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                  </div>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-          <Link href={langPath(lang)} className={styles.biglink}>
-            {page.home}
-            <i aria-hidden="true">→</i>
-          </Link>
-        </footer>
-      </main>
-    </>
+      <ContactBlock
+        lang={lang}
+        eyebrow={ui.contactsLabel}
+        heading={contact?.title ?? ui.contactsLabel}
+        body={[page.outro]}
+      />
+    </EcoShell>
   );
 }
