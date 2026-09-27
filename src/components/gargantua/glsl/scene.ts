@@ -12,6 +12,12 @@
  * grazing angles, which is exactly where the lensing puts it.
  */
 export const FRAG_SCENE = /* glsl */ `
+// Needed for the ray map's derivatives; core in WebGL2, and without it the
+// stars fall back to a profile sized by the screen pixel
+#extension GL_OES_standard_derivatives : enable
+#ifdef GL_OES_standard_derivatives
+#define HAS_DERIVATIVES 1
+#endif
 precision highp float;
 
 varying vec2 vUv;
@@ -112,7 +118,21 @@ vec3 starColor(float t){
   return c;
 }
 
-vec3 starLayer(vec3 rd, float scale, float density, float gain, float px){
+/*
+ * How one pixel of the screen lands on the sky. The lens maps the screen to
+ * escape directions, and near the hole it stretches that map by a lot, so a
+ * star is measured in pixels of the screen, not in radians of the sky: sky
+ * offsets go back through the inverse of the local map, and a star stays a
+ * round point under any magnification instead of turning into an arc.
+ */
+struct Footprint {
+  vec3  jx;    // sky offset of one pixel to the right
+  vec3  jy;    // sky offset of one pixel up
+  mat2  inv;   // sky offset, projected on jx and jy, back to pixels
+  float mag;   // brightening by the lens, clamped
+};
+
+vec3 starLayer(vec3 rd, float scale, float density, float gain, Footprint fp){
   vec3 p  = rd * scale;
   vec3 id = floor(p);
   vec3 f  = fract(p) - 0.5;
@@ -122,7 +142,8 @@ vec3 starLayer(vec3 rd, float scale, float density, float gain, float px){
   // The star stands anywhere inside its cell, or the grid would show through
   vec3  off = (hash33(id + 11.7) - 0.5) * 0.72;
   vec3  dv  = (f - off) / scale;              // offset in radians, not cells
-  float a   = length(dv);
+  vec2  sc  = fp.inv * vec2(dot(dv, fp.jx), dot(dv, fp.jy));  // ... in pixels
+  float a   = length(sc);
 
   // Magnitudes follow a power law: a handful of bright ones and a crowd of
   // faint ones. A flat distribution is what makes a sky look sprayed on
@@ -131,34 +152,17 @@ vec3 starLayer(vec3 rd, float scale, float density, float gain, float px){
   // Point spread: a core about a pixel across plus the wide skirt every real
   // optic has. The core is what is seen; the skirt is what makes the bright
   // ones feel bright
-  // The skirt is kept short on purpose. The profile is measured in the sky
-  // the ray came from, not on the screen, so whatever the lens magnifies it
-  // also stretches — and a long tail turns every star near the ring into a
-  // comet. The core survives that; the tail is what gives it away
-  //
-  // TODO: size the profile by the local Jacobian of the ray map instead of
-  // by a pixel of the screen — dFdx/dFdy of the escape direction give the
-  // solid angle one pixel actually covers, and a star scaled to that stays
-  // a point under any magnification. Two things stand in the way: derivatives
-  // need OES_standard_derivatives in GLSL ES 1.00, and along the edge of the
-  // shadow neighbouring pixels take different paths (one falls in, one
-  // escapes), so the derivative there is garbage and has to be clamped.
-  float s     = 0.9 * px;
-  float core  = exp(-(a * a) / (2.0 * s * s));
-  float wide  = a / (2.2 * px);
+  float core  = exp(-(a * a) / (2.0 * 0.81));
+  float wide  = a / 2.2;
   float skirt = 0.022 / (1.0 + wide * wide);
   float flux  = core + skirt;
 
-  // Diffraction spikes belong to the handful of brightest stars and to no
-  // one else. They are also drawn in the camera's own axes, which stops
-  // being the plane of the screen once the ray is bent — one more reason to
-  // keep them where the bending is weak and the stars are few
+  // Diffraction spikes belong to the handful of brightest stars. Measured
+  // in pixels they stay on the axes of the screen, lens or no lens
   float spike = smoothstep(0.975, 1.0, h.y);
   if (spike > 0.0){
-    vec2 sc = vec2(dot(dv, uCamMat[0]), dot(dv, uCamMat[1]));
-    float across = 2.0 * s * s;
-    float arm = exp(-abs(sc.x) / (9.0 * px)) * exp(-sc.y * sc.y / across)
-              + exp(-abs(sc.y) / (9.0 * px)) * exp(-sc.x * sc.x / across);
+    float arm = exp(-abs(sc.x) / 9.0) * exp(-sc.y * sc.y / 1.62)
+              + exp(-abs(sc.y) / 9.0) * exp(-sc.x * sc.x / 1.62);
     flux += arm * 0.09 * spike;
   }
 
@@ -166,7 +170,7 @@ vec3 starLayer(vec3 rd, float scale, float density, float gain, float px){
   // blue-white and the faint end red
   float temp = clamp(h.z * 0.55 + h.y * h.y * 0.75, 0.0, 1.0);
 
-  return starColor(temp) * flux * mag * gain;
+  return starColor(temp) * flux * mag * gain * fp.mag;
 }
 
 /*
@@ -206,18 +210,50 @@ vec3 milkyWay(vec3 rd, out float crowding){
   return col;
 }
 
-vec3 background(vec3 rd){
-  // Angular size of a pixel: the star profile is measured in these, so it
-  // holds its width whatever resolution the scene is running at
+/*
+ * The footprint of this pixel from the derivatives of the escape direction.
+ * Where the neighbouring rays took different paths — one fell in, one went
+ * round the other side — the derivative means nothing, and the pixel falls
+ * back to the plain footprint of an unbent ray.
+ */
+Footprint footprint(vec3 jx, vec3 jy){
+  // Angular size of a pixel: the fallback footprint and the yardstick for
+  // what counts as a sane derivative
   float px = 2.0 * uTanFov / uRes.y;
 
+  float xx = dot(jx, jx);
+  float yy = dot(jy, jy);
+  float xy = dot(jx, jy);
+  float det = xx * yy - xy * xy;
+  float limit = 60.0 * px;
+
+  Footprint fp;
+  if (xx > limit * limit || yy > limit * limit || det < 1e-4 * px * px * px * px){
+    fp.jx  = uCamMat[0] * px;
+    fp.jy  = uCamMat[1] * px;
+    fp.inv = mat2(1.0 / (px * px));
+    fp.mag = 1.0;
+    return fp;
+  }
+
+  fp.jx  = jx;
+  fp.jy  = jy;
+  // Inverse of the Gram matrix: turns projections on jx and jy into pixels
+  fp.inv = mat2(yy, -xy, -xy, xx) / det;
+  // A magnified patch of sky gathers more light into the same pixel; the
+  // clamp keeps the ring from flaring and the demagnified images visible
+  fp.mag = clamp(px * px / sqrt(det), 0.35, 3.0);
+  return fp;
+}
+
+vec3 background(vec3 rd, Footprint fp){
   float crowding;
   vec3  col = milkyWay(rd, crowding);
 
-  col += starLayer(rd,  46.0, 0.070 * crowding, 2.60, px);
-  col += starLayer(rd,  96.0, 0.060 * crowding, 1.45, px);
-  col += starLayer(rd, 190.0, 0.050 * crowding, 0.85, px);
-  col += starLayer(rd, 360.0, 0.040 * crowding, 0.50, px);
+  col += starLayer(rd,  46.0, 0.070 * crowding, 2.60, fp);
+  col += starLayer(rd,  96.0, 0.060 * crowding, 1.45, fp);
+  col += starLayer(rd, 190.0, 0.050 * crowding, 0.85, fp);
+  col += starLayer(rd, 360.0, 0.040 * crowding, 0.50, fp);
 
   // Everything too far and too faint to be anything in particular
   col += vec3(0.0035, 0.0042, 0.0060);
@@ -288,6 +324,11 @@ void main(){
   vec3  col   = vec3(0.0);
   float trans = 1.0;
   bool  done  = false;
+  // The sky is shaded after the loop: derivatives are only defined in
+  // uniform control flow, and every pixel leaves the loop at its own step
+  bool  escaped  = false;
+  float escTrans = 0.0;
+  vec3  escDir   = vec3(0.0);
 
   for (int i = 0; i < MAX_STEPS; i++){
     if (i >= uSteps) break;
@@ -295,7 +336,9 @@ void main(){
     float r  = length(pos);
     if (r < RS){ done = true; break; }                       // event horizon
     if (r > ESCAPE && dot(pos, vel) > 0.0){                   // escaped
-      col += trans * background(normalize(vel));
+      escaped  = true;
+      escTrans = trans;
+      escDir   = normalize(vel);
       done = true; break;
     }
 
@@ -352,6 +395,13 @@ void main(){
 
   // rays that ran out of steps are grazing the photon sphere: they end black
   if (!done) col += trans * vec3(0.0);
+
+#ifdef HAS_DERIVATIVES
+  Footprint fp = footprint(dFdx(escDir), dFdy(escDir));
+#else
+  Footprint fp = footprint(vec3(1e3), vec3(1e3));
+#endif
+  if (escaped) col += escTrans * background(escDir, fp);
 
   gl_FragColor = vec4(max(col, 0.0), 1.0);
 }`;

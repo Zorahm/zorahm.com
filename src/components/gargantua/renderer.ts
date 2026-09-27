@@ -39,6 +39,24 @@ type Program = {
   uniforms: Record<string, WebGLUniformLocation | null>;
 };
 
+/**
+ * GLSL ES 1.00 → 3.00 for the shaders here: they read no textures, so the
+ * only differences are the version line, the in/out qualifiers and the
+ * fragment output.
+ */
+const toES3Vertex = (source: string) =>
+  "#version 300 es\n" +
+  source.replace(/\battribute\b/g, "in").replace(/\bvarying\b/g, "out");
+
+const toES3Fragment = (source: string) =>
+  "#version 300 es\n" +
+  source
+    // Derivatives are core in ES 3.00
+    .replace(/^#extension .*$/m, "#define HAS_DERIVATIVES 1")
+    .replace(/\bvarying\b/g, "in")
+    .replace("precision highp float;", "precision highp float;\nout vec4 fragColor;")
+    .replace(/\bgl_FragColor\b/g, "fragColor");
+
 type Target = {
   tex: WebGLTexture;
   fbo: WebGLFramebuffer;
@@ -104,6 +122,8 @@ export function createRenderer(
       | null;
     const halfLinear = gl.getExtension("OES_texture_half_float_linear");
     gl.getExtension("EXT_color_buffer_half_float");
+    // Derivatives of the ray map size the stars; the shader copes without
+    gl.getExtension("OES_standard_derivatives");
     if (half) {
       texType = half.HALF_FLOAT_OES;
       texInternal = gl.RGBA;
@@ -128,10 +148,10 @@ export function createRenderer(
     return shader;
   };
 
-  const link = (fragment: string): Program => {
+  const link = (fragment: string, vertex = VERT): Program => {
     const program = gl.createProgram();
     if (!program) throw new Error("program");
-    const vs = compile(gl.VERTEX_SHADER, VERT);
+    const vs = compile(gl.VERTEX_SHADER, vertex);
     const fs = compile(gl.FRAGMENT_SHADER, fragment);
     gl.attachShader(program, vs);
     gl.attachShader(program, fs);
@@ -158,12 +178,12 @@ export function createRenderer(
   let blur: Program;
   let composite: Program;
   try {
-    [scene, bright, blur, composite] = [
-      FRAG_SCENE,
-      FRAG_BRIGHT,
-      FRAG_BLUR,
-      FRAG_COMPOSITE,
-    ].map(link);
+    // WebGL2 gives GLSL ES 1.00 no derivatives at all, and the scene needs
+    // them for the stars, so there the scene pass is lifted to ES 3.00
+    scene = isGL2 ? link(toES3Fragment(FRAG_SCENE), toES3Vertex(VERT)) : link(FRAG_SCENE);
+    [bright, blur, composite] = [FRAG_BRIGHT, FRAG_BLUR, FRAG_COMPOSITE].map((f) =>
+      link(f),
+    );
   } catch (e) {
     // The reason is only visible here; the page gets a failure screen and
     // whoever debugs it reads the driver log

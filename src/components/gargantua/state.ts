@@ -86,7 +86,8 @@ export const DEFAULT_PARAMS: Params = {
   bright: 1,
   spin: 1,
   lens: 1,
-  glow: 1,
+  // At full strength the bloom turns the lensed Milky Way into a haze
+  glow: 0.5,
 };
 
 type GargantuaStore = {
