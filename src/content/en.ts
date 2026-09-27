@@ -99,7 +99,6 @@ export const enUi: UiStrings = {
     title: "Gargantua",
     description:
       "An interactive black hole: every ray is integrated along a geodesic of the Schwarzschild metric, so the ring of light, the disk folded over the hole and the bent sky all come out of one equation.",
-    subtitle: "Schwarzschild geodesic ray-tracer",
     panel: "Parameters",
     params: {
       steps: "Quality",
@@ -111,6 +110,14 @@ export const enUi: UiStrings = {
     autoOrbit: "Auto-orbit",
     reset: "Reset",
     hint: "Drag to orbit · Scroll to zoom",
+    hintTouch: "Drag to orbit · Pinch to zoom",
+    actions: {
+      hide: "Hide the interface",
+      show: "Show the interface",
+      fullscreen: "Fullscreen",
+      about: "What is physics here",
+      close: "Close",
+    },
     keys: {
       hide: "interface",
       reset: "reset",

@@ -265,8 +265,6 @@ export type Space3DStrings = {
 export type GargantuaStrings = {
   title: string;
   description: string;
-  /** The line under the mark: what this page is */
-  subtitle: string;
   /** Heading of the parameter panel */
   panel: string;
   /** Slider labels */
@@ -281,6 +279,16 @@ export type GargantuaStrings = {
   reset: string;
   /** Pointer hint */
   hint: string;
+  /** Hint for a touch screen */
+  hintTouch: string;
+  /** Labels of the icon buttons in the top bar and on the panel */
+  actions: {
+    hide: string;
+    show: string;
+    fullscreen: string;
+    about: string;
+    close: string;
+  };
   /** What the H, R, Space and F keys do */
   keys: {
     hide: string;
