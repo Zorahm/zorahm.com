@@ -79,6 +79,19 @@ export type Placement = {
 export const bodyAngle = (body: BodyStructure, time: number, azimuth: number) =>
   body.phase + time * angularRate(body.orbit) + azimuth;
 
+/** Share of the frame the outermost orbit may take, leaving room for its dot */
+const FIT_MARGIN = 0.9;
+
+/**
+ * Scale of the system in nodes that fits Neptune's orbit into a frame of
+ * `cols` by `rows` at the idle tilt. The orbits are ellipses flattened by
+ * the tilt, so a wide frame is limited by its width, not its height.
+ */
+export function systemScale(cols: number, rows: number) {
+  const flat = Math.sin(IDLE_CAMERA.inclination);
+  return Math.min(cols / 2, rows / 2 / flat) * FIT_MARGIN;
+}
+
 /** Масштаб сцены в узлах: обычный зум плюс наезд при залёте к телу */
 export const viewScale = (camera: Camera, scene: Scene) =>
   scene.scale * camera.zoom * (1 + FOCUS_ZOOM * camera.focus);

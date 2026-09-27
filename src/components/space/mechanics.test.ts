@@ -7,6 +7,7 @@ import {
   bodyScale,
   pickBody,
   placeBodies,
+  systemScale,
   type Camera,
 } from "./mechanics";
 
@@ -158,5 +159,20 @@ describe("угол на орбите", () => {
       body.phase + 10 * angularRate(body.orbit) + 0.5,
       10,
     );
+  });
+});
+
+describe("system fit", () => {
+  it("keeps Neptune's orbit inside a wide and a square frame", () => {
+    for (const [cols, rows] of [[64, 40], [30, 30], [30, 38]]) {
+      const scale = systemScale(cols, rows);
+      const flat = Math.sin(IDLE_CAMERA.inclination);
+      expect(scale).toBeLessThan(cols / 2);
+      expect(scale * flat).toBeLessThan(rows / 2);
+    }
+  });
+
+  it("uses the width of a wide frame instead of its height", () => {
+    expect(systemScale(64, 40)).toBeGreaterThan(40 / 2);
   });
 });

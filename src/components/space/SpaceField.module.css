@@ -1,10 +1,9 @@
 .host {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 0;
   cursor: grab;
-  /* Иначе перетаскивание на тач-экране прокручивало бы страницу под сценой */
-  touch-action: none;
+  /* A vertical swipe scrolls the page; sideways drags and pinches go to the scene */
+  touch-action: pan-y;
 }
 
 .host:active {

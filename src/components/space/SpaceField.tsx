@@ -9,29 +9,38 @@ import styles from "./SpaceField.module.css";
 /** Насколько можно сдвинуть указатель, чтобы это осталось кликом, а не поворотом */
 const CLICK_SLOP = 5;
 
+type Touch = { x: number; y: number };
+
 /**
  * Поле сцены /space вместе с управлением.
  *
- * Обработчики живут здесь, а не на странице, потому что здесь известна
- * геометрия: холст растянут на весь экран, поэтому экранные координаты
- * события — это сразу координаты сцены, и попадание по телу считается
- * без единого пересчёта систем.
+ * The scene lives in a frame on the page, so every pointer position is
+ * taken relative to the frame first: after that it is already in scene
+ * coordinates, and a click hits a body with no further conversion.
  *
  * Ничего не хранится в состоянии React: и поворот камеры, и наведение
  * меняются каждый кадр, им нужен обычный мутируемый объект. Наружу через
  * React уходит только выбранное тело.
+ *
+ * The frame sits in a scrolling page, so it must not trap the scroll: the
+ * wheel zooms only with Ctrl or ⌘ held (a trackpad pinch arrives that way
+ * too), and on a touch screen a vertical swipe scrolls the page while a
+ * sideways one turns the system and two fingers zoom.
  */
 export default function SpaceField({ label }: { label: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ active: false, x: 0, y: 0, travel: 0 });
+  const touchesRef = useRef(new Map<number, Touch>());
+  const pinchRef = useRef(0);
 
-  // Колесо слушается вручную: React вешает пассивный обработчик, а нам нужно
-  // отменить прокрутку страницы под сценой
+  // Колесо слушается вручную: React вешает пассивный обработчик, а отменять
+  // прокрутку страницы нужно, когда колесо всё-таки зумит
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
 
     const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       zoomCamera(Math.exp(-e.deltaY * 0.0012));
     };
@@ -49,11 +58,27 @@ export default function SpaceField({ label }: { label: string }) {
     [],
   );
 
-  const trackPointer = (e: React.PointerEvent) => {
-    spaceState.pointerX = e.clientX;
-    spaceState.pointerY = e.clientY;
+  const local = (e: React.PointerEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top, rect };
+  };
+
+  const trackPointer = (e: React.PointerEvent, x: number, y: number) => {
+    spaceState.pointerX = x;
+    spaceState.pointerY = y;
     // Только мышь: на тач-экране расталкивание точек липло бы к последнему касанию
     spaceState.pointerActive = e.pointerType === "mouse";
+  };
+
+  const pinchDistance = () => {
+    const [a, b] = [...touchesRef.current.values()];
+    return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+  };
+
+  const release = (e: React.PointerEvent) => {
+    touchesRef.current.delete(e.pointerId);
+    if (touchesRef.current.size < 2) pinchRef.current = 0;
+    dragRef.current.active = false;
   };
 
   return (
@@ -63,37 +88,63 @@ export default function SpaceField({ label }: { label: string }) {
       role="application"
       aria-label={label}
       onPointerDown={(e) => {
+        const { x, y } = local(e);
         (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-        dragRef.current = { active: true, x: e.clientX, y: e.clientY, travel: 0 };
-        trackPointer(e);
+        trackPointer(e, x, y);
+
+        if (e.pointerType === "touch") {
+          touchesRef.current.set(e.pointerId, { x, y });
+          if (touchesRef.current.size === 2) {
+            pinchRef.current = pinchDistance();
+            // A pinch is never a tap, whatever the fingers do next
+            dragRef.current.travel = Infinity;
+            return;
+          }
+        }
+        dragRef.current = { active: true, x, y, travel: 0 };
       }}
       onPointerMove={(e) => {
-        trackPointer(e);
-        const drag = dragRef.current;
+        const { x, y, rect } = local(e);
+        trackPointer(e, x, y);
 
+        if (e.pointerType === "touch" && touchesRef.current.has(e.pointerId)) {
+          touchesRef.current.set(e.pointerId, { x, y });
+          if (pinchRef.current > 0) {
+            const distance = pinchDistance();
+            if (distance > 0) zoomCamera(distance / pinchRef.current);
+            pinchRef.current = distance;
+            return;
+          }
+        }
+
+        const drag = dragRef.current;
         if (drag.active) {
-          const dx = e.clientX - drag.x;
-          const dy = e.clientY - drag.y;
+          const dx = x - drag.x;
+          const dy = y - drag.y;
           drag.travel += Math.abs(dx) + Math.abs(dy);
-          drag.x = e.clientX;
-          drag.y = e.clientY;
-          turnCamera(dx, dy, Math.min(window.innerWidth, window.innerHeight));
+          drag.x = x;
+          drag.y = y;
+          turnCamera(dx, dy, Math.min(rect.width, rect.height));
           return;
         }
 
-        const hover = bodyAt(e.clientX, e.clientY);
+        const hover = bodyAt(x, y);
         spaceState.hover = hover;
         if (hostRef.current) {
           hostRef.current.style.cursor = hover >= 0 ? "pointer" : "grab";
         }
       }}
       onPointerUp={(e) => {
-        const drag = dragRef.current;
-        drag.active = false;
+        const { x, y } = local(e);
+        const tap = dragRef.current.active && dragRef.current.travel <= CLICK_SLOP;
+        release(e);
         // Клик и поворот различаются пройденным путём, а не кнопкой
-        if (drag.travel <= CLICK_SLOP) selectBody(bodyAt(e.clientX, e.clientY));
+        if (tap) selectBody(bodyAt(x, y));
       }}
-      onPointerLeave={() => {
+      // The browser took a vertical swipe over as a page scroll
+      onPointerCancel={release}
+      onPointerLeave={(e) => {
+        if (e.pointerType !== "mouse") return;
         dragRef.current.active = false;
         spaceState.pointerActive = false;
         spaceState.hover = -1;

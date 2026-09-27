@@ -9,7 +9,7 @@ import { damp, smoothstep } from "@/components/field/stage";
 import { GOLD, INK, POINTS_FRAGMENT, POINTS_VERTEX } from "@/components/field/points";
 import { BODIES } from "./bodies/registry";
 import { spaceState } from "./camera";
-import { bodyScale, placeBodies, viewScale } from "./mechanics";
+import { bodyScale, placeBodies, systemScale, viewScale } from "./mechanics";
 import { SYSTEM_SHADER, buildBodyShader } from "./shader";
 
 /** Полноэкранный проход для рендера поля в render target */
@@ -303,11 +303,14 @@ export function Orrery() {
     }
     const index = spaceState.anchorIndex;
 
+    // The system fits its orbits into the frame; a body opened in detail
+    // still fills the frame's short side, so it keeps the grid's scale
     const scene = {
       centerX: grid.centerX,
       centerY: grid.centerY,
-      scale: grid.scale,
+      scale: systemScale(grid.cols, grid.rows),
     };
+    const detail = { ...scene, scale: grid.scale };
     const camera = {
       azimuth: spaceState.azimuth,
       inclination: spaceState.inclination,
@@ -351,7 +354,7 @@ export function Orrery() {
         // Центр тела — там же, где его точка в обзоре: пока камера летит,
         // диск растёт ровно из неё
         bu.uCenter.value.set(anchor.x, anchor.y);
-        bu.uScale.value = bodyScale(scene, spaceState.focus) * BODIES[SPACE_STRUCTURE[index].id].fit;
+        bu.uScale.value = bodyScale(detail, spaceState.focus) * BODIES[SPACE_STRUCTURE[index].id].fit;
 
         fbo.mesh.material = pass.material;
         gl.setRenderTarget(targets[1]);

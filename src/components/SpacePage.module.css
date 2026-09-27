@@ -1,315 +1,344 @@
-/* Строка состояния и подсказка живут в той же телеметрической типографике,
-   что и HUD главной страницы */
-.status,
-.hint {
-  position: fixed;
-  z-index: 5;
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  pointer-events: none;
+/* /space layout; tokens, type and shared blocks live in eco/eco.module.css */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.status {
-  top: calc(var(--pad) + 34px);
-  left: var(--pad);
-  color: var(--ink);
-}
-
-.hint {
-  top: calc(var(--pad) + 34px);
-  right: var(--pad);
-  color: var(--dim);
-  text-align: right;
-  max-width: 42ch;
-  letter-spacing: 0.14em;
-}
-
-/* Ссылка на трассированную сцену. Живёт в нижнем углу, подальше от ряда
-   тел: это переход на другую страницу, а не ещё одна кнопка выбора */
-.viewLink {
-  position: fixed;
-  z-index: 5;
-  bottom: var(--pad);
-  left: var(--pad);
+.back {
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--dim);
-  text-decoration: none;
-  transition: color 0.3s;
-}
-
-.viewLink i {
-  font-style: normal;
-  color: var(--gold);
-  transition: transform 0.3s;
-}
-
-.viewLink:hover {
-  color: var(--ink);
-}
-
-.viewLink:hover i {
-  transform: translateX(4px);
-}
-
-.viewLink:focus-visible {
-  outline: 1px solid var(--gold);
-  outline-offset: 6px;
-}
-
-/* Ряд имён: единственный способ выбрать тело с клавиатуры и на телефоне */
-.rail {
-  position: fixed;
-  z-index: 5;
-  left: 50%;
-  bottom: var(--pad);
-  transform: translateX(-50%);
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 4px 6px;
-  padding: 7px 10px;
-  max-width: calc(100vw - var(--pad) * 2);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(3, 5, 10, 0.72);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
-
-.railItem {
-  appearance: none;
+  gap: 8px;
+  margin-left: -8px;
+  padding: 8px;
   border: 0;
+  border-radius: 10px;
   background: none;
-  padding: 5px 10px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--dim);
-  transition:
-    color 0.25s,
-    background 0.25s;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--ink-muted);
 }
 
-.railItem:hover {
+.back:hover {
+  background: var(--paper-sunken);
   color: var(--ink);
-  background: rgba(232, 237, 244, 0.07);
-}
-
-.railItem[aria-pressed="true"] {
-  color: var(--gold);
-  background: rgba(217, 164, 65, 0.12);
-}
-
-.railItem:focus-visible {
-  outline: 1px solid var(--gold);
-  outline-offset: 2px;
-}
-
-/* Карточка тела прижата к правому краю: центр экрана занимает планета */
-.main {
-  position: fixed;
-  z-index: 4;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: calc(var(--pad) + 60px) var(--pad) calc(var(--pad) + 70px);
-  /* Мимо карточки указатель должен доходить до сцены */
-  pointer-events: none;
-}
-
-.card {
-  position: relative;
-  width: min(38ch, 100%);
-  pointer-events: auto;
-  animation: appear 0.5s ease both;
-}
-
-@keyframes appear {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-}
-
-/* Та же подложка, что под текстом кадров: гасит точки строго под буквами */
-.card::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: -6vh -3vw;
-  pointer-events: none;
-  background: radial-gradient(
-    closest-side at 50% 50%,
-    rgba(3, 5, 10, 0.95) 0%,
-    rgba(3, 5, 10, 0.9) 45%,
-    rgba(3, 5, 10, 0.55) 74%,
-    transparent 100%
-  );
-  -webkit-backdrop-filter: blur(7px) brightness(0.4);
-  backdrop-filter: blur(7px) brightness(0.4);
-  -webkit-mask-image: radial-gradient(
-    closest-side at 50% 50%,
-    #000 0%,
-    #000 50%,
-    transparent 100%
-  );
-  mask-image: radial-gradient(
-    closest-side at 50% 50%,
-    #000 0%,
-    #000 50%,
-    transparent 100%
-  );
-}
-
-.eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 16px;
-  font-size: 11px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-
-.eyebrow::before {
-  content: "";
-  width: 26px;
-  height: 1px;
-  background: var(--gold);
-  opacity: 0.6;
 }
 
 .title {
-  font-family: var(--display);
-  font-weight: 800;
-  line-height: 0.94;
-  letter-spacing: -0.035em;
-  margin: 0 0 14px;
-  font-size: clamp(2.4rem, 5vw, 3.8rem);
-  text-shadow: 0 0 40px rgba(3, 5, 10, 0.9);
+  margin-top: -8px;
 }
 
-.tagline {
-  margin: 0 0 24px;
-  color: #d8dfe8;
-  text-shadow: 0 0 22px rgba(3, 5, 10, 1);
-}
+/* Scene and bodies side by side; the card replaces the list once a body is open */
 
-.stats {
+.explorer {
+  margin-top: 8px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px 18px;
-  margin: 0 0 24px;
-  padding: 16px 0;
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.stageColumn {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/*
+ * The scene is night in both themes. Its colours are fixed, not tokens:
+ * the dots are drawn in the same fixed ink and gold by the shader.
+ */
+.stage {
+  --space-void: #03050a;
+  --space-ink: #e8edf4;
+  --space-muted: rgb(232 237 244 / 0.6);
+  --space-line: rgb(232 237 244 / 0.18);
+
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--space-void);
+  color: var(--space-ink);
+}
+
+.status {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  margin: 0;
+  font-family: var(--code);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--space-muted);
+  pointer-events: none;
+}
+
+.zoom {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.zoomButton {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--space-line);
+  border-radius: 10px;
+  background: rgb(3 5 10 / 0.6);
+  font-family: var(--code);
+  font-size: 18px;
+  color: var(--space-ink);
+}
+
+.zoomButton:hover {
+  background: rgb(232 237 244 / 0.12);
+}
+
+.hintTouch {
+  display: none;
+}
+
+@media (hover: none) {
+  .hintMouse {
+    display: none;
+  }
+
+  .hintTouch {
+    display: block;
+  }
+}
+
+/* Side column */
+
+.side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bodiesLabel {
+  padding-bottom: 12px;
+}
+
+.list {
+  /* Chips measure their offset from the list when it scrolls sideways */
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   border-top: 1px solid var(--line);
+}
+
+.list li {
   border-bottom: 1px solid var(--line);
 }
 
-.stat dt {
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin-bottom: 5px;
+.item {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: baseline;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.item:hover {
+  background: var(--paper-sunken);
+}
+
+.item[aria-pressed="true"] .itemName,
+.item[aria-pressed="true"] .itemIndex {
+  color: var(--vermilion-ink);
+}
+
+.itemName {
+  font-weight: 600;
+}
+
+.itemTag {
+  grid-column: 2;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+.explorer[data-open] .bodies {
+  display: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: cardIn 0.4s ease-out;
+}
+
+.card .back {
+  margin-top: -8px;
+}
+
+.tagline {
+  margin: -4px 0 0;
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+
+.stat {
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
 }
 
 .stat dd {
   margin: 0;
   font-family: var(--display);
-  font-weight: 500;
-  font-size: 15px;
-  letter-spacing: -0.01em;
-  color: var(--ink);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 28px;
 }
 
-.body {
-  margin: 0;
-  color: #d8dfe8;
-  text-shadow:
-    0 0 22px rgba(3, 5, 10, 1),
-    0 0 8px rgba(3, 5, 10, 1);
-}
-
-.back {
-  appearance: none;
-  border: 0;
-  background: none;
-  padding: 0;
-  margin-top: 26px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ink);
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 6px;
-  transition:
-    color 0.3s,
-    border-color 0.3s;
-}
-
-.back i {
-  font-style: normal;
-  color: var(--gold);
-  transition: transform 0.3s;
-}
-
-.back:hover {
-  color: var(--gold);
-  border-color: var(--gold);
-}
-
-.back:hover i {
-  transform: translateX(-4px);
-}
-
-.back:focus-visible {
-  outline: 1px solid var(--gold);
-  outline-offset: 6px;
-}
-
-/* На узком экране карточка уезжает вниз, чтобы не закрывать планету */
-@media (max-width: 860px) {
-  .hint {
-    display: none;
-  }
-
-  .main {
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: calc(var(--pad) + 96px);
-  }
-
-  .card {
-    width: 100%;
-    max-width: 46ch;
-  }
-
-  .stats {
-    gap: 12px 14px;
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card {
     animation: none;
+  }
+}
+
+/* The other view of the same system */
+
+.more {
+  border-bottom: 0;
+}
+
+.view3d {
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper-raised);
+}
+
+.view3d:hover {
+  background: var(--paper-sunken);
+}
+
+.view3dText {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Narrower screens: the frame on top, chips under it, then the card */
+
+@media (max-width: 960px) {
+  .explorer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The orbits are flattened ellipses: a taller frame would only add sky */
+  .stage {
+    aspect-ratio: 4 / 3;
+  }
+
+  .side {
+    gap: 24px;
+  }
+
+  .bodiesLabel {
+    display: none;
+  }
+
+  .explorer[data-open] .bodies {
+    display: block;
+  }
+
+  /* The list turns into one row of chips that scrolls sideways */
+  .list {
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 0 var(--gutter);
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-top: 0;
+  }
+
+  .list li {
+    flex-shrink: 0;
+    border-bottom: 0;
+  }
+
+  .item {
+    min-height: 40px;
+    padding: 8px 16px;
+    display: block;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+  }
+
+  .item[aria-pressed="true"] {
+    border-color: var(--vermilion);
+    background: var(--vermilion);
+  }
+
+  .item[aria-pressed="true"] .itemName {
+    color: var(--on-vermilion);
+  }
+
+  .itemIndex,
+  .itemTag {
+    display: none;
+  }
+
+  .itemName {
+    font-size: 14px;
+    line-height: 22px;
+  }
+}
+
+@media (max-width: 560px) {
+  .title {
+    font-size: 44px;
+    line-height: 48px;
+  }
+
+  .view3d {
+    padding: 16px;
   }
 }

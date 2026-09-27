@@ -176,8 +176,16 @@ export type SpaceStrings = {
   description: string;
   /** Заголовок обзора, когда ничего не выбрано */
   overview: string;
-  /** Подсказка по управлению */
+  /** Section label over the page heading */
+  eyebrow: string;
+  heading: string;
+  lead: string;
+  /** Controls hint for a mouse */
   hint: string;
+  /** Controls hint for a touch screen */
+  hintTouch: string;
+  zoomIn: string;
+  zoomOut: string;
   /** Подпись ряда с именами тел */
   bodiesLabel: string;
   /** Кнопка возврата к обзору системы */
@@ -186,8 +194,6 @@ export type SpaceStrings = {
   enter: string;
   /** Ссылка на главную */
   home: string;
-  /** Ссылка на трассированную версию сцены */
-  view3d: string;
 };
 
 /**
