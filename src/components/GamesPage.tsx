@@ -25,6 +25,7 @@ const twoDigits = (n: number) => String(n).padStart(2, "0");
 /** The dotted figure on each game's card; the games ship no screenshots */
 const COVERS: Record<GameId, PlateShape> = {
   "rail-rush": "rails",
+  "city-street": "street",
 };
 
 /**

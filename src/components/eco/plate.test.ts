@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { breath, buildPlate, lensPull, type PlateShape } from "./plate";
 
 const SHAPES: PlateShape[] = [
-  "saturn", "noise", "network", "eye", "globe", "ripple", "github", "mark", "rails", "spirit",
+  "saturn", "noise", "network", "eye", "globe", "ripple", "github", "mark", "rails", "street", "spirit",
   "crossword", "rules",
 ];
 

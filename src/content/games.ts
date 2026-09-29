@@ -16,4 +16,12 @@ export const GAMES_STRUCTURE: GameStructure[] = [
     tags: ["Three.js", "WebGL", "Vite"],
     href: "/games/rail-rush/",
   },
+  {
+    id: "city-street",
+    year: 2026,
+    model: "Claude Sonnet 5.5",
+    setup: "Claude Code · Max effort",
+    tags: ["Three.js", "WebGL", "Vite"],
+    href: "/games/city-street/",
+  },
 ];

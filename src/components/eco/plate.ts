@@ -8,7 +8,7 @@ import type { ShapeId } from "@/content";
  */
 
 /** The field's shapes plus figures that only exist on flat plates */
-export type PlateShape = ShapeId | "rails" | "spirit" | "crossword" | "rules";
+export type PlateShape = ShapeId | "rails" | "street" | "spirit" | "crossword" | "rules";
 
 export type Plate = {
   cols: number;
@@ -198,6 +198,32 @@ export function density(
       const sleeper = Math.floor(2.4 / t) !== Math.floor(2.4 / next);
       if (t > 0.2 && sleeper && Math.abs(u) < gauge) return 0.4;
       return hash(i, j) > 0.93 ? 0.06 : 0;
+    }
+    case "street": {
+      // An avenue running to the vanishing point: lit windows on both walls
+      // in perspective, a dashed line down the road, a glow where it ends
+      const horizon = -0.25;
+      if (u * u + (v - horizon) * (v - horizon) * 2 < 0.03) return 1;
+      const side = u < 0 ? 0 : 1;
+      const d = Math.abs(u) - 0.1;
+      if (d <= 0) {
+        if (v <= horizon) return star;
+        const t = (v - horizon) / (1 - horizon);
+        const dash = t > 0.15 && Math.floor(3 / t) % 2 === 0;
+        return dash && Math.abs(u) < 0.06 * t + k * 0.5 ? 0.7 : 0;
+      }
+      const roof = horizon - 0.8 * d;
+      const ground = horizon + 0.5 * d;
+      if (v < roof) return star;
+      // Pavement and road: only the wall's foot is drawn
+      if (v > ground) return v - ground < k * 0.9 ? 0.35 : 0;
+      // Wall coordinates: columns bunch up with distance, rows scale with it
+      const across = 2.4 / (d + 0.12);
+      const col = Math.floor(across);
+      const down = ((v - horizon) / d) * 6;
+      const row = Math.floor(down);
+      if (across - col > 0.7 || down - row > 0.62) return 0.06;
+      return hash(col + side * 31, row + 5) > 0.5 ? 0.9 : 0.25;
     }
     case "spirit": {
       // The /spirit figure of the WebGL field: two orbits mirrored across

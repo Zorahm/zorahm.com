@@ -470,7 +470,7 @@ export type AiStrings = {
 };
 
 /** Games on the /games page */
-export type GameId = "rail-rush";
+export type GameId = "rail-rush" | "city-street";
 
 /**
  * Language-independent part of a game. The model and the setup are written

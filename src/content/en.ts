@@ -293,8 +293,14 @@ export const enGames: Record<GameId, GameText> = {
   "rail-rush": {
     title: "Rail Rush",
     summary:
-      "A 3D endless runner along railway tracks: dodge trains, run over their roofs, grab power-ups and stay ahead of a patrol robot and its robo-dog. The whole game came out of a single prompt — graphics, menus, heroes, behaviour, the procedural music and sound. The prompts after it only fixed small things and barely touched the first version.",
+      "A 3D endless runner along railway tracks: dodge trains, run over their roofs, grab power-ups and stay ahead of a patrol robot and its robo-dog. The whole game came out of a single prompt — graphics, menus, heroes, behaviour, the procedural music and sound. The prompts after it only fixed small things and barely touched the first version. The model managed it in 56 minutes.",
     prompts: "One for the game, a few for small fixes",
+  },
+  "city-street": {
+    title: "City Street",
+    summary:
+      "A procedural 3D street of a European city on a rainy autumn evening, called Autumn Avenue in the game itself. Not a single external model or texture: the buildings, signs, asphalt, people, cars and even the sound are generated right in the browser. Change the time of day and the weather on the fly, watch a camera tour of the street, walk it in first person or fly over it. Built from a single prompt in 2 hours 11 minutes and about 210 thousand tokens.",
+    prompts: "One, and nothing after it",
   },
 };
 
