@@ -1,0 +1,35 @@
+/* Measuring scale and readout under a dot plate */
+
+.wrap {
+  width: 100%;
+}
+
+.scale {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: 8px;
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.readout {
+  margin: 8px 0 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-family: var(--font-mono), ui-monospace, Consolas, monospace;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+/* Pointer position needs a hovering pointer; touch devices show only the grid size */
+@media (hover: none) {
+  .pointer {
+    display: none;
+  }
+}

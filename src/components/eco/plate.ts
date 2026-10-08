@@ -1,21 +1,21 @@
-import type { ShapeId } from "@/content";
+import type { PlateShapeId } from "@/content";
 
 /**
  * Flat halftone plates for the home page: a grid of dots whose sizes draw a
- * figure. The same shapes as the WebGL field, redrawn as ink on paper.
+ * figure. The same shapes as the WebGL field, redrawn as ink on the night ground.
  *
  * Pure functions only, so the figures are testable without a canvas.
  */
 
 /** The field's shapes plus figures that only exist on flat plates */
-export type PlateShape = ShapeId | "rails" | "street" | "spirit" | "crossword" | "rules";
+export type PlateShape = PlateShapeId;
 
 export type Plate = {
   cols: number;
   rows: number;
   /** Ink density per dot, 0..1, row by row */
   values: Float32Array;
-  /** 1 where the dot is painted vermilion */
+  /** 1 where the dot is painted signal */
   accents: Uint8Array;
 };
 
@@ -53,8 +53,29 @@ function isCrossing(col: number, row: number) {
 const RULE_LINES: [number, number][] = [
   [0, 16], [2, 19], [2, 13], [4, 20], [4, 11], [2, 17], [0, 21], [2, 9],
 ];
-/** The line lit vermilion: the rule being applied right now */
+/** The line lit signal: the rule being applied right now */
 const RULE_LIT = 3;
+
+/** Radius and phase of each body of the orbits figure */
+const ORBITS: [number, number][] = [
+  [0.5, 0.7],
+  [1.0, 2.7],
+  [1.5, 4.5],
+];
+/** How much the orbits are flattened by the tilt of the system */
+const ORBIT_TILT = 1.6;
+
+/**
+ * Distance from a point to the ellipse of semi-axes `a` and `b`, to first
+ * order: the level-set value over its gradient, so a line stays evenly thick
+ * all the way round.
+ */
+function ellipseDistance(u: number, v: number, a: number, b: number) {
+  const rr = Math.hypot(u / a, v / b);
+  if (rr === 0) return Math.min(a, b);
+  const slope = Math.hypot(u / (a * a), v / (b * b)) / rr;
+  return Math.abs(rr - 1) / slope;
+}
 
 const NODES: [number, number][] = [
   [-1.2, -0.55],
@@ -274,6 +295,32 @@ export function density(
       const inside = x > start && x < start + length - 1;
       if (inside && hash(line + 17, x) < 0.16) return 0;
       return line === RULE_LIT ? 1 : 0.55;
+    }
+    case "orbits": {
+      // The system seen at a tilt: the Sun, three orbits, a body on each
+      if (r < 0.17) return 1;
+      const line = Math.max(k * 0.5, 0.04);
+      const body = Math.max(k * 0.8, 0.08);
+      let m = star;
+      for (const [radius, phase] of ORBITS) {
+        const bx = radius * Math.cos(phase);
+        const by = (radius * Math.sin(phase)) / ORBIT_TILT;
+        if (Math.hypot(u - bx, v - by) < body) return 1;
+        if (ellipseDistance(u, v, radius, radius / ORBIT_TILT) < line) m = 0.4;
+      }
+      return m;
+    }
+    case "hole": {
+      // A black hole: the shadow, the ring of light around it, the disc
+      // crossing in front and its far side bent over the top
+      const line = Math.max(k * 0.55, 0.04);
+      if (Math.abs(v) < line && Math.abs(u) < 1.5) return clamp01(1.05 - Math.abs(u) * 0.4);
+      const ring = 0.4;
+      if (Math.abs(r - ring) < line) return 1;
+      if (r < ring) return 0;
+      if (v < 0 && ellipseDistance(u, v, 1.02, 0.74) < line) return 0.6;
+      if (v > 0 && ellipseDistance(u, v, 0.8, 0.56) < line) return 0.3;
+      return star;
     }
     case "mark": {
       // The backslash of Z\M

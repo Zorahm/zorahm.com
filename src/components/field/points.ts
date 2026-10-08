@@ -10,8 +10,8 @@ import * as THREE from "three";
  * целиком, и меш, приехавший из чужой функции, они считают чужой памятью.
  */
 
-export const INK = new THREE.Color("#E8EDF4");
-export const GOLD = new THREE.Color("#D9A441");
+export const INK = new THREE.Color("#E6ECEF");
+export const GOLD = new THREE.Color("#8EA2FF");
 
 /** Радиус, в котором курсор расталкивает точки, и сила расталкивания */
 const PUSH_RADIUS = 140;

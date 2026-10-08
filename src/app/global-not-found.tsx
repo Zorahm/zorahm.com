@@ -1,7 +1,8 @@
+import Script from "next/script";
 import type { Metadata } from "next";
 import "./globals.css";
 import { NotFoundPage } from "@/components/NotFoundPage";
-import { fontClassName, viewport } from "./shared";
+import { fontClassName, themeInitScript, viewport } from "./shared";
 
 /**
  * Страница 404 для всего сайта.
@@ -19,7 +20,8 @@ export { viewport };
 
 export default function GlobalNotFound() {
   return (
-    <html lang="en" className={fontClassName}>
+    <html lang="en" className={fontClassName} suppressHydrationWarning>
+      <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       <body>
         <NotFoundPage />
       </body>

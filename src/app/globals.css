@@ -1,15 +1,13 @@
 :root {
-  --void: #03050a;
-  --ink: #e8edf4;
-  --dim: #78828f;
-  /* Golden Record «Вояджера» */
-  --gold: #d9a441;
-  --line: rgba(232, 237, 244, 0.13);
+  /* Laboratory daylight: the page sets its own tokens, these are the fallback */
+  --ground: #eef1f2;
+  --ink: #10171c;
+  --ink-muted: #56626a;
+  --signal: #2b45e0;
+  --line: #cdd5d9;
 
-  /* Unbounded покрывает и латиницу, и кириллицу — заголовки выглядят
-     одинаково в обеих версиях сайта */
-  --display: var(--font-display), "Arial Black", system-ui, sans-serif;
-  --mono: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --display: var(--font-display), system-ui, sans-serif;
+  --mono: var(--font-mono), ui-monospace, Consolas, monospace;
 
   --pad: clamp(20px, 5vw, 80px);
 }
@@ -24,9 +22,9 @@ html {
 
 body {
   margin: 0;
-  background: var(--void);
+  background: var(--ground);
   color: var(--ink);
-  font-family: var(--mono);
+  font-family: var(--font-body), system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
@@ -34,12 +32,30 @@ body {
 }
 
 ::selection {
-  background: var(--gold);
-  color: #000;
+  background: var(--signal);
+  color: #ffffff;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* Dark bench before hydration: data-bench is set by themeInitScript in <head>.
+   Mirrors the dark tokens of eco.module.css, which take over once the page mounts. */
+html[data-bench="dark"] body {
+  --ground: #0e1317;
+  --panel: #151b20;
+  --well: #090d10;
+  --line: #243038;
+  --line-strong: #62727d;
+  --ink: #e6ecef;
+  --ink-muted: #8d9ba4;
+  --signal: #8ea2ff;
+  --on-signal: #0e1317;
+  --signal-ink: #9db0ff;
+  background: var(--ground);
+  color: var(--ink);
+  color-scheme: dark;
 }

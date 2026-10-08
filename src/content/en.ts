@@ -20,12 +20,6 @@ export const enUi: UiStrings = {
   siteDescription:
     "I work with artificial intelligence: I build systems, take models apart, and write about how all of it reshapes the world around us.",
   switchLanguage: "Переключиться на русский",
-  motionDisclaimer: {
-    eyebrow: "Before you continue",
-    title: "This site moves",
-    body: "ZorahM is built from halftone dot fields that keep drifting and pulsing across the screen. That can strain the eyes, and it may be worse if you have photosensitive epilepsy, vestibular disorders, or motion sensitivity. If that's you, it's best to leave now — or skip the site altogether if you already know.",
-    accept: "Understood, continue",
-  },
   notFound: {
     eyebrow: "Error 404 — signal lost",
     title: "Page not found",
@@ -140,6 +134,7 @@ export const enUi: UiStrings = {
       "There is not much left to analyse; it is all in the tables by now. I am writing it down while I still remember how it went.",
     ],
     runLabel: "Two weeks, three trophies",
+    contentsLabel: "Contents",
     scoreWord: "Series",
     rosterWord: "Roster",
     coachWord: "Coach",
@@ -250,34 +245,45 @@ export const enUi: UiStrings = {
     home: "Home",
   },
   home: {
-    write: "Get in touch",
-    heroHint: "Hover over Saturn and the dots respond. Click to open the Solar System.",
+    enter: "Open the Solar System",
+    heroHint: "Hover over Saturn and the dots respond.",
     index: {
-      eyebrow: "Index",
       heading: "What's here",
-      lead: "Experiments, scenes and notes. Hover a row and its card opens on the right.",
-      open: "Open section",
     },
     sections: {
-      ai: { name: "AI", line: "Plugins and skills for models", tag: "Claude Code" },
-      games: { name: "Games", line: "Browser games built by models", tag: "Model tests" },
-      space: { name: "Space", line: "The Solar System in dots", tag: "Dots" },
-      space3d: { name: "Space 3D", line: "A system traced with rays", tag: "Shader" },
-      gargantua: { name: "Gargantua", line: "An interactive black hole", tag: "Schwarzschild" },
-      spirit: { name: "Spirit", line: "A fan's note", tag: "23.08.2026" },
+      ai: {
+        name: "AI",
+        line: "Plugins and skills that teach models new things",
+        tag: "Claude Code",
+      },
+      games: {
+        name: "Games",
+        line: "Browser games that models built on their own",
+        tag: "Model tests",
+      },
+      space: {
+        name: "Space",
+        line: "The Solar System in dots: nine bodies, each one opens",
+        tag: "Dots",
+      },
+      space3d: {
+        name: "Space 3D",
+        line: "The same system, ray-traced in a single shader",
+        tag: "Shader",
+      },
+      gargantua: {
+        name: "Gargantua",
+        line: "A black hole to fly around, its light bent by the real metric",
+        tag: "Schwarzschild",
+      },
+      spirit: {
+        name: "Spirit",
+        line: "A fan's note on one day and two titles",
+        tag: "23.08.2026",
+      },
     },
     frames: {
-      eyebrow: "Seven frames",
       heading: "From noise to the world",
-      tabsLabel: "Frames",
-      prev: "Previous frame",
-      next: "Next frame",
-      upNext: "Up next: ",
-      last: "That's the last frame",
-      toContacts: "To the contacts",
-    },
-    contact: {
-      eyebrow: "Contact",
     },
   },
   shell: {
@@ -328,7 +334,7 @@ export const enFrames: Record<ShapeId, FrameText> = {
     title: "ZorahM",
     body: [
       {
-        text: "I work with artificial intelligence: I build systems, take models apart, and write about how all of it reshapes the world around us.",
+        text: "I work with AI models and keep what comes out of it here: tools for agents, games a model built on its own, a Solar System in dots and a black hole that follows the real equation.",
       },
     ],
   },

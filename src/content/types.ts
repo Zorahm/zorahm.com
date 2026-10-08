@@ -22,6 +22,17 @@ export type ExtraShapeId = "notfound" | "waifik" | "spirit" | "latent";
 
 export type AnyShapeId = ShapeId | ExtraShapeId;
 
+/** Figures of the flat dot plates: the frame shapes plus ones only plates draw */
+export type PlateShapeId =
+  | ShapeId
+  | "rails"
+  | "street"
+  | "spirit"
+  | "crossword"
+  | "rules"
+  | "orbits"
+  | "hole";
+
 export type FrameAlign = "left" | "right" | "center";
 
 export type Paragraph = {
@@ -77,14 +88,6 @@ export type ScreenText = {
   status: string;
 };
 
-/** Предупреждение о движущемся поле точек, один раз при первом визите */
-export type MotionDisclaimerStrings = {
-  eyebrow: string;
-  title: string;
-  body: string;
-  accept: string;
-};
-
 /** Строки интерфейса вне кадров */
 export type UiStrings = {
   /** Название языка в переключателе */
@@ -96,7 +99,6 @@ export type UiStrings = {
   /** Подпись ссылки на другой язык для скринридеров */
   switchLanguage: string;
   /** Предупреждение о движении, показанное до согласия из localStorage */
-  motionDisclaimer: MotionDisclaimerStrings;
   /** Страница 404 */
   notFound: ScreenText;
   /** Она же после того, как нашли маскота */
@@ -374,6 +376,8 @@ export type SpiritStrings = {
   lead: string[];
   /** Label over the strip of trophies */
   runLabel: string;
+  /** Accessible name of the contents navigation */
+  contentsLabel: string;
   /** Подписи внутри табло */
   scoreWord: string;
   rosterWord: string;
@@ -546,35 +550,16 @@ export type ShellStrings = {
 
 /** Strings of the home page */
 export type HomeStrings = {
-  /** The one primary action of the first screen */
-  write: string;
-  /** What the dotted Saturn on the first screen does */
+  /** The one primary action of the first screen: into the dotted Solar System */
+  enter: string;
+  /** What the dotted Saturn on the first screen does under a mouse */
   heroHint: string;
   index: {
-    eyebrow: string;
     heading: string;
-    lead: string;
-    /** Link from the preview card to the section */
-    open: string;
   };
   /** Short name, line and mono tag of each section in the index */
   sections: Record<HomeSectionId, { name: string; line: string; tag: string }>;
   frames: {
-    eyebrow: string;
     heading: string;
-    /** Accessible name of the frame tabs */
-    tabsLabel: string;
-    prev: string;
-    next: string;
-    /** Put before the next frame's title: "Up next: " */
-    upNext: string;
-    /** Shown on the last frame instead of the next title */
-    last: string;
-    /** Link from the contact frame down to the contacts */
-    toContacts: string;
-  };
-  /** The contact block; its heading and text come from the contact frame */
-  contact: {
-    eyebrow: string;
   };
 };

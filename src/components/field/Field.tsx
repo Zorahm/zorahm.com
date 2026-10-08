@@ -2,7 +2,6 @@
 
 import { Canvas } from "@react-three/fiber";
 import { FRAME_STRUCTURE } from "@/content";
-import { useMotionAck } from "@/lib/motionAck";
 import { Halftone, type FieldFrame } from "./Halftone";
 import styles from "./Field.module.css";
 
@@ -12,9 +11,6 @@ import styles from "./Field.module.css";
  *
  * По умолчанию показывает ленту главной страницы; служебные страницы передают
  * свой набор фигур.
- *
- * Не рендерится, пока не принят дисклеймер о движении: до согласия сцена
- * не должна крутиться даже за непрозрачным экраном поверх неё.
  *
  * A still field only draws while it appears and when the viewport changes.
  * The rest of the time the canvas keeps its last frame, so whatever blurs the
@@ -28,9 +24,6 @@ export default function Field({
   /** No drift and no push from the pointer: the dots stay where they are */
   still?: boolean;
 }) {
-  const acknowledged = useMotionAck();
-  if (!acknowledged) return null;
-
   return (
     <>
       <div className={styles.field} aria-hidden="true">

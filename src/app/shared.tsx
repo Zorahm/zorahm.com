@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Unbounded } from "next/font/google";
+import { Geologica, JetBrains_Mono, Onest } from "next/font/google";
 import {
   SITE_URL,
   aiPath,
@@ -21,33 +21,45 @@ import {
  * собрано здесь.
  */
 
-// Unbounded вместо Bricolage Grotesque: у того нет кириллицы, из-за чего
-// русские заголовки уезжали на фолбэк и два языка выглядели по-разному
-const display = Unbounded({
+// Geologica for display: a variable grotesque with Cyrillic and a light cut that
+// holds at very large sizes, in both languages
+const display = Geologica({
   subsets: ["latin", "cyrillic"],
   variable: "--font-display",
   display: "swap",
 });
 
-const mono = IBM_Plex_Mono({
-  weight: ["400", "500"],
+// Onest for running text: a calm humanist sans with matching Cyrillic
+const body = Onest({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+// Monospace only for readouts: coordinates, tags and data
+const mono = JetBrains_Mono({
+  weight: ["400", "500", "600"],
   subsets: ["latin", "cyrillic"],
   variable: "--font-mono",
   display: "swap",
 });
 
-export const fontClassName = `${display.variable} ${mono.variable}`;
+export const fontClassName = `${display.variable} ${body.variable} ${mono.variable}`;
+
+/**
+ * Runs synchronously in <head>, before first paint: a visitor who chose the dark
+ * bench gets data-bench="dark" on <html>, and globals.css paints the dark tokens
+ * from that attribute. Mirrors the dark tokens of eco.module.css.
+ */
+export const themeInitScript = `(function(){try{if(window.localStorage.getItem("zorahm:theme")==="dark"){document.documentElement.dataset.bench="dark";}}catch(e){}})();`;
 
 export const viewport: Viewport = {
-  themeColor: "#03050A",
+  themeColor: "#eef1f2",
 };
 
-/** Pages on the ecosystem design are paper, not night sky: the chrome follows their theme */
+/** Pages on the laboratory design: the daylight ground shows in the browser chrome */
 export const ecoViewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4efe6" },
-    { media: "(prefers-color-scheme: dark)", color: "#16130f" },
-  ],
+  themeColor: "#eef1f2",
 };
 
 const OG_LOCALE: Record<Lang, string> = {

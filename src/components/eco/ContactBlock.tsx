@@ -19,12 +19,10 @@ const isExternal = (href: string) => href.startsWith("http");
  */
 export function ContactBlock({
   lang,
-  eyebrow,
   heading,
   body,
 }: {
   lang: Lang;
-  eyebrow: string;
   heading: string;
   body: string[];
 }) {
@@ -46,7 +44,6 @@ export function ContactBlock({
   return (
     <section id="contact" className={`${eco.section} ${eco.contact}`}>
       <div className={eco.contactText}>
-        <p className={eco.label}>{eyebrow}</p>
         <h2 className={eco.displayL}>{heading}</h2>
         {body.map((text, i) => (
           <p key={i} className={eco.body}>

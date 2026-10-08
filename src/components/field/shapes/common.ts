@@ -4,8 +4,8 @@ import type { Grid } from "../grid";
 /**
  * Семейство заголовочного шрифта для Canvas2D.
  *
- * next/font подставляет сгенерированное имя вида `__Unbounded_a1b2c3`, поэтому
- * задать шрифт литералом («Unbounded») нельзя — canvas молча возьмёт фолбэк.
+ * next/font подставляет сгенерированное имя вида `__Geologica_a1b2c3`, поэтому
+ * задать шрифт литералом («Geologica») нельзя — canvas молча возьмёт фолбэк.
  * Настоящее имя лежит в CSS-переменной, которую ставит layout.
  */
 export function displayFamily(): string {

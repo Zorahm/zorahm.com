@@ -1,6 +1,6 @@
+import Script from "next/script";
 import "../globals.css";
-import { MotionDisclaimer } from "@/components/MotionDisclaimer";
-import { buildMetadata, fontClassName, viewport } from "../shared";
+import { buildMetadata, fontClassName, themeInitScript, viewport } from "../shared";
 
 export const metadata = buildMetadata("ru");
 export { viewport };
@@ -11,9 +11,9 @@ export default function RuLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru" className={fontClassName}>
+    <html lang="ru" className={fontClassName} suppressHydrationWarning>
+      <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       <body>
-        <MotionDisclaimer lang="ru" />
         {children}
       </body>
     </html>

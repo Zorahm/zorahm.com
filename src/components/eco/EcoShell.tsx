@@ -11,7 +11,6 @@ import {
   type Lang,
 } from "@/content";
 import { useEcoTheme } from "@/lib/ecoTheme";
-import { ecoFontClassName } from "./fonts";
 import { MoonIcon, SunIcon } from "./icons";
 import eco from "./eco.module.css";
 
@@ -64,7 +63,7 @@ export function EcoShell({
 
   return (
     <SchemeContext value={scheme}>
-      <div className={`${eco.page} ${ecoFontClassName}`} data-theme={choice ?? undefined}>
+      <div className={eco.page} data-theme={choice ?? undefined}>
         <header className={eco.header}>
           <Link href={langPath(lang)} className={eco.homeLink} aria-label="ZorahM">
             <Mark />
@@ -107,8 +106,11 @@ export function EcoShell({
 
         <footer className={eco.footer}>
           <Mark />
-          <span className={eco.code}>zorahm.com — {year ?? ""}</span>
+          <div className={eco.footerTools}>
+            <span className={eco.code}>zorahm.com — {year ?? ""}</span>
+          </div>
         </footer>
+
       </div>
     </SchemeContext>
   );
