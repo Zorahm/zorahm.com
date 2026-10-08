@@ -5,7 +5,7 @@
   font-size: 11px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--dim);
+  color: var(--ink-muted);
 }
 
 .mark {
@@ -20,7 +20,7 @@
 }
 
 .mark span {
-  color: var(--gold);
+  color: var(--signal);
 }
 
 .lang {
@@ -34,17 +34,17 @@
 }
 
 .lang a {
-  color: var(--dim);
+  color: var(--ink-muted);
   text-decoration: none;
   transition: color 0.3s;
 }
 
 .lang a:hover {
-  color: var(--gold);
+  color: var(--signal);
 }
 
 .lang a:focus-visible {
-  outline: 1px solid var(--gold);
+  outline: 1px solid var(--signal);
   outline-offset: 5px;
 }
 
@@ -84,7 +84,7 @@
 .bar i {
   position: absolute;
   inset: 0 auto 0 0;
-  background: var(--gold);
+  background: var(--signal);
   width: 0;
 }
 

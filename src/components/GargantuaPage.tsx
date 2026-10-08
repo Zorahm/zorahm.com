@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { gargantuaPath, getUi, langPath, otherLang, type Lang } from "@/content";
 import { Mark } from "./eco/EcoShell";
-import { ecoFontClassName } from "./eco/fonts";
 import {
   CloseIcon,
   EyeIcon,
@@ -72,7 +71,7 @@ function toggleFullscreen() {
  *
  * This is a visualization, not a page to read: the scene takes the whole
  * window and the interface is a thin layer over it in the site's design —
- * its type and its vermilion, always on the dark palette, since the sky
+ * its type and its signal, always on the dark palette, since the sky
  * behind is black whatever the theme. A top bar says what this is and holds
  * the tools, the parameters sit on a card in the corner (a bottom sheet on
  * a phone), and the note on what is physics here opens on demand.
@@ -82,6 +81,10 @@ function toggleFullscreen() {
  * second for two numbers is not worth a render.
  */
 export function GargantuaPage({ lang }: { lang: Lang }) {
+  return <GargantuaScene lang={lang} />;
+}
+
+function GargantuaScene({ lang }: { lang: Lang }) {
   const ui = getUi(lang);
   const t = ui.gargantua;
   const other = otherLang(lang);
@@ -150,7 +153,7 @@ export function GargantuaPage({ lang }: { lang: Lang }) {
   };
 
   return (
-    <div className={`${styles.host} ${ecoFontClassName}`}>
+    <div className={styles.host}>
       <Scene label={t.description} error={t.error} onStats={onStats} />
 
       <header className={`${layer} ${styles.top}`}>

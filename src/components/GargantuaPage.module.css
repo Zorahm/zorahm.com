@@ -1,22 +1,22 @@
 /*
  * /gargantua: a visualization, so the scene takes the window and the
- * interface is a thin layer over it. The type and the vermilion are the
+ * interface is a thin layer over it. The type and the signal are the
  * site's; the palette is always the dark one, because the sky behind the
  * interface is black whatever theme the rest of the site is in. The tokens
  * are declared on the host so that nothing from :root can leak in.
  */
 .host {
-  --ink: #f2ece2;
-  --ink-muted: #a89d8c;
-  --line: rgb(242 236 226 / 0.14);
-  --line-strong: rgb(242 236 226 / 0.32);
-  --glass: rgb(22 19 15 / 0.72);
-  --glass-hover: rgb(242 236 226 / 0.1);
-  --vermilion: #ff5a3c;
-  --on-vermilion: #16130f;
-  --vermilion-ink: #ff7a61;
-  --sans: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --code: var(--font-code), ui-monospace, Consolas, monospace;
+  --ink: #e6ecef;
+  --ink-muted: #8d9ba4;
+  --line: rgb(230 236 239 / 0.14);
+  --line-strong: rgb(230 236 239 / 0.32);
+  --glass: rgb(14 19 23 / 0.88);
+  --glass-hover: rgb(230 236 239 / 0.1);
+  --signal: #8ea2ff;
+  --on-signal: #0e1317;
+  --signal-ink: #9db0ff;
+  --sans: var(--font-display), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --code: var(--font-mono), ui-monospace, Consolas, monospace;
   --edge: 24px;
 
   position: fixed;
@@ -31,7 +31,7 @@
 }
 
 .host :focus-visible {
-  outline: 2px solid var(--vermilion-ink);
+  outline: 2px solid var(--signal-ink);
   outline-offset: 2px;
 }
 
@@ -66,8 +66,6 @@
 .iconButton,
 .langs {
   background: var(--glass);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
 }
 
 .label {
@@ -89,7 +87,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--line-strong);
-  border-radius: 10px;
+  border-radius: 0;
 }
 
 .iconButton:hover {
@@ -145,7 +143,7 @@
 .tag {
   padding: 2px 10px;
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
+  border-radius: 0;
   font-family: var(--code);
   font-size: 12px;
   line-height: 18px;
@@ -164,13 +162,13 @@
   gap: 4px;
   padding: 4px;
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
+  border-radius: 0;
 }
 
 .langActive,
 .langLink {
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: 0;
   font-family: var(--code);
   font-weight: 600;
   font-size: 12px;
@@ -179,8 +177,8 @@
 }
 
 .langActive {
-  background: var(--vermilion);
-  color: var(--on-vermilion);
+  background: var(--signal);
+  color: var(--on-signal);
 }
 
 .langLink {
@@ -219,7 +217,7 @@
   flex-direction: column;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 0;
   animation: rise 0.25s ease-out;
 }
 
@@ -263,7 +261,7 @@
   margin: 0 4px 0 8px;
   padding: 0 6px;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
+  border-radius: 0;
   font-family: var(--code);
   font-size: 12px;
   line-height: 18px;
@@ -313,7 +311,7 @@
   flex-direction: column;
   gap: 16px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 0;
   animation: rise 0.25s ease-out;
 }
 
@@ -352,7 +350,7 @@
 .row input {
   width: 100%;
   margin: 0;
-  accent-color: var(--vermilion);
+  accent-color: var(--signal);
   cursor: pointer;
 }
 
@@ -368,7 +366,7 @@
   height: 40px;
   padding: 0 12px;
   border: 1px solid var(--line-strong);
-  border-radius: 10px;
+  border-radius: 0;
   background: none;
   font-weight: 600;
 }
@@ -379,9 +377,9 @@
 }
 
 .toggle[aria-pressed="true"] {
-  border-color: var(--vermilion);
-  background: var(--vermilion);
-  color: var(--on-vermilion);
+  border-color: var(--signal);
+  background: var(--signal);
+  color: var(--on-signal);
 }
 
 .toggle[aria-pressed="true"]:hover {
@@ -397,7 +395,7 @@
   align-items: center;
   gap: 8px;
   border: 1px solid var(--line-strong);
-  border-radius: 10px;
+  border-radius: 0;
   font-weight: 600;
 }
 
@@ -467,7 +465,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px 16px;
     border-width: 1px 0 0;
-    border-radius: 16px 16px 0 0;
+    border-radius: 0;
   }
 
   .panelHead,

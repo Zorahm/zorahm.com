@@ -53,6 +53,10 @@ const SLIDERS: { key: keyof Params; max: number }[] = [
  * дважды в секунду ради двух чисел незачем.
  */
 export function Space3DPage({ lang }: { lang: Lang }) {
+  return <Space3DScene lang={lang} />;
+}
+
+function Space3DScene({ lang }: { lang: Lang }) {
   const bodies = getBodies(lang);
   const ui = getUi(lang);
   const t = ui.space3d;

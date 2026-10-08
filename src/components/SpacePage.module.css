@@ -14,7 +14,7 @@
   margin-left: -8px;
   padding: 8px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 0;
   background: none;
   font-size: 14px;
   line-height: 22px;
@@ -22,7 +22,7 @@
 }
 
 .back:hover {
-  background: var(--paper-sunken);
+  background: var(--well);
   color: var(--ink);
 }
 
@@ -61,7 +61,7 @@
   aspect-ratio: 16 / 10;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 0;
   background: var(--space-void);
   color: var(--space-ink);
 }
@@ -97,7 +97,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--space-line);
-  border-radius: 10px;
+  border-radius: 0;
   background: rgb(3 5 10 / 0.6);
   font-family: var(--code);
   font-size: 18px;
@@ -161,12 +161,12 @@
 }
 
 .item:hover {
-  background: var(--paper-sunken);
+  background: var(--well);
 }
 
 .item[aria-pressed="true"] .itemName,
 .item[aria-pressed="true"] .itemIndex {
-  color: var(--vermilion-ink);
+  color: var(--signal-ink);
 }
 
 .itemName {
@@ -249,12 +249,12 @@
   align-items: center;
   gap: 24px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--paper-raised);
+  border-radius: 0;
+  background: var(--panel);
 }
 
 .view3d:hover {
-  background: var(--paper-sunken);
+  background: var(--well);
 }
 
 .view3dText {
@@ -309,16 +309,16 @@
     padding: 8px 16px;
     display: block;
     border: 1px solid var(--line-strong);
-    border-radius: 999px;
+    border-radius: 0;
   }
 
   .item[aria-pressed="true"] {
-    border-color: var(--vermilion);
-    background: var(--vermilion);
+    border-color: var(--signal);
+    background: var(--signal);
   }
 
   .item[aria-pressed="true"] .itemName {
-    color: var(--on-vermilion);
+    color: var(--on-signal);
   }
 
   .itemIndex,

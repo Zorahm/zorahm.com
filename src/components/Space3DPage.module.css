@@ -1,13 +1,10 @@
-/* Страница намеренно выходит из стиля сайта: ни точечной сетки, ни золота
-   Golden Record, ни Unbounded. Здесь приборная панель — системный гротеск,
-   янтарный акцент и стеклянные подложки поверх чёрного неба. Свои токены
-   объявлены на хосте, чтобы ничего из :root сюда не протекло. */
+/* The scene page keeps the night ground of the whole site. Its tokens are declared on the host, so nothing from :root can leak in. */
 .host {
-  --fg: #e9eef6;
-  --muted: #7c8899;
-  --line: rgba(255, 255, 255, 0.1);
-  --glass: rgba(10, 13, 20, 0.62);
-  --accent: #ffb46a;
+  --fg: #e6ecef;
+  --muted: #8d9ba4;
+  --line: rgb(230 236 239 / 0.12);
+  --glass: rgb(14 19 23 / 0.86);
+  --accent: #8ea2ff;
   --edge: 26px;
 
   position: fixed;
@@ -15,8 +12,7 @@
   overflow: hidden;
   background: #000;
   color: var(--fg);
-  font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto,
-    Helvetica, Arial, sans-serif;
+  font-family: var(--font-display), system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -152,7 +148,7 @@
 .hint kbd {
   font: inherit;
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: 0;
   padding: 1px 5px;
   color: var(--fg);
   background: rgba(255, 255, 255, 0.04);
@@ -167,9 +163,7 @@
   padding: 14px 16px 12px;
   background: var(--glass);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  border-radius: 0;
   pointer-events: auto;
 }
 
@@ -206,7 +200,7 @@
   width: 100%;
   height: 2px;
   margin: 0;
-  border-radius: 2px;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.16);
   outline: none;
 }
@@ -218,7 +212,6 @@
   border-radius: 50%;
   background: var(--fg);
   cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(255, 180, 106, 0.16);
 }
 
 .row input::-moz-range-thumb {
@@ -250,7 +243,7 @@
   color: var(--fg);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 0;
   cursor: pointer;
   transition: background 0.25s;
 }
@@ -296,10 +289,8 @@
   overflow-x: auto;
   scrollbar-width: none;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--glass);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
   pointer-events: auto;
 }
 
@@ -313,7 +304,7 @@
   border: 0;
   background: none;
   padding: 5px 10px;
-  border-radius: 999px;
+  border-radius: 0;
   cursor: pointer;
   font: inherit;
   font-size: 11px;
@@ -355,9 +346,7 @@
   padding: 18px 20px 20px;
   background: var(--glass);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  border-radius: 0;
   pointer-events: auto;
   animation: appear 0.45s ease both;
 }

@@ -24,14 +24,14 @@
   gap: 8px;
   margin-left: -8px;
   padding: 8px;
-  border-radius: 10px;
+  border-radius: 0;
   font-size: 14px;
   line-height: 22px;
   color: var(--ink-muted);
 }
 
 .back:hover {
-  background: var(--paper-sunken);
+  background: var(--well);
   color: var(--ink);
 }
 
@@ -53,10 +53,10 @@
 .countValue {
   margin: 0;
   font-family: var(--display);
-  font-weight: 600;
-  font-size: 40px;
-  line-height: 44px;
-  letter-spacing: -0.01em;
+  font-weight: 300;
+  font-size: 56px;
+  line-height: 56px;
+  letter-spacing: -0.04em;
 }
 
 .heroPlate {
@@ -81,17 +81,17 @@
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
   gap: 48px;
-  padding: 24px;
-  background: var(--paper-raised);
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  padding: 40px 0 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
 }
 
 .cover {
   align-self: start;
-  padding: 16px;
-  background: var(--paper-sunken);
-  border-radius: 4px;
+  padding: 0;
+  border-radius: 0;
 }
 
 .info {
@@ -118,8 +118,8 @@
 .kind i {
   width: 8px;
   height: 8px;
-  border-radius: 2px;
-  background: var(--vermilion);
+  border-radius: 0;
+  background: var(--signal);
 }
 
 .year {
@@ -138,7 +138,7 @@
 .tags li {
   padding: 4px 12px;
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
+  border-radius: 0;
   font-family: var(--code);
   font-size: 12px;
   line-height: 16px;
@@ -172,7 +172,7 @@
   line-height: 22px;
 }
 
-/* Commands sit on the sunken paper, the copy button under them */
+/* Commands sit on the sunken panel, the copy button under them */
 .install {
   display: flex;
   flex-direction: column;
@@ -185,8 +185,8 @@
   margin: 0;
   padding: 8px 12px;
   overflow-x: auto;
-  background: var(--paper-sunken);
-  border-radius: 4px;
+  background: var(--well);
+  border-radius: 0;
   font-family: var(--code);
   font-size: 13px;
   line-height: 20px;

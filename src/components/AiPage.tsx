@@ -99,7 +99,6 @@ export function AiPage({ lang }: { lang: Lang }) {
             <ArrowLeftIcon />
             {page.home}
           </Link>
-          <p className={eco.label}>{page.eyebrow}</p>
           <h1 className={`${eco.displayXl} ${styles.title}`}>{page.heading}</h1>
           {page.lead.map((text, index) => (
             <p key={index} className={`${eco.body} ${index > 0 ? eco.muted : ""}`}>
@@ -118,7 +117,7 @@ export function AiPage({ lang }: { lang: Lang }) {
         </div>
 
         <div className={styles.heroPlate}>
-          <DotPlate shape="network" accent={0.85} cols={30} rows={20} lens />
+          <DotPlate shape="network" accent={0.85} cols={30} rows={20} lens arrive />
         </div>
       </section>
 
@@ -201,7 +200,6 @@ export function AiPage({ lang }: { lang: Lang }) {
 
       <ContactBlock
         lang={lang}
-        eyebrow={ui.contactsLabel}
         heading={contact?.title ?? ui.contactsLabel}
         body={[page.outro]}
       />

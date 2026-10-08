@@ -23,7 +23,7 @@ const twoDigits = (n: number) => String(n).padStart(2, "0");
  * Страница /space: солнечная система теми же точками, что и кадры главной.
  *
  * The scene is a dark frame in the page, dark in both themes: space stays
- * night, and on paper it reads as a photograph pasted in. Next to it sits
+ * night, and on the ground it reads as a photograph pasted in. Next to it sits
  * the list of bodies and, once one is picked, its card. On narrow screens
  * the list becomes a row of chips under the frame and the card follows it,
  * so the text never covers the scene.
@@ -71,7 +71,6 @@ export function SpacePage({ lang }: { lang: Lang }) {
             <ArrowLeftIcon />
             {page.home}
           </Link>
-          <p className={eco.label}>{page.eyebrow}</p>
           <h1 className={`${eco.displayXl} ${styles.title}`}>{page.heading}</h1>
           <p className={`${eco.body} ${eco.muted}`}>{page.lead}</p>
         </div>
