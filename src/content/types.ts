@@ -119,6 +119,8 @@ export type UiStrings = {
   ai: AiStrings;
   /** The /games page */
   games: GamesStrings;
+  /** The temporary /notice page about outages */
+  notice: NoticeStrings;
   /** The home page */
   home: HomeStrings;
   /** Header, footer and contacts shared by pages on the ecosystem design */
@@ -530,6 +532,30 @@ export type GamesStrings = {
   play: string;
   /** Closing line above the contacts */
   outro: string;
+  home: string;
+};
+
+/** Strings of the temporary /notice page */
+export type NoticeStrings = {
+  title: string;
+  description: string;
+  /** Status tag above the heading */
+  eyebrow: string;
+  heading: string;
+  /** Lead paragraphs; the second one is dimmed */
+  lead: string[];
+  /** Captions and values of the short fact list */
+  facts: {
+    status: { label: string; value: string };
+    cause: { label: string; value: string };
+    scope: { label: string; value: string };
+    page: { label: string; value: string };
+  };
+  /** One line of the banner on the home page, and the words of its link */
+  banner: string;
+  bannerLink: string;
+  /** Link to the provider's incident page */
+  source: string;
   home: string;
 };
 

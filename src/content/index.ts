@@ -149,6 +149,10 @@ export const aiPath = (lang: Lang) => (lang === "en" ? "/ai" : `/${lang}/ai`);
 export const gamesPath = (lang: Lang) =>
   lang === "en" ? "/games" : `/${lang}/games`;
 
+/** Path to the temporary outage notice. Not in the sitemap: it is meant to go away */
+export const noticePath = (lang: Lang) =>
+  lang === "en" ? "/notice" : `/${lang}/notice`;
+
 export const otherLang = (lang: Lang): Lang => (lang === "en" ? "ru" : "en");
 
 export const getContacts = (lang: Lang) =>

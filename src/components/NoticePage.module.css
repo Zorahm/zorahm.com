@@ -1,0 +1,115 @@
+/* /notice layout; tokens, type and shared blocks live in eco/eco.module.css */
+
+.hero {
+  flex-direction: row;
+  align-items: center;
+  gap: 48px;
+}
+
+.heroText {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: -8px;
+  padding: 8px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--ink-muted);
+}
+
+.back:hover {
+  background: var(--well);
+  color: var(--ink);
+}
+
+.status {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+
+.status i {
+  width: 8px;
+  height: 8px;
+  background: var(--signal);
+}
+
+.facts {
+  margin: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.facts > div {
+  padding: 12px 0;
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.facts dt {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.facts dd {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--code);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.heroPlate {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 600px;
+  margin-left: auto;
+}
+
+@media (max-width: 960px) {
+  .hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .heroText {
+    max-width: none;
+  }
+
+  .heroPlate {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  /* display-xl does not fit the long heading on a phone */
+  .hero .title {
+    font-size: 36px;
+    line-height: 40px;
+    letter-spacing: -0.01em;
+  }
+
+  .facts > div {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .facts dt {
+    width: auto;
+  }
+}

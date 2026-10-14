@@ -7,6 +7,7 @@ import {
   gargantuaPath,
   getUi,
   langPath,
+  noticePath,
   space3dPath,
   spacePath,
   spiritPath,
@@ -196,4 +197,16 @@ export function buildAiMetadata(lang: Lang): Metadata {
 export function buildGamesMetadata(lang: Lang): Metadata {
   const { games } = getUi(lang);
   return buildPageMetadata(lang, gamesPath, games.title, games.description);
+}
+
+/**
+ * Metadata of the temporary /notice page. Kept out of search results: the
+ * page is about a passing incident and should not outlive it in an index.
+ */
+export function buildNoticeMetadata(lang: Lang): Metadata {
+  const { notice } = getUi(lang);
+  return {
+    ...buildPageMetadata(lang, noticePath, notice.title, notice.description),
+    robots: { index: false, follow: true },
+  };
 }

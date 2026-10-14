@@ -244,6 +244,27 @@ export const enUi: UiStrings = {
       "Played it and have thoughts, or want to see a model take on another game? Write to me.",
     home: "Home",
   },
+  notice: {
+    title: "Service notice",
+    description:
+      "ZorahM services may be unstable: outages at Yandex affect parts of the infrastructure that sit in Russia.",
+    eyebrow: "Notice · Temporary",
+    heading: "ZorahM services may be unstable",
+    lead: [
+      "ZorahM servers are not at hosting providers: the ecosystem runs on its own infrastructure. But some services are physically located in Russia, so outages at Yandex can make them work unreliably.",
+      "The reason is simple: Yandex servers carry a great deal of the Russian internet. Linux mirrors, name servers, internet providers and much more depend on them, so a failure there is felt far beyond Yandex itself.",
+    ],
+    facts: {
+      status: { label: "Status", value: "Interruptions possible" },
+      cause: { label: "Cause", value: "Outages at Yandex" },
+      scope: { label: "Affected", value: "ZorahM services located in Russia" },
+      page: { label: "This page", value: "Temporary" },
+    },
+    banner: "Outages at Yandex may make some ZorahM services unstable.",
+    bannerLink: "Details",
+    source: "Incident details at Yandex Cloud",
+    home: "Home",
+  },
   home: {
     enter: "Open the Solar System",
     heroHint: "Hover over Saturn and the dots respond.",

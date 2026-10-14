@@ -8,6 +8,7 @@ import {
   getFrames,
   getUi,
   langPath,
+  noticePath,
   otherLang,
   spacePath,
   type Frame,
@@ -38,6 +39,7 @@ export function HomePage({ lang }: { lang: Lang }) {
 
   return (
     <EcoShell lang={lang} otherHref={langPath(otherLang(lang))}>
+      <NoticeBanner lang={lang} />
       <Hero lang={lang} frame={hero} />
       <SectionIndex lang={lang} />
       <Story lang={lang} frames={story} />
@@ -47,6 +49,21 @@ export function HomePage({ lang }: { lang: Lang }) {
         body={contact.body.filter((p) => !p.muted).map((p) => p.text)}
       />
     </EcoShell>
+  );
+}
+
+/** Temporary strip above the hero while the outage notice is up; remove with /notice */
+function NoticeBanner({ lang }: { lang: Lang }) {
+  const notice = getUi(lang).notice;
+
+  return (
+    <aside className={styles.notice}>
+      <p>{notice.banner}</p>
+      <Link href={noticePath(lang)} className={styles.noticeLink}>
+        {notice.bannerLink}
+        <ArrowRightIcon />
+      </Link>
+    </aside>
   );
 }
 
