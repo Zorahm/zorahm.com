@@ -280,12 +280,41 @@
   font-weight: 600;
 }
 
-/* The slip keeps one height while the examples change, so the page does not jump */
-.callPanel {
-  min-height: 252px;
+/* One use at a time: its heading and words, then the slips of its calls */
+.usePanel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+}
+
+.useMark {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 30px;
+  letter-spacing: -0.02em;
+  color: var(--signal-ink);
+}
+
+.useText {
+  margin: 0;
+  font-size: 16px;
+  line-height: 26px;
+  text-wrap: pretty;
+}
+
+.useText code {
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
+.callBlock {
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--line);
 }
 
 .callState {
@@ -677,7 +706,6 @@
     gap: 0 16px;
   }
 
-  .callPanel,
   .pricePanel {
     min-height: 0;
   }

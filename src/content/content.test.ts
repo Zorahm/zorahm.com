@@ -442,9 +442,12 @@ describe("the /paper/decision note", () => {
     const en = getPaperDecision("en");
     const ru = getPaperDecision("ru");
     expect(ru.questions).toHaveLength(en.questions.length);
-    expect(ru.examples).toHaveLength(en.examples.length);
-    en.examples.forEach((example, index) => {
-      expect(ru.examples[index].rows).toHaveLength(example.rows.length);
+    en.use.forEach((use, index) => {
+      expect(ru.use[index].text).toHaveLength(use.text.length);
+      expect(ru.use[index].calls).toHaveLength(use.calls.length);
+      use.calls.forEach((call, callIndex) => {
+        expect(ru.use[index].calls[callIndex].rows).toHaveLength(call.rows.length);
+      });
     });
     expect(ru.modelList).toHaveLength(en.modelList.length);
     expect(ru.numbers).toHaveLength(en.numbers.length);

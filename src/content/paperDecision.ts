@@ -146,16 +146,9 @@ export type PaperDecisionStrings = {
   what: string[];
   /** The question types: name as the models spell it, and what it does */
   questions: { name: string; text: string }[];
+  /** Caption and note of the example calls shown with the uses */
   illustrationLabel: string;
   illustrationNote: string;
-  /** Switchable examples of a call: what the model reads, then one row per question */
-  examples: {
-    /** Name on the switch */
-    tab: string;
-    stateLabel: string;
-    state: string;
-    rows: { kind: string; question: string; answer: string }[];
-  }[];
   whatAfter: string[];
 
   modelsLabel: string;
@@ -193,7 +186,17 @@ export type PaperDecisionStrings = {
 
   useLabel: string;
   useIntro: string;
-  use: { mark: string; text: string[] }[];
+  /** Each use: the name on the switch, its heading, its words, and the calls that show it */
+  use: {
+    tab: string;
+    mark: string;
+    text: string[];
+    calls: {
+      stateLabel: string;
+      state: string;
+      rows: { kind: string; question: string; answer: string }[];
+    }[];
+  }[];
   useMore: string;
   useWarning: string;
 
@@ -255,126 +258,9 @@ const en: PaperDecisionStrings = {
       text: "Only in Jev 1.14 and only for images: returns a bounding box around the thing you asked for.",
     },
   ],
-  illustrationLabel: "What a call looks like",
+  illustrationLabel: "Example calls",
   illustrationNote:
     "An illustration with made-up numbers, not a real API response.",
-  examples: [
-    {
-      tab: "Support ticket",
-      stateLabel: "Text",
-      state:
-        "I was charged twice for the same order and nobody answers.",
-      rows: [
-        {
-          kind: "Choice",
-          question: "Which queue should take it?",
-          answer: "billing 0.94, delivery 0.03, other 0.03",
-        },
-        {
-          kind: "Score",
-          question: "How urgent is it, from 1 to 5?",
-          answer: "4.2",
-        },
-        {
-          kind: "Noul",
-          question: "Is the customer asking for a refund?",
-          answer: "0.88",
-        },
-      ],
-    },
-    {
-      tab: "Router",
-      stateLabel: "Task",
-      state:
-        "Write a Python script that renames 200 photos by the date in their EXIF data.",
-      rows: [
-        {
-          kind: "Choice",
-          question: "How hard is the task?",
-          answer: "easy 0.12, medium 0.71, hard 0.17",
-        },
-        {
-          kind: "Noul",
-          question: "Does it need to run code or use tools?",
-          answer: "0.83",
-        },
-        {
-          kind: "Noul",
-          question: "Does it need the strongest model?",
-          answer: "0.09",
-        },
-      ],
-    },
-    {
-      tab: "Safe command",
-      stateLabel: "Command",
-      state:
-        "curl https://example.com",
-      rows: [
-        {
-          kind: "Noul",
-          question: "Is it safe to run without asking?",
-          answer: "0.99",
-        },
-        {
-          kind: "Choice",
-          question: "What does it touch?",
-          answer: "network read 0.96, files 0.03, system 0.01",
-        },
-        {
-          kind: "Noul",
-          question: "Can it destroy data?",
-          answer: "0.01",
-        },
-      ],
-    },
-    {
-      tab: "Risky command",
-      stateLabel: "Command",
-      state:
-        "rm -rf /",
-      rows: [
-        {
-          kind: "Noul",
-          question: "Is it safe to run without asking?",
-          answer: "0.01",
-        },
-        {
-          kind: "Choice",
-          question: "What does it touch?",
-          answer: "network read 0.00, files 0.30, system 0.70",
-        },
-        {
-          kind: "Noul",
-          question: "Can it destroy data?",
-          answer: "0.99",
-        },
-      ],
-    },
-    {
-      tab: "Fact check",
-      stateLabel: "Draft and source",
-      state:
-        "Draft: \"The refund window is 60 days.\" Source: \"Refunds are possible within 30 days of delivery.\"",
-      rows: [
-        {
-          kind: "Noul",
-          question: "Does the source support the draft?",
-          answer: "0.04",
-        },
-        {
-          kind: "Choice",
-          question: "What is wrong?",
-          answer: "number 0.91, condition 0.06, nothing 0.03",
-        },
-        {
-          kind: "Score",
-          question: "How serious is the mismatch, from 1 to 5?",
-          answer: "4.6",
-        },
-      ],
-    },
-  ],
   whatAfter: [
     "TypeSafe says the probabilities are calibrated: when the model says 0.8, it should be right about 80% of the time across many answers. That is the vendor's claim, and one independent write-up warns that confidence shows how concentrated an answer is, not whether it is correct.",
   ],
@@ -470,26 +356,161 @@ const en: PaperDecisionStrings = {
     "The bigger gap is in time. The cost of a million calls is a line in a budget, but a 7 second wait before the first token does not fit in a request path, and half a second does.",
   ],
 
-  useLabel: "Where they are used",
-  useIntro: "Two examples that show the idea well.",
+  useLabel: "What a call looks like and where it is used",
+  useIntro:
+    "A call is a text and a few typed questions, and the answer is one probability per option. Pick a use to see how it is asked and what comes back.",
   use: [
     {
+      tab: "Router",
       mark: "Model router",
       text: [
         "A request comes in and someone has to decide who gets it: the strong and expensive model or the weak and cheap one. A decision model reads the task and answers questions such as how hard it is and whether it needs code or tools. Plain code turns the answers into a choice.",
         "Every request that goes to the cheap model saves tokens, and the router itself costs almost nothing. BenchLM describes the same pattern for Jev: one call with 14 choice questions and 5 yes or no questions about a job, and code builds a shortlist of models from the answers.",
       ],
+      calls: [
+        {
+          stateLabel: "Task",
+          state:
+            "Write a Python script that renames 200 photos by the date in their EXIF data.",
+          rows: [
+            {
+              kind: "Choice",
+              question: "How hard is the task?",
+              answer: "easy 0.12, medium 0.71, hard 0.17",
+            },
+            {
+              kind: "Noul",
+              question: "Does it need to run code or use tools?",
+              answer: "0.83",
+            },
+            {
+              kind: "Noul",
+              question: "Does it need the strongest model?",
+              answer: "0.09",
+            },
+          ],
+        },
+      ],
     },
     {
+      tab: "Auto mode",
       mark: "Auto mode in coding agents",
       text: [
         "An agent wants to run a command, and asking the person every single time gets tiring. A decision model answers one question: is this safe?",
         "`curl https://example.com` gets a yes, and the interface confirms it without bothering anyone. `rm -rf /` gets a no, and then the agent either blocks it or shows it to the person, depending on the agent.",
       ],
+      calls: [
+        {
+          stateLabel: "Command",
+          state:
+            "curl https://example.com",
+          rows: [
+            {
+              kind: "Noul",
+              question: "Is it safe to run without asking?",
+              answer: "0.99",
+            },
+            {
+              kind: "Choice",
+              question: "What does it touch?",
+              answer: "network read 0.96, files 0.03, system 0.01",
+            },
+            {
+              kind: "Noul",
+              question: "Can it destroy data?",
+              answer: "0.01",
+            },
+          ],
+        },
+        {
+          stateLabel: "Command",
+          state:
+            "rm -rf /",
+          rows: [
+            {
+              kind: "Noul",
+              question: "Is it safe to run without asking?",
+              answer: "0.01",
+            },
+            {
+              kind: "Choice",
+              question: "What does it touch?",
+              answer: "network read 0.00, files 0.30, system 0.70",
+            },
+            {
+              kind: "Noul",
+              question: "Can it destroy data?",
+              answer: "0.99",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      tab: "Tickets",
+      mark: "Ticket triage",
+      text: [
+        "A message comes in and has to reach the right queue with the right priority. One call answers where it goes, how urgent it is and whether the customer wants money back, and plain code does the rest.",
+      ],
+      calls: [
+        {
+          stateLabel: "Text",
+          state:
+            "I was charged twice for the same order and nobody answers.",
+          rows: [
+            {
+              kind: "Choice",
+              question: "Which queue should take it?",
+              answer: "billing 0.94, delivery 0.03, other 0.03",
+            },
+            {
+              kind: "Score",
+              question: "How urgent is it, from 1 to 5?",
+              answer: "4.2",
+            },
+            {
+              kind: "Noul",
+              question: "Is the customer asking for a refund?",
+              answer: "0.88",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      tab: "Fact check",
+      mark: "Checking an LLM's draft",
+      text: [
+        "Before an LLM's draft reaches a customer, a decision model can check that it follows from the source text. A yes or no question catches a draft that quotes the wrong number, and a low answer sends it back.",
+      ],
+      calls: [
+        {
+          stateLabel: "Draft and source",
+          state:
+            "Draft: \"The refund window is 60 days.\" Source: \"Refunds are possible within 30 days of delivery.\"",
+          rows: [
+            {
+              kind: "Noul",
+              question: "Does the source support the draft?",
+              answer: "0.04",
+            },
+            {
+              kind: "Choice",
+              question: "What is wrong?",
+              answer: "number 0.91, condition 0.06, nothing 0.03",
+            },
+            {
+              kind: "Score",
+              question: "How serious is the mismatch, from 1 to 5?",
+              answer: "4.6",
+            },
+          ],
+        },
+      ],
     },
   ],
   useMore:
-    "Smaller jobs on the same pattern: ticket triage, content moderation, checking that an LLM draft is grounded in its source, ranking candidates.",
+    "Smaller jobs on the same pattern: content moderation, ranking candidates.",
   useWarning:
     "One warning from the write-ups: hostile text inside the input can push a decision model toward an allowed but harmful answer. In auto mode that matters, so the permission itself should be enforced in code and the model's answer should be only one input to it.",
 
@@ -589,126 +610,9 @@ const ru: PaperDecisionStrings = {
       text: "Только в Jev 1.14 и только для изображений: возвращает рамку вокруг того, что попросили найти.",
     },
   ],
-  illustrationLabel: "Как выглядит вызов",
+  illustrationLabel: "Примеры вызовов",
   illustrationNote:
     "Иллюстрация с выдуманными числами, а не настоящий ответ API.",
-  examples: [
-    {
-      tab: "Тикет",
-      stateLabel: "Текст",
-      state:
-        "С меня дважды списали деньги за один заказ, и никто не отвечает.",
-      rows: [
-        {
-          kind: "Choice",
-          question: "В какую очередь отправить?",
-          answer: "billing 0.94, delivery 0.03, other 0.03",
-        },
-        {
-          kind: "Score",
-          question: "Насколько срочно, от 1 до 5?",
-          answer: "4.2",
-        },
-        {
-          kind: "Noul",
-          question: "Клиент просит вернуть деньги?",
-          answer: "0.88",
-        },
-      ],
-    },
-    {
-      tab: "Роутер",
-      stateLabel: "Задача",
-      state:
-        "Напиши скрипт на Python, который переименует 200 фотографий по дате из EXIF.",
-      rows: [
-        {
-          kind: "Choice",
-          question: "Насколько сложная задача?",
-          answer: "easy 0.12, medium 0.71, hard 0.17",
-        },
-        {
-          kind: "Noul",
-          question: "Нужно ли запускать код или использовать инструменты?",
-          answer: "0.83",
-        },
-        {
-          kind: "Noul",
-          question: "Нужна ли самая сильная модель?",
-          answer: "0.09",
-        },
-      ],
-    },
-    {
-      tab: "Безопасная команда",
-      stateLabel: "Команда",
-      state:
-        "curl https://example.com",
-      rows: [
-        {
-          kind: "Noul",
-          question: "Можно выполнять без вопросов?",
-          answer: "0.99",
-        },
-        {
-          kind: "Choice",
-          question: "Чего она касается?",
-          answer: "network read 0.96, files 0.03, system 0.01",
-        },
-        {
-          kind: "Noul",
-          question: "Может ли она уничтожить данные?",
-          answer: "0.01",
-        },
-      ],
-    },
-    {
-      tab: "Опасная команда",
-      stateLabel: "Команда",
-      state:
-        "rm -rf /",
-      rows: [
-        {
-          kind: "Noul",
-          question: "Можно выполнять без вопросов?",
-          answer: "0.01",
-        },
-        {
-          kind: "Choice",
-          question: "Чего она касается?",
-          answer: "network read 0.00, files 0.30, system 0.70",
-        },
-        {
-          kind: "Noul",
-          question: "Может ли она уничтожить данные?",
-          answer: "0.99",
-        },
-      ],
-    },
-    {
-      tab: "Проверка фактов",
-      stateLabel: "Черновик и источник",
-      state:
-        "Черновик: «Возврат возможен в течение 60 дней». Источник: «Возврат возможен в течение 30 дней после доставки».",
-      rows: [
-        {
-          kind: "Noul",
-          question: "Подтверждает ли источник черновик?",
-          answer: "0.04",
-        },
-        {
-          kind: "Choice",
-          question: "Что не так?",
-          answer: "number 0.91, condition 0.06, nothing 0.03",
-        },
-        {
-          kind: "Score",
-          question: "Насколько серьёзно расхождение, от 1 до 5?",
-          answer: "4.6",
-        },
-      ],
-    },
-  ],
   whatAfter: [
     "TypeSafe утверждает, что вероятности откалиброваны: когда модель говорит 0.8, она должна оказываться права примерно в 80% таких ответов. Это слова вендора, а в одном независимом разборе предупреждают, что уверенность показывает, насколько ответ сосредоточен, а не верен ли он.",
   ],
@@ -804,26 +708,161 @@ const ru: PaperDecisionStrings = {
     "Больший разрыв во времени. Стоимость миллиона вызовов это строчка в бюджете, а семь секунд до первого токена в путь запроса не помещаются, в отличие от полусекунды.",
   ],
 
-  useLabel: "Где их применяют",
-  useIntro: "Два примера, на которых идея видна лучше всего.",
+  useLabel: "Как выглядит вызов и где применяют",
+  useIntro:
+    "Вызов это текст и несколько типизированных вопросов, а ответ это по одной вероятности на вариант. Выберите применение, чтобы увидеть, как задаются вопросы и что приходит в ответ.",
   use: [
     {
+      tab: "Роутер",
       mark: "Роутер моделей",
       text: [
         "Приходит запрос, и надо решить, кому его отдать: сильной дорогой модели или слабой дешёвой. Decision-модель читает задачу и отвечает на вопросы вроде того, насколько она сложная и нужны ли код или инструменты. Обычный код превращает ответы в выбор.",
         "Каждый запрос, ушедший к дешёвой модели, экономит токены, а сам роутер почти ничего не стоит. BenchLM описывает тот же приём для Jev: один вызов с 14 вопросами Choice и 5 вопросами да или нет про задачу, и код собирает по ответам список подходящих моделей.",
       ],
+      calls: [
+        {
+          stateLabel: "Задача",
+          state:
+            "Напиши скрипт на Python, который переименует 200 фотографий по дате из EXIF.",
+          rows: [
+            {
+              kind: "Choice",
+              question: "Насколько сложная задача?",
+              answer: "easy 0.12, medium 0.71, hard 0.17",
+            },
+            {
+              kind: "Noul",
+              question: "Нужно ли запускать код или использовать инструменты?",
+              answer: "0.83",
+            },
+            {
+              kind: "Noul",
+              question: "Нужна ли самая сильная модель?",
+              answer: "0.09",
+            },
+          ],
+        },
+      ],
     },
     {
+      tab: "Auto-mode",
       mark: "Auto-mode в кодинг-агентах",
       text: [
         "Агент хочет выполнить команду, а спрашивать человека каждый раз утомительно. Decision-модель отвечает на один вопрос: это безопасно?",
         "`curl https://example.com` получает «да», и интерфейс подтверждает команду, не беспокоя пользователя. `rm -rf /` получает «нет», и тогда агент либо запрещает команду, либо показывает её пользователю, в зависимости от агента.",
       ],
+      calls: [
+        {
+          stateLabel: "Команда",
+          state:
+            "curl https://example.com",
+          rows: [
+            {
+              kind: "Noul",
+              question: "Можно выполнять без вопросов?",
+              answer: "0.99",
+            },
+            {
+              kind: "Choice",
+              question: "Чего она касается?",
+              answer: "network read 0.96, files 0.03, system 0.01",
+            },
+            {
+              kind: "Noul",
+              question: "Может ли она уничтожить данные?",
+              answer: "0.01",
+            },
+          ],
+        },
+        {
+          stateLabel: "Команда",
+          state:
+            "rm -rf /",
+          rows: [
+            {
+              kind: "Noul",
+              question: "Можно выполнять без вопросов?",
+              answer: "0.01",
+            },
+            {
+              kind: "Choice",
+              question: "Чего она касается?",
+              answer: "network read 0.00, files 0.30, system 0.70",
+            },
+            {
+              kind: "Noul",
+              question: "Может ли она уничтожить данные?",
+              answer: "0.99",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      tab: "Тикеты",
+      mark: "Сортировка тикетов",
+      text: [
+        "Приходит сообщение, и оно должно попасть в нужную очередь с нужным приоритетом. Один вызов отвечает, куда его отправить, насколько оно срочное и просит ли клиент вернуть деньги, а остальное делает обычный код.",
+      ],
+      calls: [
+        {
+          stateLabel: "Текст",
+          state:
+            "С меня дважды списали деньги за один заказ, и никто не отвечает.",
+          rows: [
+            {
+              kind: "Choice",
+              question: "В какую очередь отправить?",
+              answer: "billing 0.94, delivery 0.03, other 0.03",
+            },
+            {
+              kind: "Score",
+              question: "Насколько срочно, от 1 до 5?",
+              answer: "4.2",
+            },
+            {
+              kind: "Noul",
+              question: "Клиент просит вернуть деньги?",
+              answer: "0.88",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      tab: "Проверка фактов",
+      mark: "Проверка черновика LLM",
+      text: [
+        "Прежде чем черновик LLM дойдёт до клиента, Decision-модель может проверить, что он следует из исходного текста. Вопрос с ответом да или нет ловит черновик с неверной цифрой, а низкий ответ отправляет его на доработку.",
+      ],
+      calls: [
+        {
+          stateLabel: "Черновик и источник",
+          state:
+            "Черновик: «Возврат возможен в течение 60 дней». Источник: «Возврат возможен в течение 30 дней после доставки».",
+          rows: [
+            {
+              kind: "Noul",
+              question: "Подтверждает ли источник черновик?",
+              answer: "0.04",
+            },
+            {
+              kind: "Choice",
+              question: "Что не так?",
+              answer: "number 0.91, condition 0.06, nothing 0.03",
+            },
+            {
+              kind: "Score",
+              question: "Насколько серьёзно расхождение, от 1 до 5?",
+              answer: "4.6",
+            },
+          ],
+        },
+      ],
     },
   ],
   useMore:
-    "Задачи поменьше на том же приёме: сортировка тикетов, модерация контента, проверка, что черновик LLM опирается на источник, ранжирование кандидатов.",
+    "Задачи поменьше на том же приёме: модерация контента, ранжирование кандидатов.",
   useWarning:
     "Одно предупреждение из разборов: враждебный текст во входе может подтолкнуть Decision-модель к допустимому, но вредному ответу. В auto-mode это важно, поэтому само разрешение должно проверяться кодом, а ответ модели быть лишь одним из его входов.",
 

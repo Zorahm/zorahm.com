@@ -99,11 +99,14 @@ function Tabs({
   );
 }
 
-/** One call drawn as a slip, with a switch between several examples */
-function CallExamples({ paper }: { paper: PaperDecisionStrings }) {
+/**
+ * The uses of decision models as one switcher. Each use has its words and the
+ * calls that show it, drawn as slips: the text the model reads, then one row
+ * per question with the answer that comes back.
+ */
+function UseExamples({ paper }: { paper: PaperDecisionStrings }) {
   const [active, setActive] = useState(0);
-  const { examples } = paper;
-  const example = examples[active];
+  const use = paper.use[active];
 
   return (
     <figure className={styles.call}>
@@ -113,32 +116,43 @@ function CallExamples({ paper }: { paper: PaperDecisionStrings }) {
       </figcaption>
 
       <Tabs
-        name="call"
-        label={paper.illustrationLabel}
-        items={examples.map((item) => item.tab)}
+        name="use"
+        label={paper.useLabel}
+        items={paper.use.map((item) => item.tab)}
         active={active}
         onChange={setActive}
       />
 
       <div
-        id="call-panel"
+        id="use-panel"
         role="tabpanel"
-        aria-labelledby={`call-tab-${active}`}
-        className={styles.callPanel}
+        aria-labelledby={`use-tab-${active}`}
+        className={styles.usePanel}
       >
-        <p className={styles.callState}>
-          <span>{example.stateLabel}</span>
-          {example.state}
-        </p>
-        <ul className={styles.callRows}>
-          {example.rows.map((row, index) => (
-            <li key={index}>
-              <span className={styles.callKind}>{row.kind}</span>
-              <span className={styles.callQuestion}>{row.question}</span>
-              <b className={styles.callAnswer}>{row.answer}</b>
-            </li>
-          ))}
-        </ul>
+        <h3 className={styles.useMark}>{use.mark}</h3>
+        {use.text.map((text, index) => (
+          <p key={index} className={styles.useText}>
+            <Inline text={text} />
+          </p>
+        ))}
+
+        {use.calls.map((call, index) => (
+          <div key={index} className={styles.callBlock}>
+            <p className={styles.callState}>
+              <span>{call.stateLabel}</span>
+              {call.state}
+            </p>
+            <ul className={styles.callRows}>
+              {call.rows.map((row, rowIndex) => (
+                <li key={rowIndex}>
+                  <span className={styles.callKind}>{row.kind}</span>
+                  <span className={styles.callQuestion}>{row.question}</span>
+                  <b className={styles.callAnswer}>{row.answer}</b>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
     </figure>
   );
@@ -344,7 +358,6 @@ export function PaperDecisionPage({ lang }: { lang: Lang }) {
                 ))}
               </dl>
 
-              <CallExamples paper={paper} />
 
               <Paragraphs items={paper.whatAfter} />
             </section>
@@ -394,17 +407,7 @@ export function PaperDecisionPage({ lang }: { lang: Lang }) {
             <section id="use" className={styles.part}>
               <h2 className={styles.h2}>{paper.useLabel}</h2>
               <Paragraphs items={[paper.useIntro]} />
-              <ol className={styles.steps}>
-                {paper.use.map((item, index) => (
-                  <li key={item.mark}>
-                    <span className={styles.stepNo}>{twoDigits(index + 1)}</span>
-                    <div className={styles.stepBody}>
-                      <h3 className={styles.stepMark}>{item.mark}</h3>
-                      <Paragraphs items={item.text} />
-                    </div>
-                  </li>
-                ))}
-              </ol>
+              <UseExamples paper={paper} />
               <Paragraphs items={[paper.useMore]} />
               <p className={styles.warning}>{paper.useWarning}</p>
             </section>

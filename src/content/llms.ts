@@ -376,18 +376,6 @@ function paperDecisionText(lines: string[], lang: Lang) {
     lines.push(`- ${question.name}: ${question.text}`);
   }
   lines.push("");
-  lines.push(`${paper.illustrationLabel}. ${paper.illustrationNote}`);
-  lines.push("");
-  for (const example of paper.examples) {
-    lines.push(`##### ${example.tab}`);
-    lines.push("");
-    lines.push(`${example.stateLabel}: ${example.state}`);
-    lines.push("");
-    for (const row of example.rows) {
-      lines.push(`- ${row.kind}, ${row.question} ${row.answer}`);
-    }
-    lines.push("");
-  }
   paragraphs(paper.whatAfter);
 
   heading(paper.modelsLabel);
@@ -433,10 +421,20 @@ function paperDecisionText(lines: string[], lang: Lang) {
 
   heading(paper.useLabel);
   paragraphs([paper.useIntro]);
+  lines.push(`${paper.illustrationLabel}. ${paper.illustrationNote}`);
+  lines.push("");
   for (const item of paper.use) {
     lines.push(`##### ${item.mark}`);
     lines.push("");
     paragraphs(item.text);
+    for (const call of item.calls) {
+      lines.push(`${call.stateLabel}: ${call.state}`);
+      lines.push("");
+      for (const row of call.rows) {
+        lines.push(`- ${row.kind}, ${row.question} ${row.answer}`);
+      }
+      lines.push("");
+    }
   }
   paragraphs([paper.useMore, paper.useWarning]);
 
