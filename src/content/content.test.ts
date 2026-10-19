@@ -20,10 +20,14 @@ import {
   getContacts,
   getFrames,
   getGames,
+  getPaperDecision,
   getSpiritMatches,
   getUi,
   langPath,
   otherLang,
+  paperDecisionPath,
+  PAPER_DECISION_PRICE_CALLS,
+  priceOfMillionCalls,
   space3dPath,
   spacePath,
   spiritPath,
@@ -410,3 +414,68 @@ describe("home index", () => {
     }
   });
 });
+
+describe("the /paper/decision note", () => {
+  const shape = (value: unknown): unknown =>
+    Array.isArray(value)
+      ? value.map(shape)
+      : value !== null && typeof value === "object"
+        ? Object.fromEntries(
+            Object.entries(value).map(([key, item]) => [key, shape(item)]),
+          )
+        : typeof value;
+
+  it("has the same shape in every language", () => {
+    const [first, ...rest] = LANGS;
+    for (const lang of rest) {
+      expect(shape(getPaperDecision(lang)), `${lang} against ${first}`).toEqual(
+        shape(getPaperDecision(first)),
+      );
+    }
+  });
+
+  it("keeps lists of the same length in every language", () => {
+    const en = getPaperDecision("en");
+    const ru = getPaperDecision("ru");
+    expect(ru.questions).toHaveLength(en.questions.length);
+    expect(ru.examples).toHaveLength(en.examples.length);
+    en.examples.forEach((example, index) => {
+      expect(ru.examples[index].rows).toHaveLength(example.rows.length);
+    });
+    expect(ru.modelList).toHaveLength(en.modelList.length);
+    expect(ru.numbers).toHaveLength(en.numbers.length);
+    expect(en.priceCalls).toHaveLength(PAPER_DECISION_PRICE_CALLS.length);
+    expect(ru.priceCalls).toHaveLength(PAPER_DECISION_PRICE_CALLS.length);
+    expect(ru.use).toHaveLength(en.use.length);
+    expect(ru.limits).toHaveLength(en.limits.length);
+  });
+
+  it("uses no long dashes, as the author asked", () => {
+    for (const lang of LANGS) {
+      expect(JSON.stringify(getPaperDecision(lang))).not.toMatch(/[–—]/);
+    }
+  });
+
+  it("lies next to the language home", () => {
+    expect(paperDecisionPath("en")).toBe("/paper/decision");
+    expect(paperDecisionPath("ru")).toBe("/ru/paper/decision");
+  });
+
+  it("prices the ticket the way OpenRouter does for Jev", () => {
+    // 447 input tokens at $0.042 per million is about $19 for a million tickets
+    const [ticket] = PAPER_DECISION_PRICE_CALLS;
+    const price = priceOfMillionCalls(ticket);
+    expect(price.decision).toBeCloseTo(18.77, 2);
+    expect(price.haiku).toBeCloseTo(79.2, 1);
+    expect(price.haikuLow).toBeCloseTo(229.2, 1);
+  });
+
+  it("keeps the decision model the cheapest row of every call", () => {
+    for (const call of PAPER_DECISION_PRICE_CALLS) {
+      const price = priceOfMillionCalls(call);
+      expect(price.decision).toBeLessThan(price.haiku);
+      expect(price.haiku).toBeLessThan(price.haikuLow);
+    }
+  });
+});
+

@@ -34,6 +34,17 @@ export { FRAME_STRUCTURE } from "./structure";
 export { AI_STRUCTURE } from "./ai";
 export { GAMES_STRUCTURE } from "./games";
 export { HOME_SECTIONS, type HomeSectionStructure } from "./home";
+export {
+  PAPER_DECISION_DATE,
+  PAPER_DECISION_IMAGES,
+  PAPER_DECISION_PRICES,
+  PAPER_DECISION_PRICE_CALLS,
+  PAPER_DECISION_SPEED,
+  PAPER_DECISION_SOURCES,
+  getPaperDecision,
+  priceOfMillionCalls,
+  type PaperDecisionStrings,
+} from "./paperDecision";
 export { SPACE_STRUCTURE, BODY_COUNT } from "./space";
 export {
   SPIRIT_STRUCTURE,
@@ -148,6 +159,10 @@ export const aiPath = (lang: Lang) => (lang === "en" ? "/ai" : `/${lang}/ai`);
 /** Path to the games page. The games themselves are one build for both languages */
 export const gamesPath = (lang: Lang) =>
   lang === "en" ? "/games" : `/${lang}/games`;
+
+/** Path to the note on decision models. Papers live under /paper */
+export const paperDecisionPath = (lang: Lang) =>
+  lang === "en" ? "/paper/decision" : `/${lang}/paper/decision`;
 
 /** Path to the temporary outage notice. Not in the sitemap: it is meant to go away */
 export const noticePath = (lang: Lang) =>

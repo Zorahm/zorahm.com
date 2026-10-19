@@ -6,6 +6,7 @@ import {
   gamesPath,
   gargantuaPath,
   langPath,
+  paperDecisionPath,
   space3dPath,
   spacePath,
   spiritPath,
@@ -30,6 +31,7 @@ const ROUTES: Route[] = [
   { path: spiritPath, priority: (lang) => (lang === "en" ? 0.5 : 0.4) },
   { path: aiPath, priority: (lang) => (lang === "en" ? 0.6 : 0.5) },
   { path: gamesPath, priority: (lang) => (lang === "en" ? 0.6 : 0.5) },
+  { path: paperDecisionPath, priority: (lang) => (lang === "en" ? 0.5 : 0.4) },
 ];
 
 const absolute = (path: (lang: Lang) => string, lang: Lang) =>

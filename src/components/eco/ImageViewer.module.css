@@ -1,0 +1,108 @@
+/* A picture that opens full size. Colours come from the page's tokens in eco.module.css */
+
+.figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.figure figcaption {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+.thumb {
+  padding: 0;
+  display: block;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  /* Screenshots of light pages stay white on the dark bench: they are sheets, not part of the page */
+  background: #ffffff;
+  cursor: zoom-in;
+}
+
+.thumb:hover {
+  border-color: var(--signal-ink);
+}
+
+.thumb img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The modal fills the screen: the picture sits on a dim sheet */
+
+.dialog {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(9, 13, 16, 0.92);
+  color: #e6ecef;
+  overflow: auto;
+}
+
+.dialog::backdrop {
+  background: rgba(9, 13, 16, 0.92);
+}
+
+:global(body):has(.dialog[open]) {
+  overflow: hidden;
+}
+
+.stage {
+  min-width: 100%;
+  min-height: 100%;
+  padding: 64px 24px 24px;
+  display: grid;
+  place-items: center;
+}
+
+/* Never larger than the screen, never upscaled past the file's own pixels */
+.full {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 88px);
+  border: 1px solid #62727d;
+  background: #ffffff;
+  cursor: default;
+}
+
+.close {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #62727d;
+  border-radius: 0;
+  background: #0e1317;
+  color: #e6ecef;
+}
+
+.close:hover {
+  border-color: #9db0ff;
+  color: #9db0ff;
+}
+
+.close:focus-visible {
+  outline: 2px solid #9db0ff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  .stage {
+    padding: 64px 8px 8px;
+  }
+}

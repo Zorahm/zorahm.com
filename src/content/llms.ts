@@ -7,13 +7,21 @@ import {
   getContacts,
   getFrames,
   getGames,
+  getPaperDecision,
   getSpiritMatches,
   getUi,
   langPath,
+  paperDecisionPath,
   space3dPath,
   spacePath,
   spiritPath,
 } from "./index";
+import {
+  PAPER_DECISION_DATE,
+  PAPER_DECISION_PRICE_CALLS,
+  PAPER_DECISION_SOURCES,
+  priceOfMillionCalls,
+} from "./paperDecision";
 import { SPIRIT_CITY_TITLE, SPIRIT_DAY, SPIRIT_TEAM } from "./spirit";
 import { LANGS, SITE_URL, type Lang } from "./types";
 
@@ -68,6 +76,11 @@ const PAGES: Page[] = [
     path: spiritPath,
     title: (lang) => getUi(lang).spirit.title,
     description: (lang) => getUi(lang).spirit.description,
+  },
+  {
+    path: paperDecisionPath,
+    title: (lang) => getPaperDecision(lang).title,
+    description: (lang) => getPaperDecision(lang).description,
   },
 ];
 
@@ -316,6 +329,123 @@ function spiritText(lines: string[], lang: Lang) {
   lines.push("");
 }
 
+function paperDecisionText(lines: string[], lang: Lang) {
+  const paper = getPaperDecision(lang);
+  pageHead(lines, paper.heading, paperDecisionPath(lang), paper.description);
+  lines.push(`${paper.date} (${PAPER_DECISION_DATE})`);
+  lines.push("");
+  const paragraphs = (items: string[]) => {
+    for (const item of items) {
+      lines.push(item);
+      lines.push("");
+    }
+  };
+  const heading = (label: string) => {
+    lines.push(`#### ${label}`);
+    lines.push("");
+  };
+
+  paragraphs(paper.lead);
+
+  heading(paper.whatLabel);
+  paragraphs(paper.what);
+  for (const question of paper.questions) {
+    lines.push(`- ${question.name}: ${question.text}`);
+  }
+  lines.push("");
+  lines.push(`${paper.illustrationLabel}. ${paper.illustrationNote}`);
+  lines.push("");
+  for (const example of paper.examples) {
+    lines.push(`##### ${example.tab}`);
+    lines.push("");
+    lines.push(`${example.stateLabel}: ${example.state}`);
+    lines.push("");
+    for (const row of example.rows) {
+      lines.push(`- ${row.kind}, ${row.question} ${row.answer}`);
+    }
+    lines.push("");
+  }
+  paragraphs(paper.whatAfter);
+
+  heading(paper.modelsLabel);
+  paragraphs(paper.models);
+  for (const model of paper.modelList) {
+    lines.push(`- ${model.name}: ${model.text}`);
+  }
+  lines.push("");
+  paragraphs([paper.modelsAfter]);
+
+  heading(paper.whyLabel);
+  paragraphs(paper.why);
+  for (const number of paper.numbers) {
+    lines.push(`- ${number.value} ${number.label}`);
+  }
+  lines.push("");
+  lines.push(`##### ${paper.priceLabel}`);
+  lines.push("");
+  paragraphs([paper.priceIntro]);
+  PAPER_DECISION_PRICE_CALLS.forEach((call, index) => {
+    const price = priceOfMillionCalls(call);
+    const money = (value: number) => `$${value.toFixed(2)}`;
+    lines.push(
+      `- ${paper.priceCalls[index].tab} (${call.inputTokens} ${paper.priceTokens.input}, ` +
+        `${call.answerTokens} ${paper.priceTokens.answer}), ${paper.priceUnit}: ` +
+        `${paper.priceRows.decision} ${money(price.decision)}, ` +
+        `${paper.priceRows.haiku} ${money(price.haiku)}, ` +
+        `${paper.priceRows.haikuLow} ${money(price.haikuLow)}`,
+    );
+  });
+  lines.push("");
+  paragraphs(paper.priceNotes);
+  paragraphs(paper.priceVerdict);
+  lines.push(`##### ${paper.speedLabel}`);
+  lines.push("");
+  lines.push(
+    `- ${paper.speedRows.decision}: ${paper.speedRows.decisionValue}`,
+  );
+  lines.push(`- ${paper.speedRows.haiku}: ${paper.speedRows.haikuValue}`);
+  lines.push("");
+  paragraphs(paper.speedNotes);
+  paragraphs(paper.speedVerdict);
+
+  heading(paper.useLabel);
+  paragraphs([paper.useIntro]);
+  for (const item of paper.use) {
+    lines.push(`##### ${item.mark}`);
+    lines.push("");
+    paragraphs(item.text);
+  }
+  paragraphs([paper.useMore, paper.useWarning]);
+
+  heading(paper.indexLabel);
+  paragraphs(paper.index);
+  lines.push(`##### ${paper.beforeLabel}`);
+  lines.push("");
+  lines.push(paper.beforeAlt);
+  lines.push("");
+  paragraphs(paper.before);
+  lines.push(`##### ${paper.afterLabel}`);
+  lines.push("");
+  lines.push(paper.afterAlt);
+  lines.push("");
+  paragraphs(paper.after);
+  paragraphs(paper.indexVerdict);
+
+  heading(paper.limitsLabel);
+  for (const limit of paper.limits) {
+    lines.push(`- ${limit.mark}: ${limit.text}`);
+  }
+  lines.push("");
+
+  heading(paper.sourcesLabel);
+  for (const source of PAPER_DECISION_SOURCES) {
+    lines.push(`- [${source.label}](${source.href})`);
+  }
+  lines.push("");
+  lines.push(paper.disclaimer);
+  lines.push("");
+}
+
 /**
  * llms-full.txt: the text of every page, so a crawler does not need to run
  * the pages to read them — much of the site is drawn on canvases and in
@@ -342,6 +472,7 @@ export function buildLlmsFullTxt(): string {
     spaceText(lines, lang);
     sceneTexts(lines, lang);
     spiritText(lines, lang);
+    paperDecisionText(lines, lang);
   }
 
   return finish(lines);

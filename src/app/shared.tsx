@@ -5,9 +5,11 @@ import {
   aiPath,
   gamesPath,
   gargantuaPath,
+  getPaperDecision,
   getUi,
   langPath,
   noticePath,
+  paperDecisionPath,
   space3dPath,
   spacePath,
   spiritPath,
@@ -197,6 +199,17 @@ export function buildAiMetadata(lang: Lang): Metadata {
 export function buildGamesMetadata(lang: Lang): Metadata {
   const { games } = getUi(lang);
   return buildPageMetadata(lang, gamesPath, games.title, games.description);
+}
+
+/** Metadata of the /paper/decision note */
+export function buildPaperDecisionMetadata(lang: Lang): Metadata {
+  const paper = getPaperDecision(lang);
+  return buildPageMetadata(
+    lang,
+    paperDecisionPath,
+    paper.title,
+    paper.description,
+  );
 }
 
 /**

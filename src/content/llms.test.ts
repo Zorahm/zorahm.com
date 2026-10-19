@@ -10,9 +10,11 @@ import {
   getBodies,
   getFrames,
   getGames,
+  getPaperDecision,
   getSpiritMatches,
   getUi,
   langPath,
+  paperDecisionPath,
   space3dPath,
   spacePath,
   spiritPath,
@@ -30,6 +32,7 @@ const PATHS = [
   space3dPath,
   gargantuaPath,
   spiritPath,
+  paperDecisionPath,
 ];
 
 describe("llms.txt", () => {
@@ -109,6 +112,7 @@ describe("llms-full.txt", () => {
       for (const body of getBodies(lang)) expect(full).toContain(body.body);
       for (const match of getSpiritMatches(lang)) expect(full).toContain(match.line);
       for (const p of getUi(lang).spirit.ps) expect(full).toContain(p);
+      for (const p of getPaperDecision(lang).after) expect(full).toContain(p);
     }
   });
 });
