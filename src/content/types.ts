@@ -31,7 +31,8 @@ export type PlateShapeId =
   | "crossword"
   | "rules"
   | "orbits"
-  | "hole";
+  | "hole"
+  | "paper";
 
 export type FrameAlign = "left" | "right" | "center";
 
@@ -560,7 +561,14 @@ export type NoticeStrings = {
 };
 
 /** Sections the home page index points to */
-export type HomeSectionId = "ai" | "games" | "space" | "space3d" | "gargantua" | "spirit";
+export type HomeSectionId =
+  | "ai"
+  | "games"
+  | "space"
+  | "space3d"
+  | "gargantua"
+  | "spirit"
+  | "paper";
 
 /** Strings of the shared page shell */
 export type ShellStrings = {

@@ -302,6 +302,11 @@ export const enUi: UiStrings = {
         line: "A fan's note on one day and two titles",
         tag: "23.08.2026",
       },
+      paper: {
+        name: "Paper",
+        line: "Short articles on AI, with the sources behind every number",
+        tag: "Articles",
+      },
     },
     frames: {
       heading: "From noise to the world",

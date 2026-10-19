@@ -7,6 +7,7 @@ import {
   gargantuaPath,
   langPath,
   paperDecisionPath,
+  paperPath,
   space3dPath,
   spacePath,
   spiritPath,
@@ -31,6 +32,7 @@ const ROUTES: Route[] = [
   { path: spiritPath, priority: (lang) => (lang === "en" ? 0.5 : 0.4) },
   { path: aiPath, priority: (lang) => (lang === "en" ? 0.6 : 0.5) },
   { path: gamesPath, priority: (lang) => (lang === "en" ? 0.6 : 0.5) },
+  { path: paperPath, priority: (lang) => (lang === "en" ? 0.6 : 0.5) },
   { path: paperDecisionPath, priority: (lang) => (lang === "en" ? 0.5 : 0.4) },
 ];
 

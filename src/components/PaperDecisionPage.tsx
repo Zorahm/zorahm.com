@@ -9,9 +9,9 @@ import {
   PAPER_DECISION_SOURCES,
   PAPER_DECISION_SPEED,
   getPaperDecision,
-  langPath,
   otherLang,
   paperDecisionPath,
+  paperPath,
   priceOfMillionCalls,
   type Lang,
   type PaperDecisionStrings,
@@ -290,12 +290,12 @@ export function PaperDecisionPage({ lang }: { lang: Lang }) {
   ];
 
   return (
-    <EcoShell lang={lang} otherHref={paperDecisionPath(otherLang(lang))}>
+    <EcoShell lang={lang} otherHref={paperDecisionPath(otherLang(lang))} current="paper">
       <article>
         <header className={styles.hero}>
-          <Link href={langPath(lang)} className={styles.back}>
+          <Link href={paperPath(lang)} className={styles.back}>
             <ArrowLeftIcon />
-            {paper.home}
+            {paper.back}
           </Link>
 
           <h1 className={styles.title}>{paper.heading}</h1>

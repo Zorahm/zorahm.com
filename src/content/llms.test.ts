@@ -15,6 +15,7 @@ import {
   getUi,
   langPath,
   paperDecisionPath,
+  paperPath,
   space3dPath,
   spacePath,
   spiritPath,
@@ -32,6 +33,7 @@ const PATHS = [
   space3dPath,
   gargantuaPath,
   spiritPath,
+  paperPath,
   paperDecisionPath,
 ];
 

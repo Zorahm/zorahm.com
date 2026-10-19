@@ -23,4 +23,5 @@ export const HOME_SECTIONS: HomeSectionStructure[] = [
   { id: "space3d", path: prefixed("space-3d"), shape: "globe", accent: 0.3 },
   { id: "gargantua", path: prefixed("gargantua"), shape: "hole", accent: 0.35 },
   { id: "spirit", path: prefixed("spirit"), shape: "spirit", accent: 0.5 },
+  { id: "paper", path: prefixed("paper"), shape: "paper", accent: 0.5 },
 ];

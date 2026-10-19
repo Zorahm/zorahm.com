@@ -35,6 +35,14 @@ export { AI_STRUCTURE } from "./ai";
 export { GAMES_STRUCTURE } from "./games";
 export { HOME_SECTIONS, type HomeSectionStructure } from "./home";
 export {
+  PAPER_ARTICLES,
+  getPaperArticles,
+  getPaperIndex,
+  type PaperArticle,
+  type PaperArticleId,
+  type PaperIndexStrings,
+} from "./paper";
+export {
   PAPER_DECISION_DATE,
   PAPER_DECISION_IMAGES,
   PAPER_DECISION_PRICES,
@@ -159,6 +167,10 @@ export const aiPath = (lang: Lang) => (lang === "en" ? "/ai" : `/${lang}/ai`);
 /** Path to the games page. The games themselves are one build for both languages */
 export const gamesPath = (lang: Lang) =>
   lang === "en" ? "/games" : `/${lang}/games`;
+
+/** Path to the index of articles */
+export const paperPath = (lang: Lang) =>
+  lang === "en" ? "/paper" : `/${lang}/paper`;
 
 /** Path to the note on decision models. Papers live under /paper */
 export const paperDecisionPath = (lang: Lang) =>

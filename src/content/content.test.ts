@@ -20,12 +20,15 @@ import {
   getContacts,
   getFrames,
   getGames,
+  getPaperArticles,
   getPaperDecision,
+  getPaperIndex,
   getSpiritMatches,
   getUi,
   langPath,
   otherLang,
   paperDecisionPath,
+  paperPath,
   PAPER_DECISION_PRICE_CALLS,
   priceOfMillionCalls,
   space3dPath,
@@ -395,6 +398,7 @@ describe("home index", () => {
     space3d: space3dPath,
     gargantua: gargantuaPath,
     spirit: spiritPath,
+    paper: paperPath,
   } as const;
 
   it("leads to the same addresses as the shared path helpers", () => {
@@ -475,6 +479,40 @@ describe("the /paper/decision note", () => {
       const price = priceOfMillionCalls(call);
       expect(price.decision).toBeLessThan(price.haiku);
       expect(price.haiku).toBeLessThan(price.haikuLow);
+    }
+  });
+});
+
+describe("the /paper index", () => {
+  it("lies next to the language home and above its articles", () => {
+    expect(paperPath("en")).toBe("/paper");
+    expect(paperPath("ru")).toBe("/ru/paper");
+    for (const lang of LANGS) {
+      for (const article of getPaperArticles(lang)) {
+        expect(article.path(lang).startsWith(paperPath(lang) + "/")).toBe(true);
+      }
+    }
+  });
+
+  it("lists the same articles in every language, each with words", () => {
+    const ids = getPaperArticles("en").map((a) => a.id);
+    for (const lang of LANGS) {
+      const articles = getPaperArticles(lang);
+      expect(articles.map((a) => a.id)).toEqual(ids);
+      for (const article of articles) {
+        expect(article.title.length).toBeGreaterThan(0);
+        expect(article.summary.length).toBeGreaterThan(0);
+        expect(article.dateText.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("has the same strings in every language, without long dashes", () => {
+    expect(Object.keys(getPaperIndex("ru")).sort()).toEqual(
+      Object.keys(getPaperIndex("en")).sort(),
+    );
+    for (const lang of LANGS) {
+      expect(JSON.stringify(getPaperIndex(lang))).not.toMatch(/[\u2013\u2014]/);
     }
   });
 });

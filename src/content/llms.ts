@@ -7,11 +7,14 @@ import {
   getContacts,
   getFrames,
   getGames,
+  getPaperArticles,
   getPaperDecision,
+  getPaperIndex,
   getSpiritMatches,
   getUi,
   langPath,
   paperDecisionPath,
+  paperPath,
   space3dPath,
   spacePath,
   spiritPath,
@@ -76,6 +79,11 @@ const PAGES: Page[] = [
     path: spiritPath,
     title: (lang) => getUi(lang).spirit.title,
     description: (lang) => getUi(lang).spirit.description,
+  },
+  {
+    path: paperPath,
+    title: (lang) => getPaperIndex(lang).title,
+    description: (lang) => getPaperIndex(lang).description,
   },
   {
     path: paperDecisionPath,
@@ -329,6 +337,21 @@ function spiritText(lines: string[], lang: Lang) {
   lines.push("");
 }
 
+function paperIndexText(lines: string[], lang: Lang) {
+  const paper = getPaperIndex(lang);
+  pageHead(lines, paper.heading, paperPath(lang), paper.description);
+  for (const paragraph of paper.lead) {
+    lines.push(paragraph);
+    lines.push("");
+  }
+  for (const article of getPaperArticles(lang)) {
+    lines.push(
+      `- [${article.title}](${url(article.path(lang))}) (${article.date}): ${article.summary}`,
+    );
+  }
+  lines.push("");
+}
+
 function paperDecisionText(lines: string[], lang: Lang) {
   const paper = getPaperDecision(lang);
   pageHead(lines, paper.heading, paperDecisionPath(lang), paper.description);
@@ -472,6 +495,7 @@ export function buildLlmsFullTxt(): string {
     spaceText(lines, lang);
     sceneTexts(lines, lang);
     spiritText(lines, lang);
+    paperIndexText(lines, lang);
     paperDecisionText(lines, lang);
   }
 

@@ -92,6 +92,34 @@ const EDGES: [number, number][] = [
   [4, 5], [1, 6], [3, 6], [6, 7], [1, 7],
 ];
 
+/** The paper figure in whole dots: a sheet, its folded corner, and the sheets' sizes */
+const SHEET_W = 13;
+const SHEET_H = 17;
+const SHEET_FOLD = 3;
+/** Width and height of both sheets together, for centring */
+const PAPER_W = 18;
+const PAPER_H = 19;
+/** The back sheet sits this far right and the front sheet this far down */
+const PAPER_BACK_X = 5;
+const PAPER_FRONT_Y = 2;
+/** Heights, in dots, of the little bars on the sheet's chart, left to right */
+const PAPER_BARS = [1, 2, 2, 3, 1];
+/** The bar that is lit signal: the one that stands out */
+const PAPER_BAR_LIT = 3;
+
+/**
+ * One cell of a sheet with a folded top-right corner, in the sheet's own
+ * dots: 0 outside, 1 on its edge, 2 inside.
+ */
+function sheetCell(x: number, y: number) {
+  if (x < 0 || y < 0 || x >= SHEET_W || y >= SHEET_H) return 0;
+  // How far the cell is past the start of the diagonal that cuts the corner
+  const past = x - (SHEET_W - 1 - SHEET_FOLD);
+  if (past > y) return 0;
+  if (x === 0 || x === SHEET_W - 1 || y === 0 || y === SHEET_H - 1 || past === y) return 1;
+  return 2;
+}
+
 /** Stable pseudo-random value per dot, 0..1 */
 export function hash(i: number, j: number) {
   const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
@@ -321,6 +349,39 @@ export function density(
       if (v < 0 && ellipseDistance(u, v, 1.02, 0.74) < line) return 0.6;
       if (v > 0 && ellipseDistance(u, v, 0.8, 0.56) < line) return 0.3;
       return star;
+    }
+    case "paper": {
+      // A sheet with a folded corner: a title, lines of text and a small bar
+      // chart, with a second sheet showing behind it. Laid out in whole dots,
+      // so every edge is one clean row or column on any grid.
+      const x = toDot(u / k + (PAPER_W - 1) / 2);
+      const y = toDot(v / k + (PAPER_H - 1) / 2);
+      const fy = y - PAPER_FRONT_Y;
+      const front = sheetCell(x, fy);
+
+      if (front === 1) return 0.9;
+      if (front === 2) {
+        const bend = SHEET_W - 1 - SHEET_FOLD;
+        // The turned-down corner
+        if ((x === bend && fy <= SHEET_FOLD) || (fy === SHEET_FOLD && x >= bend)) return 0.5;
+        if (fy === 5 && x >= 2 && x <= 7) return 1;
+        const textEnd = fy === 7 || fy === 9 ? 10 : fy === 11 ? 6 : 0;
+        if (textEnd > 0 && x >= 2 && x <= textEnd) {
+          const gap = x > 2 && x < textEnd && hash(x + fy * 3, fy) < 0.15;
+          return gap ? 0 : 0.55;
+        }
+        if (x >= 2 && x <= 10 && x % 2 === 0) {
+          const bar = (x - 2) / 2;
+          if (fy <= 14 && fy > 14 - PAPER_BARS[bar]) return bar === PAPER_BAR_LIT ? 1 : 0.6;
+        }
+        if (fy === 15 && x >= 2 && x <= 10) return 0.4;
+        return 0;
+      }
+
+      // Behind it: only the outline of the second sheet, a little higher and to the right
+      const back = sheetCell(x - PAPER_BACK_X, y);
+      if (back === 1) return 0.4;
+      return back === 2 ? 0 : star;
     }
     case "mark": {
       // The backslash of Z\M

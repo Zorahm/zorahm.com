@@ -3,7 +3,7 @@ import { breath, buildPlate, lensPull, type PlateShape } from "./plate";
 
 const SHAPES: PlateShape[] = [
   "saturn", "noise", "network", "eye", "globe", "ripple", "github", "mark", "rails", "street", "spirit",
-  "crossword", "rules", "orbits", "hole",
+  "crossword", "rules", "orbits", "hole", "paper",
 ];
 
 describe("home plates", () => {

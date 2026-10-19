@@ -135,7 +135,8 @@ export type PaperDecisionStrings = {
   date: string;
   heading: string;
   lead: string[];
-  home: string;
+  /** Back link: the paper index */
+  back: string;
   contentsLabel: string;
   /** Labels of the image viewer: the thumbnail button and the close button */
   viewImage: string;
@@ -226,7 +227,7 @@ const en: PaperDecisionStrings = {
     "A decision model does not write text. You give it a piece of text and a few questions, and it answers each one with a probability: which queue, how urgent, yes or no.",
     "Jev from TypeSafe started the class in September 2026, and in October d1-ultra from Liquid AI took the top of the Artificial Analysis index. This is a note on what these models are, where they are already used, and how far they have really caught up with ordinary LLMs.",
   ],
-  home: "Home",
+  back: "Papers",
   contentsLabel: "Contents",
   viewImage: "Open the image full size",
   closeImage: "Close",
@@ -560,7 +561,7 @@ const ru: PaperDecisionStrings = {
     "Decision-модель не пишет текст. Ей дают кусок текста и несколько вопросов, а она на каждый отвечает вероятностью: в какую очередь, насколько срочно, да или нет.",
     "В сентябре 2026 года этот класс начал Jev от TypeSafe, а в октябре d1-ultra от Liquid AI возглавил индекс Artificial Analysis. Здесь коротко о том, что это за модели, где их уже применяют и насколько они действительно догнали обычные LLM.",
   ],
-  home: "Главная",
+  back: "Статьи",
   contentsLabel: "Содержание",
   viewImage: "Открыть изображение в полном размере",
   closeImage: "Закрыть",
