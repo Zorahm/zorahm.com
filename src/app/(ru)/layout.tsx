@@ -12,8 +12,9 @@ export default function RuLayout({
 }) {
   return (
     <html lang="ru" className={fontClassName} suppressHydrationWarning>
-      <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       <body>
+        {/* Next moves a beforeInteractive script into <head>; a direct child of <html> breaks hydration */}
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         {children}
       </body>
     </html>
