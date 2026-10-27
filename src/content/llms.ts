@@ -194,10 +194,6 @@ function homeText(lines: string[], lang: Lang) {
       lines.push(paragraph.text);
       lines.push("");
     }
-    if (frame.cta) {
-      lines.push(`Link: ${frame.cta.href}`);
-      lines.push("");
-    }
   }
 }
 

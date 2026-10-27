@@ -9,7 +9,6 @@ import {
   getPaperIndex,
   getUi,
   langPath,
-  noticePath,
   paperDecisionPath,
   paperPath,
   space3dPath,
@@ -59,12 +58,12 @@ export const fontClassName = `${display.variable} ${body.variable} ${mono.variab
 export const themeInitScript = `(function(){try{if(window.localStorage.getItem("zorahm:theme")==="dark"){document.documentElement.dataset.bench="dark";}}catch(e){}})();`;
 
 export const viewport: Viewport = {
-  themeColor: "#eef1f2",
+  themeColor: "#f0f1f3",
 };
 
-/** Pages on the laboratory design: the daylight ground shows in the browser chrome */
+/** Pages on the card design: the grey ground shows in the browser chrome */
 export const ecoViewport: Viewport = {
-  themeColor: "#eef1f2",
+  themeColor: "#f0f1f3",
 };
 
 const OG_LOCALE: Record<Lang, string> = {
@@ -218,16 +217,4 @@ export function buildPaperDecisionMetadata(lang: Lang): Metadata {
     paper.title,
     paper.description,
   );
-}
-
-/**
- * Metadata of the temporary /notice page. Kept out of search results: the
- * page is about a passing incident and should not outlive it in an index.
- */
-export function buildNoticeMetadata(lang: Lang): Metadata {
-  const { notice } = getUi(lang);
-  return {
-    ...buildPageMetadata(lang, noticePath, notice.title, notice.description),
-    robots: { index: false, follow: true },
-  };
 }

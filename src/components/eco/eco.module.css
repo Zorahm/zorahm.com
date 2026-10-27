@@ -1,37 +1,55 @@
 /*
- * ZorahM Laboratory design system, shared by every page built on it: a cool
- * daylight bench, blue-black ink and one ultramarine accent. The tokens sit
- * on <body> while such a page is mounted, so the page background and
- * overscroll match it. Daylight is the default; the dark bench is a choice
+ * ZorahM design system, shared by every page built on it: a soft grey ground
+ * with white rounded cards laid out as a bento grid, lavender tinted cards,
+ * one lime accent for the main action and an inverted card for contrast.
+ * The tokens sit on <body> while such a page is mounted, so the page
+ * background and overscroll match it. Light is the default; dark is a choice
  * the visitor makes.
  */
 :global(body):has(.page) {
-  --ground: #eef1f2;
-  --panel: #f8fafa;
-  --well: #e1e6e8;
-  --line: #cdd5d9;
-  --line-strong: #7b878f;
-  --ink: #10171c;
-  --ink-muted: #56626a;
-  --signal: #2b45e0;
+  --ground: #f0f1f3;
+  --panel: #ffffff;
+  --well: #e7e9ee;
+  --tint: #e9ecfb;
+  --line: #dfe2e7;
+  --line-strong: #8a9099;
+  --ink: #101114;
+  --ink-muted: #5d636d;
+  --signal: #4f46e5;
   --on-signal: #ffffff;
-  --signal-ink: #2b45e0;
+  --signal-ink: #4338ca;
+  --accent: #d4f53c;
+  --on-accent: #101114;
+  --inverse: #101114;
+  --on-inverse: #f4f5f7;
+  --on-inverse-muted: #a3a8b1;
+  --inverse-line: #2c2f35;
+  /* Contribution dots sit on the inverted card, so they take the colour that reads on it */
+  --contrib: #d4f53c;
   background: var(--ground);
   color: var(--ink);
   color-scheme: light;
 }
 
 :global(body):has(.page[data-theme="dark"]) {
-  --ground: #0e1317;
-  --panel: #151b20;
-  --well: #090d10;
-  --line: #243038;
-  --line-strong: #62727d;
-  --ink: #e6ecef;
-  --ink-muted: #8d9ba4;
-  --signal: #8ea2ff;
-  --on-signal: #0e1317;
-  --signal-ink: #9db0ff;
+  --ground: #0c0d0f;
+  --panel: #17181b;
+  --well: #212328;
+  --tint: #1c1f2d;
+  --line: #2a2d33;
+  --line-strong: #6b717b;
+  --ink: #eef0f3;
+  --ink-muted: #9aa1ab;
+  --signal: #9b95ff;
+  --on-signal: #0c0d0f;
+  --signal-ink: #b0abff;
+  --accent: #d4f53c;
+  --on-accent: #101114;
+  --inverse: #f4f5f7;
+  --on-inverse: #101114;
+  --on-inverse-muted: #5d636d;
+  --inverse-line: #d6d9df;
+  --contrib: #4f46e5;
   background: var(--ground);
   color: var(--ink);
   color-scheme: dark;
@@ -40,7 +58,9 @@
 .page {
   --sans: var(--font-body), system-ui, sans-serif;
   --code: var(--font-mono), ui-monospace, Consolas, monospace;
-  --gutter: 80px;
+  --gutter: 40px;
+  --radius: 32px;
+  --radius-s: 14px;
 
   min-height: 100vh;
   display: flex;
@@ -83,20 +103,44 @@
 .displayXl {
   margin: 0;
   font-family: var(--display);
-  font-weight: 300;
+  font-weight: 600;
   font-size: 64px;
   line-height: 64px;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.045em;
 }
 
 .displayL {
   margin: 0;
   font-family: var(--display);
-  font-weight: 300;
+  font-weight: 600;
   font-size: 44px;
   line-height: 48px;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.04em;
   text-wrap: balance;
+}
+
+/* Surfaces: a white card, a lavender one and an inverted one */
+
+.card {
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.tinted {
+  border-radius: var(--radius);
+  background: var(--tint);
+}
+
+/* Local tokens flip, so everything inside reads on the dark (or, in dark mode, light) card */
+.inverted {
+  --ink: var(--on-inverse);
+  --ink-muted: var(--on-inverse-muted);
+  --line: var(--inverse-line);
+  --line-strong: var(--on-inverse-muted);
+  --well: var(--inverse-line);
+  border-radius: var(--radius);
+  background: var(--inverse);
+  color: var(--ink);
 }
 
 .heading {
@@ -185,18 +229,22 @@
 
 .primary,
 .secondary {
-  min-height: 48px;
+  min-height: 52px;
   padding: 10px 24px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border-radius: 0;
+  border-radius: var(--radius-s);
   font-weight: 600;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 
 .primary {
-  background: var(--signal);
-  color: var(--on-signal);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .primary:hover {
@@ -204,26 +252,29 @@
   color: var(--ground);
 }
 
+.primary:active,
+.secondary:active {
+  transform: scale(0.98);
+}
+
 .secondary,
 .secondarySmall {
-  border: 1px solid var(--line-strong);
-  background: transparent;
+  border: 0;
+  background: var(--well);
 }
 
 .iconButton {
   border: 0;
-  background: transparent;
+  background: var(--panel);
 }
 
-/* The hover border stays at 3:1 or better against --well */
 .secondary:hover,
 .secondarySmall:hover {
-  background: var(--well);
-  border-color: var(--ink-muted);
+  background: var(--line);
 }
 
 .iconButton:hover {
-  color: var(--signal-ink);
+  background: var(--well);
 }
 
 .secondarySmall {
@@ -232,7 +283,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border-radius: 0;
+  border-radius: 12px;
   font-size: 14px;
   line-height: 22px;
   font-weight: 600;
@@ -246,12 +297,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0;
+  border-radius: 50%;
 }
 
 .chipCode {
   padding: 0 8px;
-  border-radius: 0;
+  border-radius: 8px;
   background: var(--well);
   font-family: var(--code);
   font-size: 14px;
@@ -261,12 +312,19 @@
 
 /* Header */
 
+/* Sticky bar that frosts whatever scrolls under it */
 .header {
-  height: 96px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 76px;
   padding: 0 var(--gutter);
   display: flex;
   align-items: center;
   gap: 48px;
+  background: color-mix(in srgb, var(--ground) 82%, transparent);
+  backdrop-filter: saturate(1.6) blur(16px);
+  -webkit-backdrop-filter: saturate(1.6) blur(16px);
 }
 
 /* The mark is 29px tall; this lifts the touch target to 44px around it without moving it */
@@ -282,26 +340,30 @@
 }
 
 .nav {
-  margin-left: auto;
+  margin: 0 auto;
   display: flex;
-  gap: 32px;
+  gap: 4px;
 }
 
 .navLink {
-  padding: 8px 0;
-  border-radius: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
   font-size: 14px;
   line-height: 22px;
   color: var(--ink-muted);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
 }
 
 .navLink[aria-current="page"] {
   color: var(--ink);
-  box-shadow: inset 0 -1px 0 var(--signal);
+  background: var(--panel);
 }
 
 .navLink:hover {
   color: var(--ink);
+  background: var(--panel);
 }
 
 .tools {
@@ -311,14 +373,19 @@
 }
 
 .langs {
+  height: 44px;
+  padding: 4px;
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 2px;
+  border-radius: 999px;
+  background: var(--well);
 }
 
 .langActive,
 .langLink {
-  padding: 4px 0;
-  border-radius: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
   font-family: var(--code);
   font-weight: 600;
   font-size: 12px;
@@ -328,7 +395,7 @@
 
 .langActive {
   color: var(--ink);
-  box-shadow: inset 0 -2px 0 var(--signal);
+  background: var(--panel);
 }
 
 .langLink {
@@ -339,7 +406,7 @@
   color: var(--ink);
 }
 
-/* The pill is 24px tall and about 16px wide; this lifts the touch target to 44x44 around it */
+/* The pill is 32px tall; this lifts the touch target to 44px around it */
 .langLink {
   position: relative;
 }
@@ -347,7 +414,7 @@
 .langLink::after {
   content: "";
   position: absolute;
-  inset: -10px -14px;
+  inset: -6px -2px;
 }
 
 /* Sections */
@@ -391,96 +458,106 @@
   color: var(--ink-muted);
 }
 
-/* Contact */
+/* GitHub: one large inverted card, the words on top and the contribution graph under them */
 
-.contact {
-  flex-direction: row;
-  align-items: flex-start;
+.github {
+  padding: 56px 64px 48px;
+  display: flex;
+  flex-direction: column;
   gap: 48px;
-  border-bottom: 0;
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.contactText {
-  flex: 1 1 0;
-  max-width: 572px;
+.github:hover {
+  transform: translateY(-2px);
+}
+
+.githubHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  align-items: end;
+  gap: 24px 64px;
+}
+
+.githubTitle {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.contactList {
-  flex: 1 1 0;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--line);
+.githubTitle .displayL {
+  max-width: 16ch;
 }
 
-.contactItem {
-  border-bottom: 1px solid var(--line);
-}
-
-.contactRow {
-  min-height: 88px;
-  padding: 16px 0;
+.githubAside {
   display: flex;
-  align-items: center;
-  gap: 24px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
 }
 
-.contactLink:hover .contactName {
-  text-decoration: underline;
-  text-decoration-color: var(--signal);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
+.github:hover .githubButton {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
-.contactMain {
-  flex-grow: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.contactName {
-  width: 200px;
-  flex-shrink: 0;
-  font-family: var(--display);
-  font-weight: 300;
-  font-size: 32px;
-  line-height: 36px;
-  letter-spacing: -0.03em;
-}
-
-.contactValue {
-  flex-grow: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-family: var(--code);
-  font-size: 14px;
-  line-height: 22px;
-}
-
-/* Footer */
+/* Footer: the mark, the contacts as pills, the address and year */
 
 .footer {
   min-height: 88px;
-  padding: 16px var(--gutter);
+  margin: 0 var(--gutter) 16px;
+  padding: 16px 16px 16px 32px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  border-top: 1px solid var(--line);
+  gap: 16px 24px;
+  border-radius: var(--radius);
+  background: var(--panel);
 }
 
-.footerTools {
+.footer > .code {
+  padding-right: 16px;
+}
+
+.footerContacts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 24px;
+  gap: 8px;
+}
+
+.footerContact {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.footerLink {
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: var(--well);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+  transition: background-color 160ms ease;
+}
+
+.footerLink:hover {
+  background: var(--line);
+}
+
+.footerLink svg {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-muted);
 }
 
 /* Hover hints mean nothing without a mouse */
@@ -494,13 +571,14 @@
 
 @media (max-width: 1200px) {
   .page {
-    --gutter: 48px;
+    --gutter: 32px;
   }
 }
 
 @media (max-width: 960px) {
   .page {
-    --gutter: 24px;
+    --gutter: 20px;
+    --radius: 24px;
   }
 
   .nav {
@@ -511,24 +589,35 @@
     justify-content: space-between;
   }
 
-  .contact {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .contactText {
-    max-width: none;
-  }
-
   .sectionHead {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .github {
+    padding: 32px;
+    gap: 32px;
+  }
+
+  .githubHead {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px;
+  }
+
+  .footer > .code {
+    padding-right: 0;
   }
 }
 
 @media (max-width: 560px) {
   .page {
     --gutter: 16px;
+    --radius: 20px;
   }
 
   .header {
@@ -543,36 +632,12 @@
     justify-content: center;
     padding: 10px 16px;
   }
-  .contactRow,
-  .contactMain {
-    gap: 16px;
-  }
 
-  .contactRow {
-    padding: 12px 8px;
-  }
-
-  .contactMain {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .contactLink {
-    flex-wrap: wrap;
-    row-gap: 4px;
-  }
-
-  .contactLink .contactName {
-    width: 100%;
-  }
-
-  .contactLink .contactValue {
-    flex-grow: 1;
+  .github {
+    padding: 24px;
   }
 
   .footer {
-    min-height: 64px;
+    padding: 20px;
   }
-
 }

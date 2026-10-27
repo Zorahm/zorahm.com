@@ -214,8 +214,6 @@ export const enUi: UiStrings = {
     },
     open: "Open on GitHub",
     copyInstall: "Copy command",
-    outro:
-      "Tried one of them, found a bug, or want a skill for something else? Write to me.",
     home: "Home",
   },
   games: {
@@ -240,29 +238,6 @@ export const enUi: UiStrings = {
       prompts: "Prompts",
     },
     play: "Play",
-    outro:
-      "Played it and have thoughts, or want to see a model take on another game? Write to me.",
-    home: "Home",
-  },
-  notice: {
-    title: "Service notice",
-    description:
-      "ZorahM services may be unstable: outages at Yandex affect parts of the infrastructure that sit in Russia.",
-    eyebrow: "Notice · Temporary",
-    heading: "ZorahM services may be unstable",
-    lead: [
-      "ZorahM servers are not at hosting providers: the ecosystem runs on its own infrastructure. But some services are physically located in Russia, so outages at Yandex can make them work unreliably.",
-      "The reason is simple: Yandex servers carry a great deal of the Russian internet. Linux mirrors, name servers, internet providers and much more depend on them, so a failure there is felt far beyond Yandex itself.",
-    ],
-    facts: {
-      status: { label: "Status", value: "Interruptions possible" },
-      cause: { label: "Cause", value: "Outages at Yandex" },
-      scope: { label: "Affected", value: "ZorahM services located in Russia" },
-      page: { label: "This page", value: "Temporary" },
-    },
-    banner: "Outages at Yandex may make some ZorahM services unstable.",
-    bannerLink: "Details",
-    source: "Incident details at Yandex Cloud",
     home: "Home",
   },
   home: {
@@ -313,6 +288,20 @@ export const enUi: UiStrings = {
     },
   },
   shell: {
+    github: {
+      label: "Open source",
+      heading: "Everything I make is open on GitHub",
+      line: "The code of this site, the plugins and skills, the games and the experiments that did not work out.",
+      open: "github.com/zorahm",
+      total: {
+        one: "{count} contribution in the last year",
+        few: "{count} contributions in the last year",
+        many: "{count} contributions in the last year",
+        other: "{count} contributions in the last year",
+      },
+      less: "Less",
+      more: "More",
+    },
     navLabel: "Sections",
     themeLight: "Light theme",
     themeDark: "Dark theme",
@@ -416,26 +405,6 @@ export const enFrames: Record<ShapeId, FrameText> = {
     body: [
       {
         text: "The wave moves out from the center: development, education, support, science, medicine. It reaches everyone — the only question is the delay.",
-      },
-    ],
-  },
-  github: {
-    label: "GitHub",
-    eyebrow: "06 — Code",
-    title: "It all lives here",
-    body: [
-      {
-        text: "Projects, experiments and abandoned branches. Out in the open, no showcase and no slides.",
-      },
-    ],
-  },
-  mark: {
-    label: "Z\\M",
-    eyebrow: "07 — Contact",
-    title: "Get in touch",
-    body: [
-      {
-        text: "Open to projects, to talking about models, and to good questions in general.",
       },
     ],
   },

@@ -327,14 +327,14 @@ export function PaperDecisionPage({ lang }: { lang: Lang }) {
               ))}
             </div>
 
-            <div className={styles.heroPlate}>
+            <div className={`${eco.tinted} ${styles.heroPlate}`}>
               <DotPlate shape="network" accent={0.5} cols={30} rows={20} lens arrive />
             </div>
           </div>
         </header>
 
         <div className={styles.layout}>
-          <nav className={styles.contents} aria-label={paper.contentsLabel}>
+          <nav className={`${eco.card} ${styles.contents}`} aria-label={paper.contentsLabel}>
             <ol>
               {contents.map((item) => (
                 <li key={item.id}>
@@ -344,7 +344,7 @@ export function PaperDecisionPage({ lang }: { lang: Lang }) {
             </ol>
           </nav>
 
-          <div className={styles.main}>
+          <div className={`${eco.card} ${styles.main}`}>
             <section id="what" className={styles.part}>
               <h2 className={styles.h2}>{paper.whatLabel}</h2>
               <Paragraphs items={paper.what} />

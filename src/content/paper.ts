@@ -51,8 +51,6 @@ export type PaperIndexStrings = {
   articlesLabel: string;
   /** Call to action on an article's card */
   read: string;
-  /** Closing line above the contacts */
-  outro: string;
   home: string;
 };
 
@@ -68,7 +66,6 @@ const en: PaperIndexStrings = {
   count: "Articles",
   articlesLabel: "Articles",
   read: "Read the article",
-  outro: "A correction, a question or a topic you would like to see here? Write to me.",
   home: "Home",
 };
 
@@ -84,7 +81,6 @@ const ru: PaperIndexStrings = {
   count: "Статей",
   articlesLabel: "Статьи",
   read: "Читать статью",
-  outro: "Поправка, вопрос или тема, которую хотелось бы здесь увидеть? Напишите мне.",
   home: "Главная",
 };
 

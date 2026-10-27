@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useContext, useSyncExternalStore } from "react";
+import { createContext, useContext, useRef, useState, useSyncExternalStore } from "react";
 import {
   HOME_SECTIONS,
+  getContacts,
   getUi,
   langPath,
   otherLang,
@@ -11,7 +12,7 @@ import {
   type Lang,
 } from "@/content";
 import { useEcoTheme } from "@/lib/ecoTheme";
-import { MoonIcon, SunIcon } from "./icons";
+import { ArrowUpRightIcon, CheckIcon, CopyIcon, MoonIcon, SunIcon } from "./icons";
 import eco from "./eco.module.css";
 
 // The year is read on the client: a static build would freeze it at build
@@ -33,6 +34,60 @@ export function Mark() {
     <span className={eco.mark}>
       Z<span className={eco.slash}>\</span>M
     </span>
+  );
+}
+
+const MAIL = "me@zorahm.com";
+
+/**
+ * The site's contacts as pills in the footer: Telegram and GitHub open in a
+ * new tab, the email address writes a letter and has a copy button beside it.
+ */
+function FooterContacts({ lang }: { lang: Lang }) {
+  const ui = getUi(lang);
+  const [copied, setCopied] = useState(false);
+  const timer = useRef(0);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(MAIL);
+    } catch {
+      return; // Nothing was copied, so nothing to confirm
+    }
+    setCopied(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(false), 1800);
+  };
+
+  return (
+    <ul className={eco.footerContacts} aria-label={ui.contactsLabel}>
+      {getContacts(lang).map((contact) => {
+        const mail = contact.href.startsWith("mailto:");
+        return (
+          <li key={contact.href} className={eco.footerContact}>
+            <a
+              href={contact.href}
+              className={eco.footerLink}
+              {...(mail ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+            >
+              {mail ? MAIL : contact.label}
+              {!mail && <ArrowUpRightIcon />}
+            </a>
+            {mail && (
+              <button
+                type="button"
+                className={eco.iconButton}
+                onClick={copy}
+                aria-label={copied ? ui.shell.copied : ui.shell.copy}
+                title={copied ? ui.shell.copied : ui.shell.copy}
+              >
+                {copied ? <CheckIcon /> : <CopyIcon />}
+              </button>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -106,9 +161,8 @@ export function EcoShell({
 
         <footer className={eco.footer}>
           <Mark />
-          <div className={eco.footerTools}>
-            <span className={eco.code}>zorahm.com — {year ?? ""}</span>
-          </div>
+          <FooterContacts lang={lang} />
+          <span className={eco.code}>zorahm.com · {year ?? ""}</span>
         </footer>
 
       </div>

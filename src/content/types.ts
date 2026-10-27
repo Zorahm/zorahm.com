@@ -10,21 +10,21 @@ export type ShapeId =
   | "network"
   | "eye"
   | "globe"
-  | "ripple"
-  | "github"
-  | "mark";
+  | "ripple";
 
 /**
  * Фигуры вне ленты кадров: живут на служебных страницах и потому не требуют
  * ни текстов кадра, ни места в FRAME_STRUCTURE.
  */
-export type ExtraShapeId = "notfound" | "waifik" | "spirit" | "latent";
+export type ExtraShapeId = "notfound" | "waifik" | "spirit" | "latent" | "github" | "mark";
 
 export type AnyShapeId = ShapeId | ExtraShapeId;
 
 /** Figures of the flat dot plates: the frame shapes plus ones only plates draw */
 export type PlateShapeId =
   | ShapeId
+  | "github"
+  | "mark"
   | "rails"
   | "street"
   | "spirit"
@@ -57,10 +57,6 @@ export type FrameStructure = {
   accent: number;
   /** Первый кадр: заголовок уровня h1 и увеличенная высота секции */
   hero?: boolean;
-  /** Крупная ссылка под текстом */
-  cta?: { href: string; label: string };
-  /** Показать блок контактов */
-  contacts?: boolean;
 };
 
 /** Языковая часть кадра */
@@ -120,8 +116,6 @@ export type UiStrings = {
   ai: AiStrings;
   /** The /games page */
   games: GamesStrings;
-  /** The temporary /notice page about outages */
-  notice: NoticeStrings;
   /** The home page */
   home: HomeStrings;
   /** Header, footer and contacts shared by pages on the ecosystem design */
@@ -471,8 +465,6 @@ export type AiStrings = {
   open: string;
   /** Copy button of the install commands */
   copyInstall: string;
-  /** Closing line above the contacts */
-  outro: string;
   home: string;
 };
 
@@ -531,32 +523,6 @@ export type GamesStrings = {
   };
   /** Call to action on a game card */
   play: string;
-  /** Closing line above the contacts */
-  outro: string;
-  home: string;
-};
-
-/** Strings of the temporary /notice page */
-export type NoticeStrings = {
-  title: string;
-  description: string;
-  /** Status tag above the heading */
-  eyebrow: string;
-  heading: string;
-  /** Lead paragraphs; the second one is dimmed */
-  lead: string[];
-  /** Captions and values of the short fact list */
-  facts: {
-    status: { label: string; value: string };
-    cause: { label: string; value: string };
-    scope: { label: string; value: string };
-    page: { label: string; value: string };
-  };
-  /** One line of the banner on the home page, and the words of its link */
-  banner: string;
-  bannerLink: string;
-  /** Link to the provider's incident page */
-  source: string;
   home: string;
 };
 
@@ -572,12 +538,28 @@ export type HomeSectionId =
 
 /** Strings of the shared page shell */
 export type ShellStrings = {
+  /** The closing GitHub card of the content pages */
+  github: {
+    label: string;
+    heading: string;
+    line: string;
+    /** Words of the link button */
+    open: string;
+    /**
+     * Caption of the contribution graph by plural form, {count} is the number.
+     * Both languages fill all four forms, so their keys stay the same.
+     */
+    total: { one: string; few: string; many: string; other: string };
+    /** Ends of the graph's legend */
+    less: string;
+    more: string;
+  };
   /** Main navigation of the header */
   navLabel: string;
   /** Theme switch, named after the theme it turns on */
   themeLight: string;
   themeDark: string;
-  /** Copy button next to the email address */
+  /** Copy button next to the email address in the footer */
   copy: string;
   copied: string;
 };

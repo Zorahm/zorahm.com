@@ -1,10 +1,10 @@
 :root {
-  /* Laboratory daylight: the page sets its own tokens, these are the fallback */
-  --ground: #eef1f2;
-  --ink: #10171c;
-  --ink-muted: #56626a;
-  --signal: #2b45e0;
-  --line: #cdd5d9;
+  /* Soft grey ground: the page sets its own tokens, these are the fallback */
+  --ground: #f0f1f3;
+  --ink: #101114;
+  --ink-muted: #5d636d;
+  --signal: #4f46e5;
+  --line: #dfe2e7;
 
   --display: var(--font-display), system-ui, sans-serif;
   --mono: var(--font-mono), ui-monospace, Consolas, monospace;
@@ -18,6 +18,11 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Anchors land below the sticky header instead of under it */
+[id] {
+  scroll-margin-top: 88px;
 }
 
 body {
@@ -45,16 +50,17 @@ body {
 /* Dark bench before hydration: data-bench is set by themeInitScript in <head>.
    Mirrors the dark tokens of eco.module.css, which take over once the page mounts. */
 html[data-bench="dark"] body {
-  --ground: #0e1317;
-  --panel: #151b20;
-  --well: #090d10;
-  --line: #243038;
-  --line-strong: #62727d;
-  --ink: #e6ecef;
-  --ink-muted: #8d9ba4;
-  --signal: #8ea2ff;
-  --on-signal: #0e1317;
-  --signal-ink: #9db0ff;
+  --ground: #0c0d0f;
+  --panel: #17181b;
+  --well: #212328;
+  --tint: #1c1f2d;
+  --line: #2a2d33;
+  --line-strong: #6b717b;
+  --ink: #eef0f3;
+  --ink-muted: #9aa1ab;
+  --signal: #9b95ff;
+  --on-signal: #0c0d0f;
+  --signal-ink: #b0abff;
   background: var(--ground);
   color: var(--ink);
   color-scheme: dark;

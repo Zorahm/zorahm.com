@@ -2,16 +2,14 @@
 
 import Link from "next/link";
 import {
-  getFrames,
   getPaperArticles,
   getPaperIndex,
-  getUi,
   langPath,
   otherLang,
   paperPath,
   type Lang,
 } from "@/content";
-import { ContactBlock } from "./eco/ContactBlock";
+import { GitHubCard } from "./eco/GitHubCard";
 import { DotPlate } from "./eco/DotPlate";
 import { EcoShell } from "./eco/EcoShell";
 import { ArrowLeftIcon, ArrowRightIcon } from "./eco/icons";
@@ -26,15 +24,13 @@ const twoDigits = (n: number) => String(n).padStart(2, "0");
  * the article's own page; the figure on it is the site's own dots.
  */
 export function PaperPage({ lang }: { lang: Lang }) {
-  const ui = getUi(lang);
   const page = getPaperIndex(lang);
   const articles = getPaperArticles(lang);
-  const contact = getFrames(lang).find((frame) => frame.contacts);
 
   return (
     <EcoShell lang={lang} otherHref={paperPath(otherLang(lang))} current="paper">
       <section className={`${eco.section} ${styles.hero}`}>
-        <div className={styles.heroText}>
+        <div className={`${eco.card} ${styles.heroText}`}>
           <Link href={langPath(lang)} className={styles.back}>
             <ArrowLeftIcon />
             {page.home}
@@ -54,7 +50,7 @@ export function PaperPage({ lang }: { lang: Lang }) {
           </dl>
         </div>
 
-        <div className={styles.heroPlate}>
+        <div className={`${eco.tinted} ${styles.heroPlate}`}>
           <DotPlate shape="paper" accent={0.85} cols={30} rows={20} lens arrive />
         </div>
       </section>
@@ -65,10 +61,10 @@ export function PaperPage({ lang }: { lang: Lang }) {
         <ol className={styles.list}>
           {articles.map((article, index) => (
             <li key={article.id}>
-              <article className={styles.card}>
+              <article className={`${eco.card} ${styles.card}`}>
                 <Link
                   href={article.path(lang)}
-                  className={styles.cover}
+                  className={`${eco.tinted} ${styles.cover}`}
                   tabIndex={-1}
                   aria-hidden="true"
                 >
@@ -100,11 +96,7 @@ export function PaperPage({ lang }: { lang: Lang }) {
         </ol>
       </section>
 
-      <ContactBlock
-        lang={lang}
-        heading={contact?.title ?? ui.contactsLabel}
-        body={[page.outro]}
-      />
+      <GitHubCard lang={lang} />
     </EcoShell>
   );
 }

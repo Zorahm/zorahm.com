@@ -79,14 +79,14 @@ export function SpiritPage({ lang }: { lang: Lang }) {
               ))}
             </div>
 
-            <div className={styles.heroPlate}>
+            <div className={`${eco.tinted} ${styles.heroPlate}`}>
               <DotPlate shape="spirit" accent={1} cols={30} rows={20} lens arrive />
             </div>
           </div>
         </header>
 
         <div className={styles.layout}>
-          <nav className={styles.contents} aria-label={note.contentsLabel}>
+          <nav className={`${eco.card} ${styles.contents}`} aria-label={note.contentsLabel}>
             <ol>
               {contents.map((item) => (
                 <li key={item.id}>
@@ -96,7 +96,7 @@ export function SpiritPage({ lang }: { lang: Lang }) {
             </ol>
           </nav>
 
-          <div className={styles.main}>
+          <div className={`${eco.card} ${styles.main}`}>
             <section id="run" className={styles.part}>
               <h2 className={styles.h2}>{note.runLabel}</h2>
 

@@ -2,8 +2,21 @@
 
 /* Hero: the title across the page, then the lead beside the figure */
 
+/*
+ * The hero, the contents and the sheet share one column in the middle of the
+ * window, as wide as the contents plus a sheet that fits its text, so the
+ * sheet never stretches past what it holds.
+ */
+.hero,
+.layout {
+  box-sizing: content-box;
+  width: auto;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
 .hero {
-  padding: 8px var(--gutter) 88px;
+  padding: 24px var(--gutter) 56px;
   display: flex;
   flex-direction: column;
   gap: 40px;
@@ -14,12 +27,16 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 16px 8px 12px;
+  border-radius: 999px;
+  background: var(--panel);
   font-size: 14px;
   line-height: 22px;
   color: var(--ink-muted);
 }
 
 .back:hover {
+  background: var(--well);
   color: var(--ink);
 }
 
@@ -27,10 +44,10 @@
   margin: 0 0 0 -0.04em;
   max-width: 16ch;
   font-family: var(--display);
-  font-weight: 300;
-  font-size: clamp(44px, 8.5vw, 128px);
-  line-height: 0.98;
-  letter-spacing: -0.045em;
+  font-weight: 700;
+  font-size: clamp(44px, 8vw, 120px);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
   text-wrap: balance;
   overflow-wrap: anywhere;
 }
@@ -83,23 +100,23 @@
 
 .heroPlate {
   min-width: 0;
+  padding: 32px;
 }
 
-/* The reading layout: a contents list in the margin, one column of text */
+/* The reading layout: a contents card in the margin, the text on one white sheet */
 
 .layout {
-  padding: 0 var(--gutter) 120px;
+  padding: 0 var(--gutter) 24px;
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  column-gap: 96px;
+  grid-template-columns: 240px minmax(0, 1fr);
+  column-gap: 16px;
   align-items: start;
 }
 
 .contents {
   position: sticky;
-  top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
+  top: 92px;
+  padding: 12px;
 }
 
 .contents ol {
@@ -113,23 +130,21 @@
 
 .contents a {
   display: block;
-  padding: 6px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
   font-size: 14px;
   line-height: 20px;
   color: var(--ink-muted);
 }
 
 .contents a:hover {
+  background: var(--well);
   color: var(--ink);
-  text-decoration: underline;
-  text-decoration-color: var(--signal);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 5px;
 }
 
 .main {
-  max-width: 740px;
   min-width: 0;
+  padding: 24px 64px;
 }
 
 .part {
@@ -139,30 +154,31 @@
   gap: 24px;
   border-top: 1px solid var(--line);
   /* A jump from the contents lands with the heading clear of the top edge */
-  scroll-margin-top: 24px;
+  scroll-margin-top: 92px;
 }
 
 .part:first-child {
   padding-top: 20px;
+  border-top: 0;
 }
 
 .h2 {
   margin: 0;
   font-family: var(--display);
-  font-weight: 300;
+  font-weight: 600;
   font-size: clamp(32px, 4vw, 44px);
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 
 .h3 {
   margin: 16px 0 0;
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 600;
   font-size: 24px;
   line-height: 30px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 /* Running text: 18px on a 30px line, about 66 characters wide */
@@ -224,8 +240,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  border: 1px solid var(--line-strong);
-  background: var(--panel);
+  border-radius: 24px;
+  background: var(--ground);
 }
 
 .callHead {
@@ -250,20 +266,22 @@
   line-height: 20px;
 }
 
+/* A segmented control: the chosen pill is white on the grey track */
 .tabs {
-  margin: 0 -24px;
-  padding: 0 24px;
+  align-self: flex-start;
+  padding: 4px;
   display: flex;
   flex-wrap: wrap;
-  gap: 0 20px;
-  border-bottom: 1px solid var(--line);
+  gap: 2px;
+  border-radius: 16px;
+  background: var(--well);
 }
 
 .tab {
-  min-height: 44px;
-  padding: 0;
+  min-height: 40px;
+  padding: 0 16px;
   border: 0;
-  border-bottom: 2px solid transparent;
+  border-radius: 12px;
   background: transparent;
   font-size: 14px;
   line-height: 22px;
@@ -275,7 +293,7 @@
 }
 
 .tab[aria-selected="true"] {
-  border-bottom-color: var(--signal);
+  background: var(--panel);
   color: var(--ink);
   font-weight: 600;
 }
@@ -290,7 +308,7 @@
 .useMark {
   margin: 0;
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 600;
   font-size: 20px;
   line-height: 30px;
   letter-spacing: -0.02em;
@@ -432,12 +450,15 @@
 .priceTrack {
   grid-area: track;
   height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
   background: var(--well);
 }
 
 .priceBar {
   display: block;
   height: 100%;
+  border-radius: 999px;
   background: var(--ink-muted);
 }
 
@@ -458,6 +479,7 @@
 .priceBarFloor {
   position: absolute;
   inset: 0 auto 0 0;
+  border-radius: 999px;
   background: var(--signal);
 }
 
@@ -531,7 +553,7 @@
 .stepMark {
   margin: 0 0 4px;
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 600;
   font-size: 20px;
   line-height: 30px;
   letter-spacing: -0.02em;
@@ -550,29 +572,24 @@
   list-style: none;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px solid var(--line);
+  gap: 8px;
 }
 
 .numbers li {
-  padding: 24px 24px 24px 0;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-bottom: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--tint);
   font-size: 15px;
   line-height: 24px;
   color: var(--ink-muted);
 }
 
-.numbers li:nth-child(even) {
-  padding-left: 24px;
-  padding-right: 0;
-  border-left: 1px solid var(--line);
-}
-
 .value {
   font-family: var(--display);
-  font-weight: 300;
+  font-weight: 600;
   font-size: clamp(32px, 4vw, 48px);
   line-height: 1.05;
   letter-spacing: -0.04em;
@@ -584,9 +601,12 @@
 
 .warning {
   margin: 8px 0 0;
-  padding: 4px 0 4px 20px;
+  padding: 16px 20px;
   max-width: 66ch;
-  border-left: 2px solid var(--signal);
+  border-radius: 16px;
+  /* The whole box takes a wash of the accent; a side stripe would read as boilerplate */
+  background: color-mix(in srgb, var(--accent) 22%, var(--panel));
+  color: var(--ink);
   font-size: 17px;
   line-height: 28px;
   color: var(--ink-muted);
@@ -649,8 +669,11 @@
   }
 
   .layout {
-    grid-template-columns: 180px minmax(0, 1fr);
-    column-gap: 48px;
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .main {
+    padding: 24px 40px;
   }
 }
 
@@ -674,6 +697,10 @@
   .contents {
     display: none;
   }
+
+  .main {
+    padding: 16px 28px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -696,14 +723,17 @@
     row-gap: 2px;
   }
 
+  .main {
+    padding: 8px 20px;
+  }
+
   .call {
+    margin: 8px -8px;
     padding: 16px 16px 4px;
   }
 
-  .tabs {
-    margin: 0 -16px;
-    padding: 0 16px;
-    gap: 0 16px;
+  .heroPlate {
+    padding: 20px;
   }
 
   .pricePanel {
@@ -718,9 +748,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .numbers li,
-  .numbers li:nth-child(even) {
-    padding: 20px 0;
-    border-left: 0;
+  .numbers li {
+    padding: 20px;
   }
 }

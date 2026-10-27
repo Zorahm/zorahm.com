@@ -74,8 +74,6 @@ describe("кадры", () => {
         align: f.align,
         accent: f.accent,
         hero: Boolean(f.hero),
-        contacts: Boolean(f.contacts),
-        cta: f.cta?.href ?? null,
       }));
     expect(composition("ru")).toEqual(composition("en"));
   });
@@ -87,9 +85,8 @@ describe("кадры", () => {
     }
   });
 
-  it("ровно один hero и ровно один блок контактов", () => {
+  it("ровно один hero", () => {
     expect(FRAME_STRUCTURE.filter((f) => f.hero)).toHaveLength(1);
-    expect(FRAME_STRUCTURE.filter((f) => f.contacts)).toHaveLength(1);
   });
 
   it("hero идёт первым", () => {

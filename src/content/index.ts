@@ -176,10 +176,6 @@ export const paperPath = (lang: Lang) =>
 export const paperDecisionPath = (lang: Lang) =>
   lang === "en" ? "/paper/decision" : `/${lang}/paper/decision`;
 
-/** Path to the temporary outage notice. Not in the sitemap: it is meant to go away */
-export const noticePath = (lang: Lang) =>
-  lang === "en" ? "/notice" : `/${lang}/notice`;
-
 export const otherLang = (lang: Lang): Lang => (lang === "en" ? "ru" : "en");
 
 export const getContacts = (lang: Lang) =>

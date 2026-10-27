@@ -8,16 +8,16 @@ import {
   getFrames,
   getUi,
   langPath,
-  noticePath,
   otherLang,
   spacePath,
   type Frame,
   type Lang,
 } from "@/content";
-import { ContactBlock } from "./eco/ContactBlock";
+import { GitHubCard } from "./eco/GitHubCard";
+import { DotIcon } from "./eco/DotIcon";
 import { DotPlate } from "./eco/DotPlate";
 import { EcoShell } from "./eco/EcoShell";
-import { ArrowRightIcon, ArrowUpRightIcon } from "./eco/icons";
+import { ArrowRightIcon } from "./eco/icons";
 import eco from "./eco/eco.module.css";
 import { arriveAt } from "./space/camera";
 import styles from "./HomePage.module.css";
@@ -25,45 +25,22 @@ import styles from "./HomePage.module.css";
 const SATURN = SPACE_STRUCTURE.findIndex((body) => body.id === "saturn");
 
 /**
- * The home page in the ZorahM Laboratory design: a daylight bench with one
- * accent. Figures are specimens laid out in plain air, with no frames. Saturn
- * is the way into the site, the index is a specimen viewer (a list on one
- * side, one large figure that morphs on the other), and the story is one plate
- * that reassembles as its text scrolls past.
+ * The home page on the card design: a centred title with the way in, Saturn
+ * on a wide white card under it, the index as a bento grid of tinted cards,
+ * and the story as one card whose plate reassembles as its text scrolls past.
  */
 export function HomePage({ lang }: { lang: Lang }) {
   const frames = getFrames(lang);
   const hero = frames.find((frame) => frame.hero) ?? frames[0];
-  const contact = frames.find((frame) => frame.contacts) ?? hero;
-  const story = frames.filter((frame) => !frame.hero && !frame.contacts);
+  const story = frames.filter((frame) => !frame.hero);
 
   return (
     <EcoShell lang={lang} otherHref={langPath(otherLang(lang))}>
-      <NoticeBanner lang={lang} />
       <Hero lang={lang} frame={hero} />
       <SectionIndex lang={lang} />
       <Story lang={lang} frames={story} />
-      <ContactBlock
-        lang={lang}
-        heading={contact.title}
-        body={contact.body.filter((p) => !p.muted).map((p) => p.text)}
-      />
+      <GitHubCard lang={lang} />
     </EcoShell>
-  );
-}
-
-/** Temporary strip above the hero while the outage notice is up; remove with /notice */
-function NoticeBanner({ lang }: { lang: Lang }) {
-  const notice = getUi(lang).notice;
-
-  return (
-    <aside className={styles.notice}>
-      <p>{notice.banner}</p>
-      <Link href={noticePath(lang)} className={styles.noticeLink}>
-        {notice.bannerLink}
-        <ArrowRightIcon />
-      </Link>
-    </aside>
   );
 }
 
@@ -75,90 +52,75 @@ function Hero({ lang, frame }: { lang: Lang; frame: Frame }) {
 
   return (
     <section className={styles.hero}>
-      {/* The button below is the named way in; the figure is the same link for a pointer */}
+      <div className={styles.heroText}>
+        {/* The letters rise in one by one; side by side they still read as one word */}
+        <h1 className={styles.heroTitle}>
+          {[...frame.title].map((letter, i) => (
+            <span key={i} className={styles.letter} style={{ "--i": i } as React.CSSProperties}>
+              {letter}
+            </span>
+          ))}
+        </h1>
+        {lead.map((paragraph, i) => (
+          <p key={i} className={`${styles.heroLead} ${styles.rise}`}>
+            {paragraph.text}
+          </p>
+        ))}
+        <div className={`${eco.actions} ${styles.heroActions} ${styles.rise}`}>
+          <Link href={spacePath(lang)} className={eco.primary} onClick={enter}>
+            {ui.home.enter}
+            <ArrowRightIcon />
+          </Link>
+          <a href="#index" className={eco.secondary}>
+            {ui.home.index.heading}
+          </a>
+        </div>
+      </div>
+
+      {/* The button above is the named way in; the card is the same link for a pointer */}
       <Link
         href={spacePath(lang)}
-        className={styles.saturn}
+        className={`${eco.card} ${styles.saturn} ${styles.rise}`}
         aria-hidden="true"
         tabIndex={-1}
         onClick={enter}
       >
         <DotPlate shape="saturn" accent={0.3} cols={52} rows={30} lens arrive />
+        <p className={`${eco.hint} ${styles.heroHint}`}>{ui.home.heroHint}</p>
       </Link>
-
-      <div className={styles.heroText}>
-        <h1 className={styles.heroTitle}>{frame.title}</h1>
-        <div className={styles.heroSide}>
-          {lead.map((paragraph, i) => (
-            <p key={i} className={styles.heroLead}>
-              {paragraph.text}
-            </p>
-          ))}
-          <div className={eco.actions}>
-            <Link href={spacePath(lang)} className={eco.primary} onClick={enter}>
-              {ui.home.enter}
-              <ArrowRightIcon />
-            </Link>
-            <a href="#index" className={eco.secondary}>
-              {ui.home.index.heading}
-            </a>
-          </div>
-          <p className={`${eco.hint} ${styles.heroHint}`}>{ui.home.heroHint}</p>
-        </div>
-      </div>
     </section>
   );
 }
 
 /**
- * The index as a specimen viewer: the sections are a list of large names, and
- * one big plate shows whichever is hovered or focused, flowing from figure to
- * figure. On a screen with no pointer the plate rides above the list and
- * follows whichever row was touched last.
+ * The index as a bento grid of tinted cards, three across and then four:
+ * each card names a section, says what is there and carries its pictogram,
+ * drawn in the same halftone dots, in the corner.
  */
 function SectionIndex({ lang }: { lang: Lang }) {
   const ui = getUi(lang);
-  const [active, setActive] = useState(0);
-  const current = HOME_SECTIONS[active];
-  const currentText = ui.home.sections[current.id];
 
   return (
     <section id="index" className={styles.index}>
-      <h2 className={styles.indexHeading}>{ui.home.index.heading}</h2>
+      <h2 className={styles.sectionHeading}>{ui.home.index.heading}</h2>
 
-      <div className={styles.viewer}>
-        <div className={styles.viewerPlate} aria-hidden="true">
-          <DotPlate
-            shape={current.shape}
-            accent={current.accent}
-            cols={40}
-            rows={26}
-            lens
-          />
-          <p className={styles.viewerCaption}>{currentText.tag}</p>
-        </div>
-
-        <ul className={styles.indexList}>
-          {HOME_SECTIONS.map((section, i) => {
-            const text = ui.home.sections[section.id];
-            return (
-              <li key={section.id}>
-                <Link
-                  href={section.path(lang)}
-                  className={styles.indexRow}
-                  data-active={i === active ? "true" : undefined}
-                  onPointerEnter={() => setActive(i)}
-                  onFocus={() => setActive(i)}
-                >
-                  <span className={styles.indexTitle}>{text.name}</span>
-                  <span className={styles.indexLine}>{text.line}</span>
-                  <ArrowUpRightIcon className={styles.indexArrow} />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <ul className={styles.bento}>
+        {HOME_SECTIONS.map((section) => {
+          const text = ui.home.sections[section.id];
+          return (
+            <li key={section.id} className={styles.bentoItem}>
+              <Link href={section.path(lang)} className={`${eco.tinted} ${styles.tile}`}>
+                <span className={styles.tileTitle}>{text.name}</span>
+                <span className={styles.tileLine}>{text.line}</span>
+                <span className={styles.tileArrow}>
+                  <ArrowRightIcon />
+                </span>
+                <DotIcon id={section.id} className={styles.tileIcon} />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
@@ -194,10 +156,10 @@ function Story({ lang, frames }: { lang: Lang; frames: Frame[] }) {
 
   return (
     <section className={styles.storySection}>
-      <h2 className={styles.storyHeading}>{ui.heading}</h2>
+      <h2 className={styles.sectionHeading}>{ui.heading}</h2>
 
-      <div className={styles.story}>
-        <div className={styles.storyPlate} aria-hidden="true">
+      <div className={`${eco.card} ${styles.story}`}>
+        <div className={`${eco.tinted} ${styles.storyPlate}`} aria-hidden="true">
           <DotPlate shape={frame.id} accent={frame.accent} cols={30} rows={20} />
           <p className={styles.storyLabel}>{frame.label}</p>
         </div>
@@ -218,16 +180,6 @@ function Story({ lang, frames }: { lang: Lang; frames: Frame[] }) {
                   {paragraph.text}
                 </p>
               ))}
-              {f.cta && (
-                <a
-                  href={f.cta.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={eco.inkLink}
-                >
-                  {f.cta.label}
-                </a>
-              )}
             </li>
           ))}
         </ol>

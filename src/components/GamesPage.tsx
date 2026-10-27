@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   gamesPath,
-  getFrames,
   getGames,
   getUi,
   langPath,
@@ -11,7 +10,7 @@ import {
   type GameId,
   type Lang,
 } from "@/content";
-import { ContactBlock } from "./eco/ContactBlock";
+import { GitHubCard } from "./eco/GitHubCard";
 import { DotPlate } from "./eco/DotPlate";
 import { EcoShell } from "./eco/EcoShell";
 import { ArrowLeftIcon, PlayIcon } from "./eco/icons";
@@ -40,7 +39,6 @@ export function GamesPage({ lang }: { lang: Lang }) {
   const ui = getUi(lang);
   const page = ui.games;
   const games = getGames(lang);
-  const contact = getFrames(lang).find((frame) => frame.contacts);
 
   const counts = [
     { label: page.counts.games, value: games.length },
@@ -53,7 +51,7 @@ export function GamesPage({ lang }: { lang: Lang }) {
   return (
     <EcoShell lang={lang} otherHref={gamesPath(otherLang(lang))} current="games">
       <section className={`${eco.section} ${styles.hero}`}>
-        <div className={styles.heroText}>
+        <div className={`${eco.card} ${styles.heroText}`}>
           <Link href={langPath(lang)} className={styles.back}>
             <ArrowLeftIcon />
             {page.home}
@@ -75,7 +73,7 @@ export function GamesPage({ lang }: { lang: Lang }) {
           </dl>
         </div>
 
-        <div className={styles.heroPlate}>
+        <div className={`${eco.tinted} ${styles.heroPlate}`}>
           <DotPlate shape="ripple" accent={0.85} cols={30} rows={20} lens arrive />
         </div>
       </section>
@@ -86,10 +84,10 @@ export function GamesPage({ lang }: { lang: Lang }) {
         <ol className={styles.list}>
           {games.map((game, index) => (
             <li key={game.id}>
-              <article className={styles.card}>
+              <article className={`${eco.card} ${styles.card}`}>
                 <a
                   href={game.href}
-                  className={styles.cover}
+                  className={`${eco.tinted} ${styles.cover}`}
                   tabIndex={-1}
                   aria-hidden="true"
                 >
@@ -144,11 +142,7 @@ export function GamesPage({ lang }: { lang: Lang }) {
         </ol>
       </section>
 
-      <ContactBlock
-        lang={lang}
-        heading={contact?.title ?? ui.contactsLabel}
-        body={[page.outro]}
-      />
+      <GitHubCard lang={lang} />
     </EcoShell>
   );
 }

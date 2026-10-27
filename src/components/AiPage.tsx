@@ -5,7 +5,6 @@ import { useRef, useState } from "react";
 import {
   aiPath,
   getAiEntries,
-  getFrames,
   getUi,
   langPath,
   otherLang,
@@ -13,7 +12,7 @@ import {
   type AiEntryId,
   type Lang,
 } from "@/content";
-import { ContactBlock } from "./eco/ContactBlock";
+import { GitHubCard } from "./eco/GitHubCard";
 import { DotPlate } from "./eco/DotPlate";
 import { EcoShell } from "./eco/EcoShell";
 import { ArrowLeftIcon, ArrowUpRightIcon, CheckIcon, CopyIcon } from "./eco/icons";
@@ -77,7 +76,6 @@ export function AiPage({ lang }: { lang: Lang }) {
   const ui = getUi(lang);
   const page = ui.ai;
   const entries = getAiEntries(lang);
-  const contact = getFrames(lang).find((frame) => frame.contacts);
 
   const counts = [
     { label: page.counts.projects, value: entries.length },
@@ -94,7 +92,7 @@ export function AiPage({ lang }: { lang: Lang }) {
   return (
     <EcoShell lang={lang} otherHref={aiPath(otherLang(lang))} current="ai">
       <section className={`${eco.section} ${styles.hero}`}>
-        <div className={styles.heroText}>
+        <div className={`${eco.card} ${styles.heroText}`}>
           <Link href={langPath(lang)} className={styles.back}>
             <ArrowLeftIcon />
             {page.home}
@@ -116,7 +114,7 @@ export function AiPage({ lang }: { lang: Lang }) {
           </dl>
         </div>
 
-        <div className={styles.heroPlate}>
+        <div className={`${eco.tinted} ${styles.heroPlate}`}>
           <DotPlate shape="network" accent={0.85} cols={30} rows={20} lens arrive />
         </div>
       </section>
@@ -127,10 +125,10 @@ export function AiPage({ lang }: { lang: Lang }) {
         <ol className={styles.list}>
           {entries.map((entry, index) => (
             <li key={entry.id}>
-              <article className={styles.card}>
+              <article className={`${eco.card} ${styles.card}`}>
                 <a
                   href={entry.href}
-                  className={styles.cover}
+                  className={`${eco.tinted} ${styles.cover}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   tabIndex={-1}
@@ -198,11 +196,7 @@ export function AiPage({ lang }: { lang: Lang }) {
         </ol>
       </section>
 
-      <ContactBlock
-        lang={lang}
-        heading={contact?.title ?? ui.contactsLabel}
-        body={[page.outro]}
-      />
+      <GitHubCard lang={lang} />
     </EcoShell>
   );
 }

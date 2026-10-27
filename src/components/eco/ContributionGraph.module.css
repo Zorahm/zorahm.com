@@ -1,0 +1,106 @@
+/* The contribution calendar in dots; colours come from the card it sits on */
+
+.graph {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/*
+ * The year keeps a readable dot size: when the card is too narrow for all of
+ * it, the oldest weeks slide off the left edge under a fade and the most
+ * recent ones stay in view.
+ */
+.window {
+  display: flex;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.svg {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 600px;
+  height: auto;
+  overflow: visible;
+}
+
+@media (max-width: 720px) {
+  .window {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 48px);
+    mask-image: linear-gradient(to right, transparent, #000 48px);
+  }
+}
+
+.month {
+  font-family: var(--font-mono), ui-monospace, Consolas, monospace;
+  font-size: 0.62px;
+  fill: var(--ink-muted);
+}
+
+.dot {
+  fill: var(--contrib);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.dot[data-level="0"] {
+  fill: var(--line);
+}
+
+/* Before the graph is seen the dots wait at zero; then they grow in week by week */
+.graph:not([data-shown]) .svg .dot {
+  transform: scale(0);
+}
+
+.graph[data-shown] .svg .dot {
+  animation: grow 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes grow {
+  from {
+    transform: scale(0);
+  }
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+}
+
+.caption {
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--ink-muted);
+}
+
+.legend {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono), ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-muted);
+}
+
+.legendDots {
+  width: 70px;
+  height: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .graph:not([data-shown]) .svg .dot {
+    transform: none;
+  }
+
+  .graph[data-shown] .svg .dot {
+    animation: none;
+  }
+}

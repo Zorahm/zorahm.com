@@ -1,17 +1,18 @@
 /* /ai layout; tokens, type and shared blocks live in eco/eco.module.css */
 
-/* Hero */
+/* Hero: the words on a white card, the figure on a tinted one beside it */
 
 .hero {
+  padding-top: 24px;
   flex-direction: row;
-  align-items: center;
-  gap: 48px;
+  align-items: stretch;
+  gap: 16px;
 }
 
 .heroText {
-  flex: 1 1 0;
+  flex: 6 1 0;
   min-width: 0;
-  max-width: 620px;
+  padding: 48px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -22,9 +23,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-left: -8px;
-  padding: 8px;
-  border-radius: 0;
+  padding: 8px 16px 8px 12px;
+  border-radius: 999px;
+  background: var(--well);
   font-size: 14px;
   line-height: 22px;
   color: var(--ink-muted);
@@ -36,7 +37,7 @@
 }
 
 .counts {
-  margin: 8px 0 0;
+  margin: auto 0 0;
   padding-top: 24px;
   display: flex;
   gap: 48px;
@@ -53,17 +54,19 @@
 .countValue {
   margin: 0;
   font-family: var(--display);
-  font-weight: 300;
+  font-weight: 600;
   font-size: 56px;
   line-height: 56px;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
 }
 
 .heroPlate {
-  flex: 1 1 0;
+  flex: 5 1 0;
   min-width: 0;
-  max-width: 600px;
-  margin-left: auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* Projects */
@@ -74,28 +77,27 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .card {
+  padding: 16px;
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
   gap: 48px;
-  padding: 40px 0 0;
-  background: transparent;
-  border: 0;
-  border-top: 1px solid var(--line);
-  border-radius: 0;
 }
 
+/* The figure sits on its own tinted card and stays in view while the facts scroll */
 .cover {
+  position: sticky;
+  top: 92px;
   align-self: start;
-  padding: 0;
-  border-radius: 0;
+  padding: 40px;
 }
 
 .info {
   min-width: 0;
+  padding: 24px 32px 24px 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -118,7 +120,7 @@
 .kind i {
   width: 8px;
   height: 8px;
-  border-radius: 0;
+  border-radius: 50%;
   background: var(--signal);
 }
 
@@ -136,9 +138,9 @@
 }
 
 .tags li {
-  padding: 4px 12px;
-  border: 1px solid var(--line-strong);
-  border-radius: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--well);
   font-family: var(--code);
   font-size: 12px;
   line-height: 16px;
@@ -186,7 +188,7 @@
   padding: 8px 12px;
   overflow-x: auto;
   background: var(--well);
-  border-radius: 0;
+  border-radius: 12px;
   font-family: var(--code);
   font-size: 13px;
   line-height: 20px;
@@ -210,18 +212,26 @@
   }
 
   .heroText {
-    max-width: none;
+    padding: 32px;
   }
 
   .heroPlate {
-    width: 100%;
-    max-width: none;
-    margin: 0;
+    padding: 24px;
   }
 
   .card {
+    padding: 12px;
     grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
+    gap: 8px;
+  }
+
+  .cover {
+    position: static;
+    padding: 24px;
+  }
+
+  .info {
+    padding: 20px;
   }
 }
 
@@ -233,12 +243,16 @@
     letter-spacing: -0.01em;
   }
 
-  .card {
-    padding: 16px;
+  .heroText {
+    padding: 24px;
+  }
+
+  .info {
+    padding: 16px 12px;
   }
 
   .cover {
-    padding: 8px;
+    padding: 16px;
   }
 
   .facts > div {
