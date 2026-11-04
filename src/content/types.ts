@@ -30,6 +30,7 @@ export type PlateShapeId =
   | "spirit"
   | "crossword"
   | "rules"
+  | "yaca"
   | "orbits"
   | "hole"
   | "paper";
@@ -404,10 +405,10 @@ export type SpiritStrings = {
 };
 
 /** Projects of the /ai page */
-export type AiEntryId = "zowork" | "crossword-skill";
+export type AiEntryId = "yaca" | "zowork" | "crossword-skill";
 
 /** What a project is to the agent that runs it */
-export type AiKind = "plugin" | "skill";
+export type AiKind = "app" | "plugin" | "skill";
 
 /**
  * Language-independent part of a project. The stack, the agents and the
@@ -416,18 +417,16 @@ export type AiKind = "plugin" | "skill";
  */
 export type AiEntryStructure = {
   id: AiEntryId;
-  kind: AiKind;
   year: number;
   tags: string[];
-  /** Agents the project runs in */
-  agents: string;
   /** What it needs besides the agent */
   requires: string;
-  /** Commands that install it, one per line */
-  install: string[];
   /** Where the project lives */
   href: string;
-};
+} & (
+  | { kind: "app"; platforms: string; downloadHref: string }
+  | { kind: "plugin" | "skill"; agents: string; install: string[] }
+);
 
 /** Language part of a project */
 export type AiEntryText = {
@@ -449,6 +448,7 @@ export type AiStrings = {
   /** Captions of the counters under the heading */
   counts: {
     projects: string;
+    apps: string;
     plugins: string;
     skills: string;
   };
@@ -458,11 +458,13 @@ export type AiStrings = {
   /** Captions of a project's facts */
   facts: {
     agents: string;
+    platforms: string;
     requires: string;
     install: string;
   };
   /** Call to action on a project card */
   open: string;
+  download: string;
   /** Copy button of the install commands */
   copyInstall: string;
   home: string;

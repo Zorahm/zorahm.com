@@ -1,13 +1,23 @@
 import type { AiEntryStructure } from "./types";
 
 /**
- * Projects of the /ai page: tools that teach AI models to do something,
+ * Projects of the /ai page: apps, plugins and skills for working with AI models,
  * all of them open source on GitHub.
  *
  * Kind, year, stack, agents and install commands are the same in every
  * language and live here; titles and summaries live in ./en.ts and ./ru.ts.
  */
 export const AI_STRUCTURE: AiEntryStructure[] = [
+  {
+    id: "yaca",
+    kind: "app",
+    year: 2026,
+    tags: ["Rust", "Tauri", "React", "Agent Skills", "MCP"],
+    platforms: "Windows · macOS · Linux",
+    requires: "API key / local model",
+    downloadHref: "https://github.com/Zorahm/yaca/releases",
+    href: "https://github.com/Zorahm/yaca",
+  },
   {
     id: "zowork",
     kind: "plugin",

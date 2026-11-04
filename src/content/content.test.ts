@@ -262,15 +262,20 @@ describe("entries of the /ai page", () => {
     }
   });
 
-  it("projects carry a stack, an install command and a link to GitHub", () => {
+  it("projects carry a stack, a way to install them and a link to GitHub", () => {
     for (const entry of AI_STRUCTURE) {
       expect(entry.tags.length, `${entry.id} tags`).toBeGreaterThan(0);
       for (const tag of entry.tags) {
         expect(tag.trim(), `${entry.id} tag`).not.toBe("");
       }
-      expect(entry.agents.trim(), `${entry.id} agents`).not.toBe("");
+      if (entry.kind === "app") {
+        expect(entry.platforms.trim(), `${entry.id} platforms`).not.toBe("");
+        expect(entry.downloadHref, `${entry.id} download`).toMatch(/^https:\/\/github\.com\/[^/]+\/[^/]+\/releases$/);
+      } else {
+        expect(entry.agents.trim(), `${entry.id} agents`).not.toBe("");
+        expect(entry.install.length, `${entry.id} install`).toBeGreaterThan(0);
+      }
       expect(entry.requires.trim(), `${entry.id} requires`).not.toBe("");
-      expect(entry.install.length, `${entry.id} install`).toBeGreaterThan(0);
       expect(entry.href, `${entry.id} href`).toMatch(/^https:\/\/github\.com\//);
     }
   });

@@ -105,7 +105,12 @@ describe("llms-full.txt", () => {
       }
       for (const entry of getAiEntries(lang)) {
         for (const p of entry.summary) expect(full, `${lang}/${entry.id}`).toContain(p);
-        for (const command of entry.install) expect(full).toContain(command);
+        if (entry.kind === "app") {
+          expect(full).toContain(entry.platforms);
+          expect(full).toContain(entry.downloadHref);
+        } else {
+          for (const command of entry.install) expect(full).toContain(command);
+        }
       }
       for (const game of getGames(lang)) {
         expect(full).toContain(game.summary);

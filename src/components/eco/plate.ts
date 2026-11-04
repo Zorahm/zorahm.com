@@ -56,6 +56,34 @@ const RULE_LINES: [number, number][] = [
 /** The line lit signal: the rule being applied right now */
 const RULE_LIT = 3;
 
+/**
+ * Yaca's own mark, sampled from public/Yaca/yaca-mark-mono.svg in
+ * https://github.com/Zorahm/yaca. Each digit is the cell's coverage, 0..9.
+ * Keeping the source silhouette in whole dots preserves the horns and stem.
+ */
+const YACA_MARK = [
+  "000000000000000000000000000000",
+  "000000000220000000022000000000",
+  "000000016840000000048610000000",
+  "000000059300000000003950000000",
+  "000000188100002200001881000000",
+  "000000297000049940000792000000",
+  "000000397000049940000793000000",
+  "000000298100026620002892000000",
+  "000000079731000000137970000000",
+  "000000028998655556899820000000",
+  "000000002799999999997200000000",
+  "000000000136789987631000000000",
+  "000000000000039930000000000000",
+  "000000000000029920000000000000",
+  "000000000000029920000000000000",
+  "000000000000029920000000000000",
+  "000000000000029920000000000000",
+  "000000000000017710000000000000",
+  "000000000000000000000000000000",
+  "000000000000000000000000000000",
+];
+
 /** Radius and phase of each body of the orbits figure */
 const ORBITS: [number, number][] = [
   [0.5, 0.7],
@@ -305,6 +333,14 @@ export function density(
       const row = Math.floor(y / CELL_PITCH);
       if (!isCell(col, row)) return hash(i, j) > 0.9 ? 0.05 : 0;
       return isCrossing(col, row) ? 1 : 0.5;
+    }
+    case "yaca": {
+      const x = toDot(u / k + (YACA_MARK[0].length - 1) / 2);
+      const y = toDot(v / k + (YACA_MARK.length - 1) / 2);
+      const coverage = Number(YACA_MARK[y]?.[x] ?? 0) / 9;
+      // The small square above the horns is the model; light only that in signal.
+      const model = x >= 13 && x <= 16 && y >= 4 && y <= 7;
+      return coverage * (model ? 1 : 0.8);
     }
     case "rules": {
       // Lines of text in an editor: a gutter of line numbers, words with

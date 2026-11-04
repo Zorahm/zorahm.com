@@ -211,15 +211,21 @@ function aiText(lines: string[], lang: Lang) {
       lines.push(paragraph);
       lines.push("");
     }
-    // One fact per line: the list of agents already uses the middle dot
-    lines.push(`- ${ai.facts.agents}: ${entry.agents}`);
+    // One fact per line: the lists already use the middle dot.
+    lines.push(entry.kind === "app"
+      ? `- ${ai.facts.platforms}: ${entry.platforms}`
+      : `- ${ai.facts.agents}: ${entry.agents}`);
     lines.push(`- ${ai.facts.requires}: ${entry.requires}`);
     lines.push("");
     lines.push(`${ai.facts.install}:`);
     lines.push("");
-    lines.push("```");
-    lines.push(...entry.install);
-    lines.push("```");
+    if (entry.kind === "app") {
+      lines.push(`[${ai.download}](${entry.downloadHref})`);
+    } else {
+      lines.push("```");
+      lines.push(...entry.install);
+      lines.push("```");
+    }
     lines.push("");
     lines.push(`GitHub: ${entry.href}`);
     lines.push("");

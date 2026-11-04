@@ -25,12 +25,13 @@ const twoDigits = (n: number) => String(n).padStart(2, "0");
 
 /** The dotted figure on each project's card */
 const COVERS: Record<AiEntryId, PlateShape> = {
+  yaca: "yaca",
   zowork: "rules",
   "crossword-skill": "crossword",
 };
 
 /** Install commands with a button that copies all of them at once */
-function Install({ entry, lang }: { entry: AiEntry; lang: Lang }) {
+function Install({ entry, lang }: { entry: Extract<AiEntry, { kind: "plugin" | "skill" }>; lang: Lang }) {
   const ui = getUi(lang);
   const [copied, setCopied] = useState(false);
   const timer = useRef(0);
@@ -66,7 +67,7 @@ function Install({ entry, lang }: { entry: AiEntry; lang: Lang }) {
 }
 
 /**
- * The /ai page: plugins and skills that teach AI models to do something,
+ * The /ai page: apps, plugins and skills for working with AI models,
  * each one open source on GitHub.
  *
  * Counters are counted from the entries, not written in the dictionaries, so
@@ -79,6 +80,10 @@ export function AiPage({ lang }: { lang: Lang }) {
 
   const counts = [
     { label: page.counts.projects, value: entries.length },
+    {
+      label: page.counts.apps,
+      value: entries.filter((entry) => entry.kind === "app").length,
+    },
     {
       label: page.counts.plugins,
       value: entries.filter((entry) => entry.kind === "plugin").length,
@@ -162,8 +167,8 @@ export function AiPage({ lang }: { lang: Lang }) {
 
                   <dl className={styles.facts}>
                     <div>
-                      <dt className={eco.label}>{page.facts.agents}</dt>
-                      <dd>{entry.agents}</dd>
+                      <dt className={eco.label}>{entry.kind === "app" ? page.facts.platforms : page.facts.agents}</dt>
+                      <dd>{entry.kind === "app" ? entry.platforms : entry.agents}</dd>
                     </div>
                     <div>
                       <dt className={eco.label}>{page.facts.requires}</dt>
@@ -172,7 +177,20 @@ export function AiPage({ lang }: { lang: Lang }) {
                     <div>
                       <dt className={eco.label}>{page.facts.install}</dt>
                       <dd>
-                        <Install entry={entry} lang={lang} />
+                        {entry.kind === "app" ? (
+                          <a
+                            href={entry.downloadHref}
+                            className={eco.secondarySmall}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {page.download}
+                            <ArrowUpRightIcon />
+                            <span className={styles.srOnly}> — {entry.title}</span>
+                          </a>
+                        ) : (
+                          <Install entry={entry} lang={lang} />
+                        )}
                       </dd>
                     </div>
                   </dl>

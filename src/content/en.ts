@@ -190,29 +190,33 @@ export const enUi: UiStrings = {
   ai: {
     title: "AI",
     description:
-      "Plugins and skills that teach AI models new things: my own rules for Claude Code and a skill that lets a model build real crosswords.",
+      "My open-source AI projects: Yaca, a desktop coding agent, a plugin for Claude Code and a skill for building crosswords.",
     eyebrow: "AI · Projects",
     heading: "Tools for models",
     lead: [
-      "Plugins and skills I build so that AI models work the way I need them to — mostly for Claude Code, all of it open source.",
-      "Each card says what the tool is, which agents it runs in and how to install it.",
+      "Apps, plugins and skills I build so that AI models work the way I need them to. All of it open source.",
+      "Each card says what the tool does, where it runs and how to get it.",
     ],
     counts: {
       projects: "Projects",
+      apps: "Apps",
       plugins: "Plugins",
       skills: "Skills",
     },
     kind: {
+      app: "Desktop app",
       plugin: "Claude Code plugin",
       skill: "Agent skill",
     },
     projectsLabel: "Projects",
     facts: {
       agents: "Runs in",
+      platforms: "Platforms",
       requires: "Needs",
       install: "Install",
     },
     open: "Open on GitHub",
+    download: "Download Yaca",
     copyInstall: "Copy command",
     home: "Home",
   },
@@ -326,6 +330,13 @@ export const enGames: Record<GameId, GameText> = {
 };
 
 export const enAiEntries: Record<AiEntryId, AiEntryText> = {
+  yaca: {
+    title: "Yaca",
+    summary: [
+      "A desktop coding agent: describe a task, and Yaca explores the project, edits files and runs commands. Connect a model provider with an API key or use a local model; checkpoints let you roll back changes.",
+      "Skills, plugins, subagents, MCP and language servers extend what the agent can do. There is also a document chat for Word, Excel and PowerPoint, and a browser beside the conversation on Windows. Yaca is in beta: Windows has been tested; macOS and Linux builds are available but untested.",
+    ],
+  },
   zowork: {
     title: "ZoWork",
     summary: [
