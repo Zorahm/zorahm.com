@@ -176,6 +176,10 @@ export const paperPath = (lang: Lang) =>
 export const paperDecisionPath = (lang: Lang) =>
   lang === "en" ? "/paper/decision" : `/${lang}/paper/decision`;
 
+/** Plain-text version of the article, in the same language */
+export const paperDecisionLlmsPath = (lang: Lang) =>
+  `${paperDecisionPath(lang)}/llms.txt`;
+
 export const otherLang = (lang: Lang): Lang => (lang === "en" ? "ru" : "en");
 
 export const getContacts = (lang: Lang) =>

@@ -13,6 +13,7 @@ import {
   getSpiritMatches,
   getUi,
   langPath,
+  paperDecisionLlmsPath,
   paperDecisionPath,
   paperPath,
   space3dPath,
@@ -164,6 +165,12 @@ export function buildLlmsTxt(): string {
 
   lines.push("## Optional");
   lines.push("");
+  for (const lang of LANGS) {
+    lines.push(
+      `- [Decision models — ${LANG_TITLE[lang]}, full text](${url(paperDecisionLlmsPath(lang))}): ` +
+        "the article only, without navigation or other pages",
+    );
+  }
   lines.push(
     `- [Full text](${url(LLMS_FULL_PATH)}): every page in English and Russian, ` +
       "grouped by language, then by page",
@@ -400,6 +407,7 @@ function paperDecisionText(lines: string[], lang: Lang) {
   PAPER_DECISION_PRICE_CALLS.forEach((call, index) => {
     const price = priceOfMillionCalls(call);
     const money = (value: number) => `$${value.toFixed(2)}`;
+    paragraphs([paper.priceCalls[index].text]);
     lines.push(
       `- ${paper.priceCalls[index].tab} (${call.inputTokens} ${paper.priceTokens.input}, ` +
         `${call.answerTokens} ${paper.priceTokens.answer}), ${paper.priceUnit}: ` +
@@ -446,11 +454,13 @@ function paperDecisionText(lines: string[], lang: Lang) {
   lines.push("");
   lines.push(paper.beforeAlt);
   lines.push("");
+  paragraphs([paper.beforeCaption]);
   paragraphs(paper.before);
   lines.push(`##### ${paper.afterLabel}`);
   lines.push("");
   lines.push(paper.afterAlt);
   lines.push("");
+  paragraphs([paper.afterCaption]);
   paragraphs(paper.after);
   paragraphs(paper.indexVerdict);
 
@@ -467,6 +477,15 @@ function paperDecisionText(lines: string[], lang: Lang) {
   lines.push("");
   lines.push(paper.disclaimer);
   lines.push("");
+}
+
+/** The article alone, using the same content as the page and full-site export. */
+export function buildPaperDecisionLlmsTxt(lang: Lang): string {
+  const lines: string[] = [];
+  paperDecisionText(lines, lang);
+  return finish(lines.map((line) => line.replace(/^(#{3,5}) /, (_, hashes: string) =>
+    `${hashes.slice(2)} `,
+  )));
 }
 
 /**

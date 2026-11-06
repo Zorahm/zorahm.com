@@ -10,6 +10,7 @@ import {
   PAPER_DECISION_SPEED,
   getPaperDecision,
   otherLang,
+  paperDecisionLlmsPath,
   paperDecisionPath,
   paperPath,
   priceOfMillionCalls,
@@ -319,6 +320,9 @@ export function PaperDecisionPage({ lang }: { lang: Lang }) {
               <p className={styles.dateLine}>
                 <span>{paper.eyebrow}</span>
                 <time dateTime={PAPER_DECISION_DATE}>{paper.date}</time>
+                <a href={paperDecisionLlmsPath(lang)} className={styles.llmsLink}>
+                  llms.txt
+                </a>
               </p>
               {paper.lead.map((text, index) => (
                 <p key={index} className={index === 0 ? styles.lead : styles.leadMuted}>

@@ -9,6 +9,7 @@ import {
   getPaperIndex,
   getUi,
   langPath,
+  paperDecisionLlmsPath,
   paperDecisionPath,
   paperPath,
   space3dPath,
@@ -211,10 +212,17 @@ export function buildPaperMetadata(lang: Lang): Metadata {
 /** Metadata of the /paper/decision note */
 export function buildPaperDecisionMetadata(lang: Lang): Metadata {
   const paper = getPaperDecision(lang);
-  return buildPageMetadata(
+  const metadata = buildPageMetadata(
     lang,
     paperDecisionPath,
     paper.title,
     paper.description,
   );
+  return {
+    ...metadata,
+    alternates: {
+      ...metadata.alternates,
+      types: { "text/plain": paperDecisionLlmsPath(lang) },
+    },
+  };
 }

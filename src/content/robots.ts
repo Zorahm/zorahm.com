@@ -63,6 +63,14 @@ type Group = {
 export const ROBOTS_GROUPS: Group[] = [
   { agents: ["*"], allow: ["/"] },
   {
+    note: [
+      "YacaTraveler is my coding agent's bot.",
+      "It's welcome to roam my own site. It would be strange otherwise :)",
+    ],
+    agents: ["YacaTraveler"],
+    allow: ["/"],
+  },
+  {
     note: ["AI crawlers are welcome, and named one by one on purpose."],
     agents: AI_AGENTS,
     allow: ["/", "/llms.txt", "/llms-full.txt"],
