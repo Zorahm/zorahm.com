@@ -60,8 +60,6 @@ const ROAM_EASE = 6;
 /** Дальше этого не улететь: снаружи смотреть не на что, а вернуться трудно */
 const ROAM_BOUND = SYSTEM_RADIUS * 1.6;
 
-const ORIGIN: Vec3 = [0, 0, 0];
-
 export const view3d = {
   /** Куда камера едет */
   theta: 0.9,
@@ -80,6 +78,7 @@ export const view3d = {
   /** Где камера сейчас */
   dist: OVERVIEW_DIST,
   target: [0, 0, 0] as Vec3,
+  goalTarget: [0, 0, 0] as Vec3,
 
   /** 0 — обзор системы, 1 — выбранное тело в кадре */
   focus: 0,
@@ -102,9 +101,10 @@ export const view3d = {
   roaming: false,
   /** Удаление в полёте: в отличие от обзора, задаётся колесом напрямую */
   roamDist: OVERVIEW_DIST,
-  /** Ход вперёд и вбок, −1..1: догоняет нажатые клавиши, а не повторяет их */
+  /** Ход вперёд, вбок и вверх, −1..1 */
   roamF: 0,
   roamR: 0,
+  roamU: 0,
 
   /** Время сцены: идёт со скоростью, заданной панелью */
   time: 0,
@@ -153,6 +153,8 @@ type View3dStore = {
   selected: number;
   /** Камера сама облетает систему, когда её не трогают */
   auto: boolean;
+  /** Границы стран на Земле */
+  borders: boolean;
   /** Интерфейс спрятан по клавише H */
   hidden: boolean;
   params: Params;
@@ -161,6 +163,7 @@ type View3dStore = {
 export const useView3dStore = create<View3dStore>(() => ({
   selected: -1,
   auto: true,
+  borders: true,
   hidden: false,
   params: { ...DEFAULT_PARAMS },
 }));
@@ -171,18 +174,23 @@ export const setParam = (key: keyof Params, value: number) =>
 export const toggleAuto = () =>
   useView3dStore.setState((s) => ({ auto: !s.auto }));
 
+export const toggleBorders = () =>
+  useView3dStore.setState((s) => ({ borders: !s.borders }));
+
 export const toggleHidden = () =>
   useView3dStore.setState((s) => ({ hidden: !s.hidden }));
 
 /**
- * Клавиши полёта и что они значат в базисе камеры: вперёд по взгляду
- * и вбок по экрану.
+ * Клавиши полёта и что они значат в базисе камеры: вперёд по взгляду,
+ * вбок по экрану и вверх/вниз вдоль вертикали камеры.
  */
-const ROAM_KEYS: Record<string, [forward: number, right: number]> = {
-  w: [1, 0],
-  s: [-1, 0],
-  a: [0, -1],
-  d: [0, 1],
+const ROAM_KEYS: Record<string, [forward: number, right: number, up: number]> = {
+  w: [1, 0, 0],
+  s: [-1, 0, 0],
+  a: [0, -1, 0],
+  d: [0, 1, 0],
+  e: [0, 0, 1],   // Вверх
+  q: [0, 0, -1],  // Вниз
 };
 
 const held = new Set<string>();
@@ -192,6 +200,11 @@ const held = new Set<string>();
  * к полёту не относится, — тогда вызывающий разбирает её сам.
  */
 export function roamKey(key: string, down: boolean): boolean {
+  if (key === "shift") {
+    if (down) held.add("shift");
+    else held.delete("shift");
+    return true;
+  }
   if (!(key in ROAM_KEYS)) return false;
   if (down) {
     if (!view3d.roaming) startRoam();
@@ -214,6 +227,7 @@ function startRoam() {
   view3d.focusIndex = -1;
   view3d.anchorIndex = -1;
   view3d.idle = 0;
+  view3d.goalTarget = [...view3d.target];
   useView3dStore.setState({ selected: -1 });
 }
 
@@ -243,40 +257,67 @@ function stepRoam(dt: number) {
   const s = view3d;
   let f = 0;
   let r = 0;
+  let u = 0;
   held.forEach((key) => {
-    f += ROAM_KEYS[key][0];
-    r += ROAM_KEYS[key][1];
+    if (key in ROAM_KEYS) {
+      f += ROAM_KEYS[key][0];
+      r += ROAM_KEYS[key][1];
+      u += ROAM_KEYS[key][2];
+    }
   });
 
-  // По диагонали летят с той же скоростью, что и прямо
-  const len = Math.hypot(f, r) || 1;
-  // Ход догоняет клавиши, а не повторяет их: мгновенный старт и такая же
-  // остановка читаются как склейка, а не как полёт
+  const len = Math.hypot(f, r, u) || 1;
   const ease = Math.min(1, dt * ROAM_EASE);
   s.roamF += (f / len - s.roamF) * ease;
   s.roamR += (r / len - s.roamR) * ease;
+  s.roamU += (u / len - s.roamU) * ease;
 
-  const drive = Math.abs(s.roamF) + Math.abs(s.roamR);
+  const drive = Math.abs(s.roamF) + Math.abs(s.roamR) + Math.abs(s.roamU);
   if (drive < 1e-4) {
     s.roamF = 0;
     s.roamR = 0;
+    s.roamU = 0;
     return;
   }
 
-  const reach = clamp(s.dist, MIN_DIST, ROAM_SPEED_CAP);
-  const step = reach * ROAM_SPEED * dt;
+  const isShift = held.has("shift");
+  const speed = clamp(s.dist * 0.75, 0.35, ROAM_SPEED_CAP) * (isShift ? 3.0 : 1.0);
+  const step = speed * ROAM_SPEED * dt;
   const b = cameraBasis(currentCamera());
 
   const next: Vec3 = [
-    s.target[0] + (b.forward[0] * s.roamF + b.right[0] * s.roamR) * step,
-    s.target[1] + (b.forward[1] * s.roamF + b.right[1] * s.roamR) * step,
-    s.target[2] + (b.forward[2] * s.roamF + b.right[2] * s.roamR) * step,
+    s.target[0] + (b.forward[0] * s.roamF + b.right[0] * s.roamR + b.up[0] * s.roamU) * step,
+    s.target[1] + (b.forward[1] * s.roamF + b.right[1] * s.roamR + b.up[1] * s.roamU) * step,
+    s.target[2] + (b.forward[2] * s.roamF + b.right[2] * s.roamR + b.up[2] * s.roamU) * step,
   ];
 
   const far = Math.hypot(next[0], next[1], next[2]);
   const k = far > ROAM_BOUND ? ROAM_BOUND / far : 1;
   s.target = [next[0] * k, next[1] * k, next[2] * k];
+  s.goalTarget = [...s.target];
   if (held.size) s.idle = 0;
+}
+
+/** Сдвиг цели камеры в плоскости экрана (панорамирование) */
+export function panCamera(dx: number, dy: number, height: number) {
+  if (!view3d.roaming) {
+    view3d.roaming = true;
+    view3d.roamDist = view3d.dist;
+    view3d.focus = 0;
+    view3d.focusIndex = -1;
+    view3d.anchorIndex = -1;
+    useView3dStore.setState({ selected: -1 });
+  }
+  const b = cameraBasis(currentCamera());
+  const factor = (view3d.dist * Math.tan(FOV * 0.5) * 2) / Math.max(height, 1);
+  const worldDx = -dx * factor;
+  const worldDy = dy * factor;
+
+  view3d.target[0] += b.right[0] * worldDx + b.up[0] * worldDy;
+  view3d.target[1] += b.right[1] * worldDx + b.up[1] * worldDy;
+  view3d.target[2] += b.right[2] * worldDx + b.up[2] * worldDy;
+  view3d.goalTarget = [...view3d.target];
+  view3d.idle = 0;
 }
 
 /** Выбрать тело; -1 возвращает к обзору системы */
@@ -297,6 +338,11 @@ export function selectBody3d(index: number) {
     view3d.anchorIndex = index;
     view3d.zoom = 1;
     view3d.idle = 0;
+    if (view3d.positions[index]) {
+      view3d.goalTarget = [...view3d.positions[index]];
+    }
+  } else {
+    view3d.goalTarget = [0, 0, 0];
   }
   useView3dStore.setState({ selected: index });
 }
@@ -316,6 +362,7 @@ export function resetView() {
   view3d.vPhi = 0;
   view3d.dist = OVERVIEW_DIST;
   view3d.target = [0, 0, 0];
+  view3d.goalTarget = [0, 0, 0];
   view3d.focus = 0;
   view3d.focusIndex = -1;
   view3d.anchorIndex = -1;
@@ -378,7 +425,7 @@ export function stepScene(dt: number): Vec3[] {
 
   // Наезд и отъезд: одно число ведёт и цель камеры, и удаление
   const want = s.focusIndex >= 0 ? 1 : 0;
-  s.focus += (want - s.focus) * Math.min(1, dt * 2.4);
+  s.focus += (want - s.focus) * (1 - Math.exp(-dt * 3.5));
   if (s.focus < 0.004 && s.focusIndex < 0) {
     s.focus = 0;
     s.anchorIndex = -1;
@@ -387,38 +434,42 @@ export function stepScene(dt: number): Vec3[] {
   if (s.roaming) {
     stepRoam(dt);
   } else {
-    const anchor = s.anchorIndex >= 0 ? positions[s.anchorIndex] : ORIGIN;
-    // Цель едет от центра системы к телу вместе с наездом
-    s.target = [
-      anchor[0] * s.focus,
-      anchor[1] * s.focus,
-      anchor[2] * s.focus,
-    ];
+    if (s.focusIndex >= 0) {
+      s.goalTarget = [...positions[s.focusIndex]];
+    } else {
+      s.goalTarget = [0, 0, 0];
+    }
+    // Плавное следование за целью
+    const ease = 1 - Math.exp(-dt * 5.5);
+    s.target[0] += (s.goalTarget[0] - s.target[0]) * ease;
+    s.target[1] += (s.goalTarget[1] - s.target[1]) * ease;
+    s.target[2] += (s.goalTarget[2] - s.target[2]) * ease;
   }
 
-  // Поворот: во время перетаскивания сразу, после — по инерции
+  // Поворот: во время перетаскивания накапливаем скорость, после — экспоненциальное затухание
   if (s.dragging) {
-    s.vTheta = clamp(-s.pendX * 0.0052 * 0.4, -0.03, 0.03);
-    s.vPhi = clamp(s.pendY * 0.0032 * 0.4, -0.03, 0.03);
+    const refH = Math.max(s.height, 300);
+    const wTheta = (-s.pendX / refH) * (Math.PI * 2) / Math.max(dt, 0.001);
+    const wPhi = (s.pendY / refH) * Math.PI / Math.max(dt, 0.001);
+    s.vTheta = s.vTheta * 0.4 + clamp(wTheta, -4.0, 4.0) * 0.6;
+    s.vPhi = s.vPhi * 0.4 + clamp(wPhi, -3.0, 3.0) * 0.6;
     s.pendX = 0;
     s.pendY = 0;
   } else {
     s.idle += dt;
-    s.theta += s.vTheta;
-    s.phi = clamp(s.phi + s.vPhi, MIN_PHI, MAX_PHI);
-    s.vTheta *= 0.93;
-    s.vPhi *= 0.93;
+    s.theta += s.vTheta * dt;
+    s.phi = clamp(s.phi + s.vPhi * dt, MIN_PHI, MAX_PHI);
+    const damp = Math.exp(-dt * 4.5);
+    s.vTheta *= damp;
+    s.vPhi *= damp;
     if (auto && s.idle > 1.2) s.theta += dt * 0.035;
   }
 
-  // Подлёт к телу, которому важен угол зрения: пока камера идёт на цель,
-  // она заодно поднимается. Кольца Сатурна с ребра — это просто линия,
-  // и встречать его надо сверху. После прилёта камера снова полностью
-  // в руках зрителя
+  // Подлёт к телу, которому важен угол зрения
   const wanted =
     s.focusIndex >= 0 ? SYSTEM_3D[s.focusIndex].viewPhi : undefined;
   if (wanted !== undefined && !s.dragging && s.focus < 0.985) {
-    s.phi += (wanted - s.phi) * Math.min(1, dt * 1.6);
+    s.phi += (wanted - s.phi) * (1 - Math.exp(-dt * 2.5));
   }
 
   // Опорное удаление ведёт наезд, ручное приближение — множитель к нему
@@ -426,14 +477,43 @@ export function stepScene(dt: number): Vec3[] {
     s.anchorIndex >= 0
       ? OVERVIEW_DIST + (framingDist(s.anchorIndex) - OVERVIEW_DIST) * s.focus
       : OVERVIEW_DIST;
+  // Защита от залёта внутрь выбранного тела: минимум body.radius * 1.45
   const floor =
     s.anchorIndex >= 0
-      ? Math.max(MIN_DIST, SYSTEM_3D[s.anchorIndex].radius * 1.25)
+      ? Math.max(MIN_DIST, SYSTEM_3D[s.anchorIndex].radius * 1.45)
       : MIN_DIST;
   const targetDist = s.roaming
     ? clamp(s.roamDist, MIN_DIST, MAX_DIST)
     : clamp(base / s.zoom, floor, MAX_DIST);
-  s.dist += (targetDist - s.dist) * Math.min(1, dt * 3.4);
+  s.dist += (targetDist - s.dist) * (1 - Math.exp(-dt * 4.5));
+  if (s.anchorIndex >= 0) {
+    s.dist = Math.max(s.dist, floor);
+  }
+
+  // Защита от залёта внутрь тел в режиме свободного полёта: выталкивание на 1.25 * radius
+  if (s.roaming) {
+    const basis = cameraBasis(currentCamera());
+    for (let i = 0; i < SYSTEM_3D.length; i++) {
+      const minR = SYSTEM_3D[i].radius * 1.25;
+      const bPos = positions[i];
+      const dx = basis.pos[0] - bPos[0];
+      const dy = basis.pos[1] - bPos[1];
+      const dz = basis.pos[2] - bPos[2];
+      const d = Math.hypot(dx, dy, dz);
+      if (d < minR) {
+        const push = minR - d;
+        const nx = d > 1e-4 ? dx / d : 0;
+        const ny = d > 1e-4 ? dy / d : 1;
+        const nz = d > 1e-4 ? dz / d : 0;
+        s.target[0] += nx * push;
+        s.target[1] += ny * push;
+        s.target[2] += nz * push;
+        s.goalTarget[0] += nx * push;
+        s.goalTarget[1] += ny * push;
+        s.goalTarget[2] += nz * push;
+      }
+    }
+  }
 
   // Сдвиг нарастает вместе с наездом: тело поднимается в кадре ровно тогда,
   // когда снизу выезжает карточка

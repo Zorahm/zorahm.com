@@ -2,6 +2,7 @@
 
 import { FRAG_BLUR, FRAG_BRIGHT, FRAG_COMPOSITE, VERT } from "./glsl/post";
 import { FRAG_SCENE } from "./glsl/scene";
+import { createEarthTexture } from "./earthMap";
 import {
   TAU,
   bodyAxis,
@@ -242,6 +243,8 @@ export function createRenderer(
   gl.enableVertexAttribArray(0);
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
+  const earthMap = createEarthTexture(gl);
+
   /* ---------------------------------------------------------------- *
    *  Цели рендера
    * ---------------------------------------------------------------- */
@@ -472,7 +475,7 @@ export function createRenderer(
     if (!rtScene || !rtHalfA || !rtHalfB || !rtQuarterA || !rtQuarterB) return;
 
     const positions = stepScene(dt);
-    const { params } = useView3dStore.getState();
+    const { params, borders } = useView3dStore.getState();
 
     positions.forEach((p, i) => {
       bodyBuf[i * 4] = p[0];
@@ -529,6 +532,9 @@ export function createRenderer(
     gl.uniform4fv(u.uBeltAt, beltAtBuf);
     gl.uniform4fv(u.uBeltWide, beltWideBuf);
     gl.uniform4fv(u.uBeltAmount, beltAmountBuf);
+    bindTex(3, earthMap.texture, u.uEarthMap);
+    gl.uniform1f(u.uEarthMapLoaded, earthMap.loaded ? 1.0 : 0.0);
+    gl.uniform1f(u.uBorders, borders ? 1.0 : 0.0);
     drawQuad();
 
     /* --- проход 2: яркая часть в половинном разрешении --- */
@@ -681,6 +687,7 @@ export function createRenderer(
       [scene, bright, blur, composite].forEach((p) => {
         if (p) gl.deleteProgram(p.program);
       });
+      earthMap.dispose();
       // Контекст намеренно не гасится через WEBGL_lose_context: холст тот же
       // самый, и повторный getContext вернул бы уже потерянный контекст —
       // в строгом режиме, где эффект монтируется дважды, сцена не поднялась

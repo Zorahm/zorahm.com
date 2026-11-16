@@ -22,6 +22,7 @@ import {
   selectBody3d,
   setParam,
   toggleAuto,
+  toggleBorders,
   toggleHidden,
   useView3dStore,
   type Params,
@@ -65,12 +66,14 @@ function Space3DScene({ lang }: { lang: Lang }) {
 
   const selected = useView3dStore((s) => s.selected);
   const auto = useView3dStore((s) => s.auto);
+  const borders = useView3dStore((s) => s.borders);
   const hidden = useView3dStore((s) => s.hidden);
   const params = useView3dStore((s) => s.params);
   const body = selected >= 0 ? bodies[selected] : null;
 
   const fpsRef = useRef<HTMLElement>(null);
   const resRef = useRef<HTMLElement>(null);
+  const savedTimeRef = useRef(1);
 
   /**
    * Экран сборки. Три состояния, а не два: между «собралось» и «убрано»
@@ -126,12 +129,37 @@ function Space3DScene({ lang }: { lang: Lang }) {
       // Полёт разбирает свои клавиши сам и держит их до отпускания
       if (roamKey(key, true)) return;
 
-      if (key === "escape") selectBody3d(-1);
-      else if (key === "h") toggleHidden();
-      else if (key === "r") resetView();
-      else if (key === " ") {
+      if (key === "escape" || key === "r") {
+        selectBody3d(-1);
+        resetView();
+      } else if (key === "h") {
+        toggleHidden();
+      } else if (key === " ") {
         e.preventDefault();
-        toggleAuto();
+        const currentTime = useView3dStore.getState().params.time;
+        if (currentTime > 0) {
+          savedTimeRef.current = currentTime;
+          setParam("time", 0);
+        } else {
+          setParam("time", savedTimeRef.current > 0 ? savedTimeRef.current : 1);
+        }
+      } else if (key === "tab") {
+        e.preventDefault();
+        const sel = useView3dStore.getState().selected;
+        const count = bodies.length;
+        const next = e.shiftKey
+          ? sel <= 0
+            ? count - 1
+            : sel - 1
+          : sel < 0
+            ? 0
+            : (sel + 1) % count;
+        selectBody3d(next);
+      } else if (/^[1-9]$/.test(key)) {
+        const idx = Number(key) - 1;
+        if (idx < bodies.length) {
+          selectBody3d(idx);
+        }
       } else if (key === "f") {
         if (document.fullscreenElement) document.exitFullscreen();
         else document.documentElement.requestFullscreen?.();
@@ -152,7 +180,7 @@ function Space3DScene({ lang }: { lang: Lang }) {
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
     };
-  }, []);
+  }, [bodies.length]);
 
   const ui_ = hidden ? `${styles.ui} ${styles.gone}` : styles.ui;
 
@@ -215,9 +243,9 @@ function Space3DScene({ lang }: { lang: Lang }) {
               без мыши сцену не покрутить, а без хоткеев — вполне */}
           <span className={styles.keys}>
             {" · "}
-            <kbd>WASD</kbd> {t.keys.roam} · <kbd>H</kbd> {t.keys.hide} ·{" "}
-            <kbd>R</kbd> {t.keys.reset} · <kbd>Space</kbd> {t.keys.auto} ·{" "}
-            <kbd>F</kbd> {t.keys.fullscreen}
+            <kbd>WASD/QE</kbd> {t.keys.roam} · <kbd>H</kbd> {t.keys.hide} ·{" "}
+            <kbd>R/Esc</kbd> {t.keys.reset} · <kbd>Space</kbd> {lang === "ru" ? "пауза" : "pause"} ·{" "}
+            <kbd>1–9/Tab</kbd> · <kbd>F</kbd> {t.keys.fullscreen}
           </span>
         </p>
 
@@ -246,6 +274,14 @@ function Space3DScene({ lang }: { lang: Lang }) {
           </div>
         ))}
         <div className={styles.buttons}>
+          <button
+            type="button"
+            className={borders ? styles.on : undefined}
+            aria-pressed={borders}
+            onClick={toggleBorders}
+          >
+            {lang === "ru" ? "Границы" : "Borders"}
+          </button>
           <button
             type="button"
             className={auto ? styles.on : undefined}

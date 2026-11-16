@@ -330,6 +330,8 @@ export const SYSTEM_RADIUS = Math.max(...SYSTEM_3D.map((b) => b.orbit));
 export const MOONS: Moon[] = [
   {
     parent: "earth",
+    // Радиус задан в радиусах родителя: 0.27 от Земли (0.55) даёт ~0.15 в единицах сцены,
+    // что в точности соответствует реальным астрономическим пропорциям Земли и Луны
     radius: 0.27,
     orbit: 2.6,
     phase: 1.1,

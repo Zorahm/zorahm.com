@@ -55,6 +55,11 @@ uniform vec3  uColB[BODIES];
 uniform vec4  uSurf[BODIES];
 /** xyz — ось вращения, w — угол собственного вращения */
 uniform vec4  uAxis[BODIES];
+
+/** Текстура реальной карты Земли (R: суша, G: границы, B: шельф) */
+uniform sampler2D uEarthMap;
+uniform float     uEarthMapLoaded;
+uniform float     uBorders;
 `;
 
 const MAIN = /* glsl */ `
