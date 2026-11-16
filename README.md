@@ -36,7 +36,7 @@ npm run build   # static export into out/
 
 ## How the field works
 
-The original prototype (kept in `reference/`) drew every frame on an offscreen
+The original prototype (still in git history) drew every frame on an offscreen
 2D canvas and read it back with `getImageData` on every animation frame — a
 synchronous GPU→CPU stall — then stroked ~13 000 arcs on the CPU.
 
