@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geologica, JetBrains_Mono, Onest } from "next/font/google";
 import {
+  PAPER_DECISION_DATE,
+  PAPER_DECISION_PUBLISHED,
   SITE_URL,
   aiPath,
   gamesPath,
@@ -220,6 +222,12 @@ export function buildPaperDecisionMetadata(lang: Lang): Metadata {
   );
   return {
     ...metadata,
+    openGraph: {
+      ...metadata.openGraph,
+      type: "article",
+      publishedTime: PAPER_DECISION_PUBLISHED,
+      modifiedTime: PAPER_DECISION_DATE,
+    },
     alternates: {
       ...metadata.alternates,
       types: { "text/plain": paperDecisionLlmsPath(lang) },

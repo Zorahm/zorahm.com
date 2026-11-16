@@ -35,6 +35,14 @@ import {
   spacePath,
   spiritPath,
 } from "./index";
+import {
+  PAPER_DECISION_EXPERIMENTS,
+  PAPER_DECISION_TIMELINE,
+  PAPER_DECISION_USES,
+  getPaperDecisionExample,
+  getPaperDecisionExperiment,
+  paperPriceRanges,
+} from "./paperDecision";
 
 describe("кадры", () => {
   it("во всех языках одинаковый набор и порядок кадров", () => {
@@ -440,23 +448,41 @@ describe("the /paper/decision note", () => {
     }
   });
 
-  it("keeps lists of the same length in every language", () => {
-    const en = getPaperDecision("en");
-    const ru = getPaperDecision("ru");
-    expect(ru.questions).toHaveLength(en.questions.length);
-    en.use.forEach((use, index) => {
-      expect(ru.use[index].text).toHaveLength(use.text.length);
-      expect(ru.use[index].calls).toHaveLength(use.calls.length);
-      use.calls.forEach((call, callIndex) => {
-        expect(ru.use[index].calls[callIndex].rows).toHaveLength(call.rows.length);
-      });
-    });
-    expect(ru.modelList).toHaveLength(en.modelList.length);
-    expect(ru.numbers).toHaveLength(en.numbers.length);
-    expect(en.priceCalls).toHaveLength(PAPER_DECISION_PRICE_CALLS.length);
-    expect(ru.priceCalls).toHaveLength(PAPER_DECISION_PRICE_CALLS.length);
-    expect(ru.use).toHaveLength(en.use.length);
-    expect(ru.limits).toHaveLength(en.limits.length);
+  it("has copy for each dated event and calculator input in both languages", () => {
+    for (const lang of LANGS) {
+      const paper = getPaperDecision(lang);
+      expect(paper.timeline).toHaveLength(PAPER_DECISION_TIMELINE.length);
+      expect(paper.price.calls).toHaveLength(PAPER_DECISION_PRICE_CALLS.length);
+    }
+  });
+
+  it("covers every saved answer in the formatted views", () => {
+    for (const lang of LANGS) {
+      for (const id of ["ticket", ...PAPER_DECISION_USES] as const) {
+        for (const call of getPaperDecisionExample(lang, id).calls) {
+          expect(call.rows.map((row) => row.id).sort()).toEqual(Object.keys(JSON.parse(call.rawJson).answers).sort());
+        }
+      }
+      for (const id of PAPER_DECISION_EXPERIMENTS) {
+        const experiment = getPaperDecisionExperiment(lang, id);
+        for (const model of experiment.models) {
+          expect(experiment.rows.map((row) => row.id).sort()).toEqual(Object.keys(JSON.parse(model.rawJson).answers).sort());
+        }
+      }
+    }
+    const [ticket] = getPaperDecisionExample("ru", "ticket").calls;
+    const urgency = ticket.rows.find((row) => row.id === "urgency");
+    expect(urgency?.value).toBe("4,16");
+    expect(urgency?.rubric?.maximum).toBe("5");
+    expect(urgency?.rubric?.levels.map(({ label, probability }) => [label, probability])).toEqual([
+      ["1", 0.0084],
+      ["2", 0.0812],
+      ["3", 0.171],
+      ["4", 0.2222],
+      ["5", 0.5172],
+    ]);
+    const refund = getPaperDecisionExperiment("en", "refund");
+    expect(refund.rows.find((row) => row.id === "urgency")?.answers.map((answer) => answer.detail)).toEqual(["", ""]);
   });
 
   it("uses no long dashes, as the author asked", () => {
@@ -485,6 +511,11 @@ describe("the /paper/decision note", () => {
       expect(price.decision).toBeLessThan(price.haiku);
       expect(price.haiku).toBeLessThan(price.haikuLow);
     }
+  });
+
+  it("includes the most expensive thinking scenario in the displayed range", () => {
+    expect(paperPriceRanges("en")).toContain("5.1× to 34.6×");
+    expect(paperPriceRanges("ru")).toContain("5,1× до 34,6×");
   });
 });
 

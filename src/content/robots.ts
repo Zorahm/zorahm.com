@@ -1,7 +1,7 @@
 import { SITE_URL } from "./types";
 
 /**
- * Easter egg at the top of the file: Saturn, the first figure of the home
+ * Easter egg at the top of the file: Saturn, the planet from the Solar System
  * page, set in the same halftone ramp the site draws with — only in letters,
  * since a text file has no dots to draw it with.
  *

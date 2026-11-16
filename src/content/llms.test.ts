@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { LLMS_FULL_PATH, buildLlmsFullTxt, buildLlmsTxt } from "./llms";
+import { LLMS_FULL_PATH, buildLlmsFullTxt, buildLlmsTxt, buildPaperDecisionLlmsTxt } from "./llms";
+import { PAPER_DECISION_SECTIONS, getPaperDecisionExample, paperArchivedTiming, paperPriceRanges } from "./paperDecision";
 import {
   LANGS,
   SITE_URL,
@@ -119,7 +120,29 @@ describe("llms-full.txt", () => {
       for (const body of getBodies(lang)) expect(full).toContain(body.body);
       for (const match of getSpiritMatches(lang)) expect(full).toContain(match.line);
       for (const p of getUi(lang).spirit.ps) expect(full).toContain(p);
-      for (const p of getPaperDecision(lang).after) expect(full).toContain(p);
+      const article = getPaperDecision(lang);
+      expect(full).toContain(article.index.v1Note);
+      expect(full).toContain(article.index.v21Note);
+    }
+  });
+});
+
+describe("the decision article text", () => {
+  it("follows the visual section order and shares its calculated values", () => {
+    for (const lang of LANGS) {
+      const paper = getPaperDecision(lang);
+      const article = buildPaperDecisionLlmsTxt(lang);
+      expect(article.split("\n").filter((line) => line.startsWith("## "))).toEqual(
+        PAPER_DECISION_SECTIONS.map((id) => "## " + paper.sections[id]),
+      );
+      expect(article).toContain(getPaperDecisionExample(lang, "ticket").calls[0].state);
+      expect(article).toContain(paperPriceRanges(lang));
+      expect(article).toContain("18. Clef-Omni");
+      expect(article).toContain(paper.index.details.notes[1]);
+      expect(article).toContain(paper.scale.footprint.cards[1].amount);
+      for (const [label, duration] of paperArchivedTiming(lang)) {
+        expect(article).toContain(label + " · " + duration);
+      }
     }
   });
 });

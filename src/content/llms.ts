@@ -22,9 +22,35 @@ import {
 } from "./index";
 import {
   PAPER_DECISION_DATE,
+  PAPER_DECISION_EXPERIMENTS,
+  PAPER_DECISION_IMAGES,
+  PAPER_DECISION_INDEX_DETAIL_SOURCES,
+  PAPER_DECISION_INDEX_WEIGHTS,
   PAPER_DECISION_PRICE_CALLS,
+  PAPER_DECISION_PRICE_KEYS,
+  PAPER_DECISION_PRICE_MAX,
+  PAPER_DECISION_PRICES,
+  PAPER_DECISION_PUBLISHED,
+  PAPER_DECISION_RANKING,
+  PAPER_DECISION_SECTIONS,
   PAPER_DECISION_SOURCES,
+  PAPER_DECISION_TIMELINE,
+  PAPER_DECISION_TIMING,
+  PAPER_DECISION_USES,
+  formatPaperDate,
+  formatPaperDuration,
+  formatPaperNumber,
+  formatPaperRatio,
+  formatPaperUsd,
+  getPaperDecisionExample,
+  getPaperDecisionExperiment,
+  getPaperDecisionPractice,
+  paperArchivedTiming,
+  paperPriceRanges,
+  paperPriceTariffs,
   priceOfMillionCalls,
+  type PaperDecisionAnswer,
+  type PaperDecisionSection,
 } from "./paperDecision";
 import { SPIRIT_CITY_TITLE, SPIRIT_DAY, SPIRIT_TEAM } from "./spirit";
 import { LANGS, SITE_URL, type Lang } from "./types";
@@ -363,120 +389,197 @@ function paperIndexText(lines: string[], lang: Lang) {
 
 function paperDecisionText(lines: string[], lang: Lang) {
   const paper = getPaperDecision(lang);
-  pageHead(lines, paper.heading, paperDecisionPath(lang), paper.description);
-  lines.push(`${paper.date} (${PAPER_DECISION_DATE})`);
-  lines.push("");
-  const paragraphs = (items: string[]) => {
-    for (const item of items) {
-      lines.push(item);
-      lines.push("");
-    }
+  pageHead(lines, paper.title, paperDecisionPath(lang), paper.description);
+
+  const paragraph = (text: string) => lines.push(text, "");
+  const subheading = (title: string) => paragraph("##### " + title);
+  const list = (items: readonly string[]) => {
+    lines.push(...items.map((item) => "- " + item), "");
   };
-  const heading = (label: string) => {
-    lines.push(`#### ${label}`);
-    lines.push("");
+  const sources = (ids: readonly (keyof typeof PAPER_DECISION_SOURCES)[]) => {
+    list(ids.map((id) => {
+      const { label, href } = PAPER_DECISION_SOURCES[id];
+      return "[" + label + "](" + href + ")";
+    }));
   };
+  const describeAnswer = ({ value, detail, rubric }: PaperDecisionAnswer) => {
+    const extra = detail ? " (" + detail + ")" : "";
+    if (!rubric) return value + extra;
 
-  paragraphs(paper.lead);
-
-  heading(paper.whatLabel);
-  paragraphs(paper.what);
-  for (const question of paper.questions) {
-    lines.push(`- ${question.name}: ${question.text}`);
-  }
-  lines.push("");
-  paragraphs(paper.whatAfter);
-
-  heading(paper.modelsLabel);
-  paragraphs(paper.models);
-  for (const model of paper.modelList) {
-    lines.push(`- ${model.name}: ${model.text}`);
-  }
-  lines.push("");
-  paragraphs([paper.modelsAfter]);
-
-  heading(paper.whyLabel);
-  paragraphs(paper.why);
-  for (const number of paper.numbers) {
-    lines.push(`- ${number.value} ${number.label}`);
-  }
-  lines.push("");
-  lines.push(`##### ${paper.priceLabel}`);
-  lines.push("");
-  paragraphs([paper.priceIntro]);
-  PAPER_DECISION_PRICE_CALLS.forEach((call, index) => {
-    const price = priceOfMillionCalls(call);
-    const money = (value: number) => `$${value.toFixed(2)}`;
-    paragraphs([paper.priceCalls[index].text]);
-    lines.push(
-      `- ${paper.priceCalls[index].tab} (${call.inputTokens} ${paper.priceTokens.input}, ` +
-        `${call.answerTokens} ${paper.priceTokens.answer}), ${paper.priceUnit}: ` +
-        `${paper.priceRows.decision} ${money(price.decision)}, ` +
-        `${paper.priceRows.haiku} ${money(price.haiku)}, ` +
-        `${paper.priceRows.haikuLow} ${money(price.haikuLow)}`,
-    );
-  });
-  lines.push("");
-  paragraphs(paper.priceNotes);
-  paragraphs(paper.priceVerdict);
-  lines.push(`##### ${paper.speedLabel}`);
-  lines.push("");
-  lines.push(
-    `- ${paper.speedRows.decision}: ${paper.speedRows.decisionValue}`,
-  );
-  lines.push(`- ${paper.speedRows.haiku}: ${paper.speedRows.haikuValue}`);
-  lines.push("");
-  paragraphs(paper.speedNotes);
-  paragraphs(paper.speedVerdict);
-
-  heading(paper.useLabel);
-  paragraphs([paper.useIntro]);
-  lines.push(`${paper.illustrationLabel}. ${paper.illustrationNote}`);
-  lines.push("");
-  for (const item of paper.use) {
-    lines.push(`##### ${item.mark}`);
-    lines.push("");
-    paragraphs(item.text);
+    const labels = paper.exampleLabels.rubric;
+    const scale = rubric.maximum ? " " + labels.outOf + " " + rubric.maximum : "";
+    return [
+      labels.mean + " " + value + scale + extra,
+      ...rubric.levels.map(({ label, percent }) => labels.level + " " + label + " · " + percent),
+    ].join("\n  - ");
+  };
+  const example = (item: ReturnType<typeof getPaperDecisionExample>, stateLabel = paper.exampleLabels.state) => {
+    subheading(item.label);
     for (const call of item.calls) {
-      lines.push(`${call.stateLabel}: ${call.state}`);
-      lines.push("");
-      for (const row of call.rows) {
-        lines.push(`- ${row.kind}, ${row.question} ${row.answer}`);
-      }
-      lines.push("");
+      paragraph(stateLabel + " · " + call.state);
+      list(call.rows.map((row) => row.kind + " · " + row.question + " " + describeAnswer(row)));
     }
-  }
-  paragraphs([paper.useMore, paper.useWarning]);
+    for (const text of item.explanation) paragraph(text);
+    if (item.sources.length > 0) sources(item.sources);
+  };
 
-  heading(paper.indexLabel);
-  paragraphs(paper.index);
-  lines.push(`##### ${paper.beforeLabel}`);
-  lines.push("");
-  lines.push(paper.beforeAlt);
-  lines.push("");
-  paragraphs([paper.beforeCaption]);
-  paragraphs(paper.before);
-  lines.push(`##### ${paper.afterLabel}`);
-  lines.push("");
-  lines.push(paper.afterAlt);
-  lines.push("");
-  paragraphs([paper.afterCaption]);
-  paragraphs(paper.after);
-  paragraphs(paper.indexVerdict);
+  paragraph(paper.dates.published + " " + formatPaperDate(PAPER_DECISION_PUBLISHED, lang, true));
+  paragraph(paper.dates.updated + " " + formatPaperDate(PAPER_DECISION_DATE, lang, true));
+  paragraph(paper.opening.format);
+  paragraph(paper.lead);
 
-  heading(paper.limitsLabel);
-  for (const limit of paper.limits) {
-    lines.push(`- ${limit.mark}: ${limit.text}`);
-  }
-  lines.push("");
+  const sections: Record<PaperDecisionSection, () => void> = {
+    what() {
+      paragraph(paper.intro.scenario);
+      example(getPaperDecisionExample(lang, "ticket"), paper.intro.message);
+      paragraph(paper.intro.explanation);
+      paragraph(paper.intro.model);
+      list(paper.intro.types.map(({ name, text }) => name + " · " + text));
+      paragraph(paper.intro.extensions);
+      paragraph(paper.intro.calibration);
+      sources(["jevUpdate", "liquidTypes", "gemini", "openrouter", "aaMethod"]);
+    },
+    use() {
+      for (const id of PAPER_DECISION_USES) example(getPaperDecisionExample(lang, id));
+      paragraph(paper.useMore);
+      paragraph(paper.useWarning);
+    },
+    models() {
+      for (const [index, { date, source }] of PAPER_DECISION_TIMELINE.entries()) {
+        const { title, text } = paper.timeline[index];
+        subheading(formatPaperDate(date, lang) + " · " + title);
+        paragraph(text);
+        sources([source]);
+      }
+      subheading(paper.modelNotes.title);
+      for (const { name, text, sources: refs } of paper.modelNotes.entries) {
+        paragraph(name + " · " + text);
+        sources(refs);
+      }
+    },
+    index() {
+      const { index } = paper;
+      paragraph(index.lead);
+      paragraph(index.v1Note);
+      paragraph(index.v21Note);
+      subheading(index.rankCaption);
+      lines.push(...PAPER_DECISION_RANKING.map(({ model, score }, position) =>
+        (position + 1) + ". " + model + " · " + formatPaperNumber(score, lang, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }),
+      ), "");
+      sources(["aaIndex", "nace"]);
+      subheading(index.methodology);
+      paragraph(index.metricNote);
+      list(PAPER_DECISION_INDEX_WEIGHTS.map(({ evaluation, weight }, position) =>
+        evaluation + " · " + formatPaperNumber(weight / 100, lang, { style: "percent" }) +
+        " · " + index.metricDescriptions[position],
+      ));
+      sources(["aaMethod"]);
+      subheading(index.details.title);
+      for (const note of index.details.notes) paragraph(note);
+      sources(PAPER_DECISION_INDEX_DETAIL_SOURCES);
+      subheading(index.archiveTitle);
+      list((["before", "after", "v2"] as const).map((id) => {
+        const { title, caption, alt } = index.archives[id];
+        return "[" + title + "](" + url(PAPER_DECISION_IMAGES[id].src) + ") · " + caption + " " + alt;
+      }));
+    },
+    why() {
+      const { price, timing } = paper;
+      paragraph(price.intro);
+      list(paperPriceTariffs(lang).map(({ value, label }) => value + " · " + label));
+      subheading(price.caption);
+      paragraph(price.barScale + " " + formatPaperUsd(PAPER_DECISION_PRICE_MAX, lang) + ".");
+      for (const [index, call] of PAPER_DECISION_PRICE_CALLS.entries()) {
+        const copy = price.calls[index];
+        const cost = priceOfMillionCalls(call);
+        paragraph(copy.label + " · " + formatPaperNumber(call.inputTokens, lang) + " " + price.tokens.input +
+          " · " + formatPaperNumber(call.answerTokens, lang) + " " + price.tokens.output + ". " + copy.basis);
+        list(PAPER_DECISION_PRICE_KEYS.map((key) => {
+          const assumption = key === "haikuLow" ? " (" + PAPER_DECISION_PRICES.thinkingTokens + " " + price.thinkingAssumption + ")" : "";
+          return price.names[key] + assumption + " · " + formatPaperUsd(cost[key], lang) +
+            " · " + formatPaperRatio(cost[key] / cost.decision, lang);
+        }));
+      }
+      paragraph(paperPriceRanges(lang));
+      paragraph(price.billingNote);
+      paragraph(price.geminiComparison);
+      sources(["openrouter", "haiku", "liquid", "gemini"]);
+      subheading(timing.caption);
+      list(PAPER_DECISION_TIMING.map(({ model, score, durationMs }) =>
+        model + " · " + paper.index.score + " " + score + " · " + formatPaperDuration(durationMs, lang),
+      ));
+      paragraph(timing.note);
+      sources(["aaV2"]);
+      paragraph(timing.extra);
+      sources(["aaV2", "nace", "gemini"]);
+      subheading(timing.archive.title);
+      list(paperArchivedTiming(lang).map(([label, value]) => label + " · " + value));
+      paragraph(timing.archive.note);
+      sources(["jev", "haikuPerformance"]);
+    },
+    scale() {
+      const labels = paper.exampleLabels;
+      paragraph(paper.scale.intro);
+      paragraph(paper.scale.setup);
+      for (const id of PAPER_DECISION_EXPERIMENTS) {
+        const experiment = getPaperDecisionExperiment(lang, id);
+        subheading(experiment.label);
+        paragraph(experiment.situation);
+        paragraph(labels.state + " · " + experiment.state);
+        for (const row of experiment.rows) {
+          paragraph(row.question + " (" + row.answers[0].kind + ")");
+          list(row.answers.map((answer, index) => experiment.models[index].name + " · " + describeAnswer(answer)));
+        }
+        list(experiment.models.map((model, index) => {
+          const timing = index === 0
+            ? labels.localInference + " " + formatPaperDuration(model.latencyMs, lang) + " · " +
+              labels.localRoundTrip + " " + formatPaperDuration(experiment.localRoundTripMs, lang)
+            : labels.apiTime + " " + formatPaperDuration(model.latencyMs, lang);
+          return model.name + " · " + labels.inputTokens + " " + model.inputTokens + " · " + timing;
+        }));
+        paragraph(experiment.takeaway);
+        if (experiment.evidenceNote) paragraph(experiment.evidenceNote);
+      }
+      paragraph(paper.scale.note);
+      subheading(paper.scale.footprint.title);
+      list(paper.scale.footprint.cards.map(({ model, amount, text }) => model + " · " + amount + " · " + text));
+      paragraph(paper.scale.footprint.note);
+    },
+    limits() {
+      list(paper.limits.map(({ title, text }) => title + " · " + text));
+    },
+    sources() {
+      sources(Object.keys(PAPER_DECISION_SOURCES) as (keyof typeof PAPER_DECISION_SOURCES)[]);
+    },
+    practice() {
+      const example = getPaperDecisionPractice(lang);
+      const { title, completed, confirm, deny, permit, buildOutput } = example.preview;
+      paragraph(example.lead);
+      paragraph("Yaca · Auto · " + example.model);
+      paragraph("Noul · " + example.question);
+      for (const call of example.calls) {
+        subheading("`" + call.command + "`");
+        paragraph(call.task);
+        paragraph(`${example.response} · ${call.assessment} · ${call.scorePercent} ${example.scoreMeaning} · \`{ "type": "noul", "noul": ${call.scoreValue} }\``);
+        paragraph(`${example.rule} · \`${call.comparison}\` → \`${call.allowed}\` · ${call.outcome}`);
+        paragraph(`${title} · ${call.allowed ? completed : confirm}`);
+        if (call.allowed) {
+          lines.push("```text", "$ " + call.command, buildOutput, "```", "");
+        } else {
+          paragraph(`\`${call.command}\` · ${deny} / ${permit}`);
+        }
+      }
+      paragraph(`${example.note} ${example.model}. [${example.sourceLabel}](${example.source})`);
+    },
+  };
 
-  heading(paper.sourcesLabel);
-  for (const source of PAPER_DECISION_SOURCES) {
-    lines.push(`- [${source.label}](${source.href})`);
+  for (const id of PAPER_DECISION_SECTIONS) {
+    paragraph("#### " + paper.sections[id]);
+    sections[id]();
   }
-  lines.push("");
-  lines.push(paper.disclaimer);
-  lines.push("");
 }
 
 /** The article alone, using the same content as the page and full-site export. */

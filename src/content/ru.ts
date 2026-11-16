@@ -245,8 +245,8 @@ export const ruUi: UiStrings = {
     home: "На главную",
   },
   home: {
-    enter: "Открыть Солнечную систему",
-    heroHint: "Наведите курсор на Сатурн — точки отзовутся.",
+    enter: "Читать статью",
+    heroHint: "Наведите курсор на лабиринт — точки отзовутся.",
     index: {
       heading: "Что здесь есть",
     },
@@ -307,6 +307,9 @@ export const ruUi: UiStrings = {
       more: "Больше",
     },
     navLabel: "Разделы",
+    menu: "Меню",
+    closeMenu: "Закрыть меню",
+    readingProgress: "Прогресс чтения",
     themeLight: "Светлая тема",
     themeDark: "Тёмная тема",
     copy: "Скопировать",

@@ -1,4 +1,9 @@
-import { PAPER_DECISION_DATE, getPaperDecision } from "./paperDecision";
+import {
+  PAPER_DECISION_DATE,
+  PAPER_DECISION_PUBLISHED,
+  formatPaperDate,
+  getPaperDecision,
+} from "./paperDecision";
 import type { Lang, PlateShapeId } from "./types";
 
 /**
@@ -27,17 +32,23 @@ export const PAPER_ARTICLES: PaperArticleStructure[] = [
   {
     id: "decision",
     path: (lang) => (lang === "en" ? "/paper/decision" : `/${lang}/paper/decision`),
-    date: PAPER_DECISION_DATE,
-    shape: "network",
+    date: PAPER_DECISION_PUBLISHED,
+    shape: "maze",
   },
 ];
 
 /** An article as the index shows it: the facts plus the article's own words */
 export type PaperArticle = PaperArticleStructure & {
   title: string;
+  /** What kind of piece it is, as the article's own opening says */
+  eyebrow: string;
   summary: string;
   /** The date in words, as the article itself writes it */
   dateText: string;
+  /** Day of the last update, ISO */
+  updated: string;
+  /** The update date in words */
+  updatedText: string;
 };
 
 export type PaperIndexStrings = {
@@ -94,8 +105,11 @@ export function getPaperArticles(lang: Lang): PaperArticle[] {
   const texts = {
     decision: {
       title: decision.title,
+      eyebrow: decision.opening.format,
       summary: decision.description,
-      dateText: decision.date,
+      dateText: formatPaperDate(PAPER_DECISION_PUBLISHED, lang, true),
+      updated: PAPER_DECISION_DATE,
+      updatedText: formatPaperDate(PAPER_DECISION_DATE, lang, true),
     },
   } as const;
 

@@ -2,7 +2,8 @@
 
 /*
  * Hero: the name set heavy and centred, the lead and the way in under it,
- * then Saturn on a wide white card that is itself a link into the scene.
+ * then the newest article on a wide card: its dotted art, its words and its
+ * date, the whole card a link into the article.
  */
 .hero {
   padding: 72px var(--gutter) 16px;
@@ -31,7 +32,7 @@
 
 /*
  * Intro: the letters of the name rise out of a blur one after another, then
- * the lead, the buttons and the Saturn card follow. Played once, on load.
+ * the lead, the buttons and the article card follow. Played once, on load.
  */
 .letter {
   display: inline-block;
@@ -59,7 +60,7 @@
   animation-delay: 500ms;
 }
 
-.saturn.rise {
+.feature.rise {
   animation-delay: 620ms;
 }
 
@@ -91,28 +92,69 @@
   justify-content: center;
 }
 
-.saturn {
-  padding: 48px 64px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+/* The figure on its tinted card, the words beside it, as the article card on /paper/ */
+.feature {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 48px;
   cursor: pointer;
   transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.saturn:hover {
+.feature:hover {
   transform: translateY(-2px);
 }
 
-/* On a wide window the planet would outgrow the screen; the card stays wide, the figure does not */
-.saturn > * {
-  width: 100%;
-  max-width: 980px;
-  margin: 0 auto;
+.featureArt {
+  padding: 40px 40px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
 }
 
-.heroHint {
+.featureHint {
   text-align: center;
+}
+
+.featureInfo {
+  min-width: 0;
+  padding: 24px 32px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.featureHead {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.featureDate {
+  margin-left: auto;
+}
+
+/* The same round arrow as the index tiles: the whole card is the link */
+.featureArrow {
+  margin-top: auto;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--well);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.feature:hover .featureArrow {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 /* Section headings: centred, heavy, the way both references set them */
@@ -290,7 +332,7 @@
 
 /* Hover hints mean nothing without a mouse */
 @media (hover: none) {
-  .heroHint {
+  .featureHint {
     display: none;
   }
 }
@@ -319,8 +361,18 @@
     gap: 40px;
   }
 
-  .saturn {
-    padding: 24px 20px 20px;
+  .feature {
+    padding: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .featureArt {
+    padding: 24px;
+  }
+
+  .featureInfo {
+    padding: 20px;
   }
 
   .index {
@@ -388,6 +440,14 @@
   .heroLead {
     font-size: 17px;
     line-height: 27px;
+  }
+
+  .featureArt {
+    padding: 16px;
+  }
+
+  .featureInfo {
+    padding: 16px 12px;
   }
 
   .storyPlate {

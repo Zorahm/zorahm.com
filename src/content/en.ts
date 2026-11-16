@@ -245,8 +245,8 @@ export const enUi: UiStrings = {
     home: "Home",
   },
   home: {
-    enter: "Open the Solar System",
-    heroHint: "Hover over Saturn and the dots respond.",
+    enter: "Read the article",
+    heroHint: "Hover over the maze and the dots respond.",
     index: {
       heading: "What's here",
     },
@@ -307,6 +307,9 @@ export const enUi: UiStrings = {
       more: "More",
     },
     navLabel: "Sections",
+    menu: "Menu",
+    closeMenu: "Close menu",
+    readingProgress: "Reading progress",
     themeLight: "Light theme",
     themeDark: "Dark theme",
     copy: "Copy",

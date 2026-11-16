@@ -25,6 +25,20 @@ const EASE = 9;
  */
 const BREATH = 0.16;
 
+/** Seconds from the maze's entry to its exit, and the rest before the next run */
+const MAZE_PERIOD = 4;
+/** Share of the period the head spends reaching the goal, so it rests at the exit */
+const MAZE_REACH = 1.15;
+/** How close to the head, along the path, a dot counts as the head itself */
+const MAZE_HEAD = 0.06;
+/** How far behind the head the brightest part of the trail reaches, in path progress */
+const MAZE_TRAIL = 0.35;
+/** Radius of a passed dot as a share of a full one: just behind the head, then further back */
+const MAZE_TAIL_NEAR = 0.85;
+const MAZE_TAIL_FAR = 0.65;
+/** Part of the period over which the finished run fades out, so the next one starts clean */
+const MAZE_FADE_FROM = 0.87;
+
 type Lens = { x: number; y: number } | null;
 
 const BLANK: Plate = {
@@ -127,6 +141,14 @@ export function DotPlate({
       const cell = state.cell;
       let moving = breathing;
 
+      // The maze's wave: a head that walks the solution path, a trail behind it,
+      // and a brief fade at the end so the clock can wrap without a jump. It is
+      // part of the breathing, so a still plate keeps the plain ink figure.
+      const path = breathing ? target.pathProgress : undefined;
+      const raw = path ? (state.time % MAZE_PERIOD) / MAZE_PERIOD : 0;
+      const head = Math.min(1, raw * MAZE_REACH);
+      const fade = raw > MAZE_FADE_FROM ? 1 - (raw - MAZE_FADE_FROM) / (1 - MAZE_FADE_FROM) : 1;
+
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, cell * target.cols, cell * target.rows);
 
@@ -150,8 +172,19 @@ export function DotPlate({
           const value = breathing
             ? current[n] * (1 + BREATH * breath(i, j, state.time))
             : current[n];
-          if (value < EMPTY) continue;
-          const radius = Math.max(1, cell * 0.46 * Math.sqrt(value));
+          // The wave paints the path it has already walked, brightest at its head
+          let ink = value;
+          if (path && path[n] >= 0 && path[n] <= head) {
+            const behind = head - path[n];
+            const near = clamp01(1 - behind / MAZE_TRAIL);
+            const size = behind < MAZE_HEAD
+              ? 1
+              : MAZE_TAIL_FAR + (MAZE_TAIL_NEAR - MAZE_TAIL_FAR) * near;
+            ink = Math.max(ink, size * size * fade);
+            if (fade > 0) hot = true;
+          }
+          if (ink < EMPTY) continue;
+          const radius = Math.max(1, cell * 0.46 * Math.sqrt(ink));
           ctx.fillStyle = hot ? state.signal : state.ink;
           ctx.beginPath();
           ctx.arc((i + 0.5) * cell, (j + 0.5) * cell, radius, 0, Math.PI * 2);

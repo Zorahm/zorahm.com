@@ -17,6 +17,12 @@ export type Plate = {
   values: Float32Array;
   /** 1 where the dot is painted signal */
   accents: Uint8Array;
+  /**
+   * How far along the maze's solution path the dot lies, 0..1, or -1 when it
+   * is off the path. Measured here once, so the wave that runs the path does
+   * not have to measure it on every frame.
+   */
+  pathProgress?: Float32Array;
 };
 
 /**
@@ -120,6 +126,44 @@ const EDGES: [number, number][] = [
   [4, 5], [1, 6], [3, 6], [6, 7], [1, 7],
 ];
 
+// Wall segments [x1, y1, x2, y2] forming maze obstacles
+const MAZE_WALLS: [number, number, number, number][] = [
+  // Outer frame with entry (bottom-left) and exit (top-right) gaps
+  [-1.35, -0.82, 1.35, -0.82],
+  [-1.35, 0.82, 1.35, 0.82],
+  [-1.35, -0.35, -1.35, 0.82],
+  [1.35, -0.82, 1.35, 0.35],
+
+  // Internal labyrinth walls
+  [-0.9, -0.82, -0.9, 0.25],
+  [-0.9, 0.25, -0.45, 0.25],
+  [-0.45, -0.35, -0.45, 0.55],
+  [-0.45, 0.55, 0.15, 0.55],
+  [0.0, -0.82, 0.0, 0.05],
+  [0.0, 0.05, 0.55, 0.05],
+  [0.45, -0.45, 0.95, -0.45],
+  [0.95, -0.45, 0.95, 0.45],
+  [0.55, 0.45, 0.95, 0.45],
+];
+
+// Optimal path waypoints from start to goal
+export const MAZE_PATH: [number, number][] = [
+  [-1.35, -0.58],
+  [-1.12, -0.58],
+  [-1.12, 0.52],
+  [-0.68, 0.52],
+  [-0.68, -0.58],
+  [-0.22, -0.58],
+  [-0.22, 0.3],
+  [0.28, 0.3],
+  [0.28, -0.22],
+  [0.72, -0.22],
+  [0.72, 0.25],
+  [1.15, 0.25],
+  [1.15, 0.6],
+  [1.35, 0.6],
+];
+
 /** The paper figure in whole dots: a sheet, its folded corner, and the sheets' sizes */
 const SHEET_W = 13;
 const SHEET_H = 17;
@@ -167,6 +211,39 @@ function segmentDistance(
   const x = ax + t * dx - px;
   const y = ay + t * dy - py;
   return Math.hypot(x, y);
+}
+
+/** Length of the maze's solution path up to each waypoint; the last is the whole */
+function mazeLengths() {
+  const at = [0];
+  for (let i = 0; i < MAZE_PATH.length - 1; i++) {
+    const [x1, y1] = MAZE_PATH[i];
+    const [x2, y2] = MAZE_PATH[i + 1];
+    at.push(at[i] + Math.hypot(x2 - x1, y2 - y1));
+  }
+  return at;
+}
+
+/**
+ * How far along the solution path a dot lies, 0..1, or -1 when it lies off
+ * it. Of the segments within `reach`, the nearest one decides.
+ */
+function mazeProgress(u: number, v: number, at: number[], reach: number) {
+  const total = at[at.length - 1];
+  let best = reach;
+  let progress = -1;
+  for (let i = 0; i < MAZE_PATH.length - 1; i++) {
+    const [x1, y1] = MAZE_PATH[i];
+    const [x2, y2] = MAZE_PATH[i + 1];
+    const d = segmentDistance(u, v, x1, y1, x2, y2);
+    if (d >= best) continue;
+    best = d;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const t = clamp01(((u - x1) * dx + (v - y1) * dy) / (dx * dx + dy * dy));
+    progress = (at[i] + t * (at[i + 1] - at[i])) / total;
+  }
+  return progress;
 }
 
 /**
@@ -219,6 +296,26 @@ export function density(
         const q = NODES[b];
         if (segmentDistance(u, v, p[0], p[1], q[0], q[1]) < k * 0.6) {
           m = Math.max(m, 0.45);
+        }
+      }
+      return m;
+    }
+    case "maze": {
+      let m = star * 0.35;
+      const wallThickness = Math.max(0.06, k * 0.75);
+      for (const [x1, y1, x2, y2] of MAZE_WALLS) {
+        const d = segmentDistance(u, v, x1, y1, x2, y2);
+        if (d < wallThickness) {
+          m = Math.max(m, clamp01(1 - (d / wallThickness) * 0.45));
+        }
+      }
+      // Subtle baseline dots along the solution path
+      const pathThickness = Math.max(0.05, k * 0.55);
+      for (let i = 0; i < MAZE_PATH.length - 1; i++) {
+        const [x1, y1] = MAZE_PATH[i];
+        const [x2, y2] = MAZE_PATH[i + 1];
+        if (segmentDistance(u, v, x1, y1, x2, y2) < pathThickness) {
+          m = Math.max(m, 0.28);
         }
       }
       return m;
@@ -440,6 +537,10 @@ export function buildPlate(
   const k = 1 / half;
   const values = new Float32Array(cols * rows);
   const accents = new Uint8Array(cols * rows);
+  const maze = shape === "maze";
+  const pathProgress = maze ? new Float32Array(cols * rows).fill(-1) : undefined;
+  const lengths = maze ? mazeLengths() : [];
+  const reach = Math.max(0.065, k * 0.65);
 
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
@@ -448,11 +549,13 @@ export function buildPlate(
       const value = density(shape, u, v, i, j, k);
       const n = j * cols + i;
       values[n] = value;
-      accents[n] = value > 0.93 && hash(j + 11, i + 5) < accent ? 1 : 0;
+      // The maze's signal is the wave that runs its path, not a share of its walls
+      accents[n] = !maze && value > 0.93 && hash(j + 11, i + 5) < accent ? 1 : 0;
+      if (pathProgress) pathProgress[n] = mazeProgress(u, v, lengths, reach);
     }
   }
 
-  return { cols, rows, values, accents };
+  return { cols, rows, values, accents, pathProgress };
 }
 
 /**

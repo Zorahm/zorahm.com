@@ -119,3 +119,11 @@ export const CloseIcon = ({ className }: IconProps) => (
     <path d="m6 6 12 12" />
   </Icon>
 );
+
+export const MenuIcon = ({ className }: IconProps) => (
+  <Icon className={className}>
+    <path d="M4 6h16" />
+    <path d="M4 12h16" />
+    <path d="M4 18h16" />
+  </Icon>
+);

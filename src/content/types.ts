@@ -33,7 +33,8 @@ export type PlateShapeId =
   | "yaca"
   | "orbits"
   | "hole"
-  | "paper";
+  | "paper"
+  | "maze";
 
 export type FrameAlign = "left" | "right" | "center";
 
@@ -558,6 +559,11 @@ export type ShellStrings = {
   };
   /** Main navigation of the header */
   navLabel: string;
+  /** Burger button that opens the section list on narrow screens */
+  menu: string;
+  closeMenu: string;
+  /** Reading progress line at the top of article pages */
+  readingProgress: string;
   /** Theme switch, named after the theme it turns on */
   themeLight: string;
   themeDark: string;
@@ -568,9 +574,9 @@ export type ShellStrings = {
 
 /** Strings of the home page */
 export type HomeStrings = {
-  /** The one primary action of the first screen: into the dotted Solar System */
+  /** The one primary action of the first screen: into the newest article */
   enter: string;
-  /** What the dotted Saturn on the first screen does under a mouse */
+  /** What the dotted figure on the featured article's card does under a mouse */
   heroHint: string;
   index: {
     heading: string;

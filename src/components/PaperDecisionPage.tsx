@@ -1,485 +1,663 @@
-"use client";
-
+import Image from "next/image";
 import Link from "next/link";
-import { Fragment, useState } from "react";
+import type { ReactNode } from "react";
+import { otherLang, paperDecisionLlmsPath, paperDecisionPath, paperPath, type Lang } from "@/content";
 import {
   PAPER_DECISION_DATE,
+  PAPER_DECISION_EXPERIMENTS,
   PAPER_DECISION_IMAGES,
+  PAPER_DECISION_INDEX_DETAIL_SOURCES,
+  PAPER_DECISION_INDEX_WEIGHTS,
   PAPER_DECISION_PRICE_CALLS,
+  PAPER_DECISION_PRICE_KEYS,
+  PAPER_DECISION_PRICE_MAX,
+  PAPER_DECISION_PRICES,
+  PAPER_DECISION_RANKING,
+  PAPER_DECISION_SECTIONS,
   PAPER_DECISION_SOURCES,
-  PAPER_DECISION_SPEED,
+  PAPER_DECISION_TIMELINE,
+  PAPER_DECISION_TIMING,
+  PAPER_DECISION_USES,
+  formatPaperDate,
+  formatPaperDuration,
+  formatPaperNumber,
+  formatPaperRatio,
+  formatPaperUsd,
   getPaperDecision,
-  otherLang,
-  paperDecisionLlmsPath,
-  paperDecisionPath,
-  paperPath,
+  getPaperDecisionExample,
+  getPaperDecisionExperiment,
+  getPaperDecisionPractice,
+  paperArchivedTiming,
+  paperPriceRanges,
+  paperPriceTariffs,
   priceOfMillionCalls,
-  type Lang,
+  type PaperDecisionAnswer,
+  type PaperDecisionSection,
   type PaperDecisionStrings,
-} from "@/content";
-import { DotPlate } from "./eco/DotPlate";
+} from "@/content/paperDecision";
 import { EcoShell } from "./eco/EcoShell";
-import { ImageViewer } from "./eco/ImageViewer";
-import { ArrowLeftIcon, ArrowUpRightIcon } from "./eco/icons";
-import eco from "./eco/eco.module.css";
+import { ArrowLeftIcon, ArrowRightIcon, ArrowUpRightIcon } from "./eco/icons";
+import { PaperDecisionBackground } from "./PaperDecisionBackground";
+import { PaperJson, PaperTabs } from "./PaperDecisionControls";
 import styles from "./PaperDecisionPage.module.css";
+import { PaperDecisionPractice } from "./PaperDecisionPractice";
+import { PaperHalftone } from "./PaperHalftone";
 
-const twoDigits = (n: number) => String(n).padStart(2, "0");
+type Example = ReturnType<typeof getPaperDecisionExample>;
+type Experiment = ReturnType<typeof getPaperDecisionExperiment>;
+type Labels = PaperDecisionStrings["exampleLabels"];
+type Rubric = NonNullable<PaperDecisionAnswer["rubric"]>;
+type SourceId = keyof typeof PAPER_DECISION_SOURCES;
+type ReadingSection = Exclude<PaperDecisionSection, "practice" | "sources">;
 
-/** Paragraph text with `backtick` spans set as code */
-function Inline({ text }: { text: string }) {
-  return text.split("`").map((part, index) =>
-    index % 2 === 1 ? (
-      <code key={index} className={eco.chipCode}>
-        {part}
-      </code>
-    ) : (
-      <Fragment key={index}>{part}</Fragment>
-    ),
+function SourceLinks({ ids }: { ids: readonly SourceId[] }) {
+  return (
+    <ul className={styles.citations}>
+      {ids.map((id) => {
+        const source = PAPER_DECISION_SOURCES[id];
+        return <li key={id}><a href={source.href} target="_blank" rel="noreferrer">{source.label}</a></li>;
+      })}
+    </ul>
   );
 }
 
-function Paragraphs({ items, muted = false }: { items: string[]; muted?: boolean }) {
-  return items.map((text, index) => (
-    <p key={index} className={muted ? styles.textMuted : styles.text}>
-      <Inline text={text} />
-    </p>
-  ));
+function NumberTiles({ figures }: { figures: readonly { value: string; label: ReactNode }[] }) {
+  return (
+    <ul className={styles.numberTiles}>
+      {figures.map(({ value, label }) => (
+        <li key={value}>
+          <strong>{value}</strong>
+          <div>{label}</div>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
-/**
- * A row of tabs that switches the panel below it. Follows the usual pattern:
- * arrows, Home and End move between the tabs, and only the chosen one is in
- * the tab order. `name` keeps the ids of two switchers on one page apart.
- */
-function Tabs({
-  name,
-  label,
-  items,
-  active,
-  onChange,
+function DataTable({
+  caption,
+  columns,
+  rows,
 }: {
-  name: string;
-  label: string;
-  items: string[];
-  active: number;
-  onChange: (index: number) => void;
+  caption?: string;
+  columns: readonly string[];
+  rows: readonly (readonly ReactNode[])[];
 }) {
-  const move = (event: React.KeyboardEvent, index: number) => {
-    const last = items.length - 1;
-    let next: number | null = null;
-    if (event.key === "ArrowRight") next = index === last ? 0 : index + 1;
-    if (event.key === "ArrowLeft") next = index === 0 ? last : index - 1;
-    if (event.key === "Home") next = 0;
-    if (event.key === "End") next = last;
-    if (next === null) return;
-    event.preventDefault();
-    onChange(next);
-    document.getElementById(`${name}-tab-${next}`)?.focus();
+  return (
+    <table className={styles.table}>
+      {caption && <caption>{caption}</caption>}
+      <thead>
+        <tr>{columns.map((column) => <th scope="col" key={column}>{column}</th>)}</tr>
+      </thead>
+      <tbody>
+        {rows.map(([name, ...values], row) => (
+          <tr key={row}>
+            <th scope="row">{name}</th>
+            {values.map((value, column) => <td key={column}>{value}</td>)}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function RubricDistribution({ levels, labels }: { levels: Rubric["levels"]; labels: Labels["rubric"] }) {
+  const highestProbability = Math.max(...levels.map(({ probability }) => probability));
+
+  return (
+    <table className={styles.rubricTable}>
+      <thead>
+        <tr>
+          <th scope="col">{labels.level}</th>
+          <th scope="col">{labels.probability}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {levels.map(({ label, probability, percent }) => (
+          <tr key={label} data-highest={probability === highestProbability}>
+            <th scope="row">{label}</th>
+            <td>
+              <span className={styles.rubricProbability}>
+                <span className={styles.rubricTrack} aria-hidden="true">
+                  <span style={{ width: probability * 100 + "%" }} />
+                </span>
+                <span>{percent}</span>
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function Answer({ answer, labels }: { answer: PaperDecisionAnswer; labels: Labels }) {
+  if (answer.rubric) {
+    const { maximum, levels } = answer.rubric;
+    return (
+      <div className={styles.rubric}>
+        <div className={styles.rubricSummary}>
+          <strong className={styles.answerValue}>
+            {answer.value}{maximum && " " + labels.rubric.outOf + " " + maximum}
+          </strong>
+          <span>{labels.rubric.mean}</span>
+        </div>
+        {answer.detail && <span className={styles.answerDetail}>{answer.detail}</span>}
+        <details className={styles.disclosure}>
+          <summary>{labels.rubric.distribution}</summary>
+          <RubricDistribution levels={levels} labels={labels.rubric} />
+        </details>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <strong className={styles.answerValue}>{answer.selectedLevel ?? answer.value}</strong>
+      {answer.detail && <span className={styles.answerDetail}>{answer.detail}</span>}
+    </>
+  );
+}
+
+function Json({ value, labels, name }: { value: string; labels: Labels; name: string }) {
+  return (
+    <PaperJson
+      json={value}
+      label={name}
+      copy={labels.copy}
+      copied={labels.copied}
+      copyFailed={labels.copyFailed}
+    />
+  );
+}
+
+function ExampleResult({ row, labels, levelLabel }: {
+  row: Example["calls"][number]["rows"][number];
+  labels: Labels;
+  levelLabel: string;
+}) {
+  const question = (
+    <span className={styles.exampleQuestion}>
+      <span>{labels.kinds[row.kind]}</span>
+      <strong>{row.question}</strong>
+    </span>
+  );
+
+  if (row.rubric) {
+    const { mean, maximum, levels } = row.rubric;
+    return (
+      <li className={styles.exampleResult}>
+        <details open>
+          <summary className={styles.exampleRow}>
+            {question}
+            <span className={styles.exampleRating}>
+              <span className={styles.exampleMetric}>
+                <strong>{row.value}</strong>
+                <span>{maximum && `${labels.rubric.outOf} ${maximum} · `}{labels.rubric.mean}</span>
+              </span>
+              {maximum && (
+                <span className={styles.exampleMeter} aria-hidden="true">
+                  <span style={{ width: (mean / Number(maximum)) * 100 + "%" }} />
+                </span>
+              )}
+              <span className={styles.exampleToggle}>{labels.rubric.distribution}</span>
+            </span>
+          </summary>
+          <div className={styles.exampleDistribution}>
+            <RubricDistribution levels={levels} labels={{ ...labels.rubric, level: levelLabel }} />
+          </div>
+        </details>
+      </li>
+    );
+  }
+
+  return (
+    <li className={styles.exampleResult}>
+      <div className={styles.exampleRow}>
+        {question}
+        {row.choice ? (
+          <div className={styles.exampleChoice}>
+            <strong>{row.choice.label} <span>{row.choice.percent}</span></strong>
+            {row.detail && <small>{row.detail}</small>}
+          </div>
+        ) : (
+          <div className={styles.exampleMetric}>
+            <strong>{row.selectedLevel ?? row.value}</strong>
+            {row.detail && <span>{row.detail}</span>}
+          </div>
+        )}
+      </div>
+    </li>
+  );
+}
+
+function ExampleCalls({ example, labels, inputLabel = labels.state, levelLabel = labels.rubric.level, commandInput = false }: {
+  example: Example;
+  labels: Labels;
+  inputLabel?: string;
+  levelLabel?: string;
+  commandInput?: boolean;
+}) {
+  return (
+    <>
+      {example.calls.map((call) => (
+        <figure key={call.state} className={styles.exampleCard} aria-label={example.label}>
+          <div className={styles.exampleInput}>
+            <span className={styles.exampleInputLabel}>{inputLabel}</span>
+            {commandInput ? <pre><code>{call.state}</code></pre> : <blockquote><p>{call.state}</p></blockquote>}
+          </div>
+          <p className={styles.exampleOutputHeading}>{labels.output}</p>
+          <ol className={styles.exampleResults}>
+            {call.rows.map((row) => (
+              <ExampleResult key={row.id} row={row} labels={labels} levelLabel={levelLabel} />
+            ))}
+          </ol>
+          <details className={`${styles.disclosure} ${styles.exampleJson}`}>
+            <summary>{labels.json}</summary>
+            <Json value={call.rawJson} labels={labels} name={labels.json} />
+          </details>
+        </figure>
+      ))}
+    </>
+  );
+}
+
+function Prices({ paper, lang }: { paper: PaperDecisionStrings; lang: Lang }) {
+  const { price } = paper;
+
+  return (
+    <figure className={styles.panel}>
+      <figcaption>
+        <div className={styles.panelTitle}>{price.caption}</div>
+        <p className={styles.smallNote}>{price.barScale} {formatPaperUsd(PAPER_DECISION_PRICE_MAX, lang)}.</p>
+      </figcaption>
+      <PaperTabs
+        id="price"
+        label={price.caption}
+        tabs={PAPER_DECISION_PRICE_CALLS.map((call, index) => {
+          const copy = price.calls[index];
+          const cost = priceOfMillionCalls(call);
+
+          return {
+            name: copy.label,
+            panel: (
+              <>
+                <p className={styles.tokenCounts}>
+                  <span>{formatPaperNumber(call.inputTokens, lang)} {price.tokens.input}</span>
+                  <span>{formatPaperNumber(call.answerTokens, lang)} {price.tokens.output}</span>
+                </p>
+                <p className={styles.smallNote}>{copy.basis}</p>
+                <DataTable
+                  columns={[paper.index.model, price.amount, price.ratio]}
+                  rows={PAPER_DECISION_PRICE_KEYS.map((key) => [
+                    <>
+                      {price.names[key]}
+                      {key === "haikuLow" && (
+                        <small>{PAPER_DECISION_PRICES.thinkingTokens} {price.thinkingAssumption}</small>
+                      )}
+                      <span className={styles.priceTrack} aria-hidden="true">
+                        <span
+                          data-baseline={key === "decision"}
+                          style={{ width: (cost[key] / PAPER_DECISION_PRICE_MAX) * 100 + "%" }}
+                        />
+                      </span>
+                    </>,
+                    formatPaperUsd(cost[key], lang),
+                    formatPaperRatio(cost[key] / cost.decision, lang),
+                  ])}
+                />
+              </>
+            ),
+          };
+        })}
+      />
+    </figure>
+  );
+}
+
+function ExperimentResult({
+  experiment,
+  labels,
+  lang,
+}: {
+  experiment: Experiment;
+  labels: Labels;
+  lang: Lang;
+}) {
+  return (
+    <>
+      <p className={styles.comparisonSituation}>{experiment.situation}</p>
+      <div className={styles.comparisonCards}>
+        {experiment.models.map((model, index) => (
+          <section key={model.name} className={styles.comparisonCard} data-local={index === 0}>
+            <header className={styles.comparisonHeader}>
+              <div>
+                <p>{model.origin}</p>
+                <h3>{model.name}</h3>
+              </div>
+              <dl className={styles.comparisonLatency}>
+                <dt>{index === 0 ? labels.localInference : labels.apiTime}</dt>
+                <dd>{formatPaperDuration(model.latencyMs, lang)}</dd>
+              </dl>
+            </header>
+            <dl className={styles.comparisonAnswers}>
+              {experiment.rows.map((row) => {
+                const answer = row.answers[index];
+                return (
+                  <div key={row.id} data-kind={answer.kind}>
+                    <dt>{row.question}</dt>
+                    <dd>
+                      {answer.choice ? (
+                        <div className={styles.comparisonChoice}>
+                          <strong>{answer.choice.label}</strong>
+                          <span title={answer.detail}>{answer.choice.percent}</span>
+                        </div>
+                      ) : (
+                        <Answer answer={answer} labels={labels} />
+                      )}
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+            <dl className={styles.comparisonMetrics}>
+              <div>
+                <dt>{labels.inputTokens}</dt>
+                <dd>{formatPaperNumber(model.inputTokens, lang)}</dd>
+              </div>
+              {index === 0 && (
+                <div>
+                  <dt>{labels.localRoundTrip}</dt>
+                  <dd>{formatPaperDuration(experiment.localRoundTripMs, lang)}</dd>
+                </div>
+              )}
+            </dl>
+          </section>
+        ))}
+      </div>
+      <p className={styles.resultNote}>{experiment.takeaway}</p>
+      <details className={styles.disclosure}>
+        <summary>{labels.excerpt}</summary>
+        <div className={styles.input}>
+          <span>{labels.state}</span>
+          <p lang="en">{experiment.state}</p>
+        </div>
+        {experiment.evidenceNote && <p className={styles.smallNote}>{experiment.evidenceNote}</p>}
+        {experiment.models.map((model) => (
+          <div key={model.name}>
+            <p className={styles.jsonModel}>{model.name}</p>
+            <Json value={model.rawJson} labels={labels} name={model.name + " · JSON"} />
+          </div>
+        ))}
+      </details>
+    </>
+  );
+}
+
+function IndexResults({ paper, lang }: { paper: PaperDecisionStrings; lang: Lang }) {
+  const { index } = paper;
+  const columns = [index.model, index.rank, index.score];
+  const rankings = PAPER_DECISION_RANKING.map(({ model, score }, position) => [
+    model,
+    position + 1,
+    formatPaperNumber(score, lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+  ]);
+
+  return (
+    <>
+      <p>{index.lead}</p>
+      <p>{index.v21Note}</p>
+      <div className={styles.panel}>
+        <DataTable caption={index.rankCaption} columns={columns} rows={rankings.slice(0, 5)} />
+        <details className={styles.disclosure}>
+          <summary>{paper.detailLabels.rankings}</summary>
+          <DataTable columns={columns} rows={rankings.slice(5)} />
+        </details>
+      </div>
+      <SourceLinks ids={["aaIndex", "nace"]} />
+      <details className={styles.disclosure}>
+        <summary>{index.methodology}</summary>
+        <p>{index.metricNote}</p>
+        <DataTable
+          columns={[index.metric, index.weight]}
+          rows={PAPER_DECISION_INDEX_WEIGHTS.map(({ evaluation, weight }, position) => [
+            <>{evaluation}<small>{index.metricDescriptions[position]}</small></>,
+            formatPaperNumber(weight / 100, lang, { style: "percent" }),
+          ])}
+        />
+        <SourceLinks ids={["aaMethod"]} />
+      </details>
+      <details className={styles.disclosure}>
+        <summary>{index.details.title}</summary>
+        {index.details.notes.map((note) => <p key={note}>{note}</p>)}
+        <SourceLinks ids={PAPER_DECISION_INDEX_DETAIL_SOURCES} />
+      </details>
+      <details className={styles.disclosure}>
+        <summary>{index.archiveTitle}</summary>
+        <p>{index.v1Note}</p>
+        <div className={styles.archives}>
+          {(["before", "after", "v2"] as const).map((id) => {
+            const image = PAPER_DECISION_IMAGES[id];
+            const copy = index.archives[id];
+
+            return (
+              <figure key={id} className={styles.archive}>
+                <figcaption>
+                  <h3>{copy.title}</h3>
+                  <p>{copy.caption}</p>
+                </figcaption>
+                <Image {...image} alt={copy.alt} />
+                <a href={image.src} target="_blank" rel="noreferrer">{index.original} <ArrowUpRightIcon /></a>
+              </figure>
+            );
+          })}
+        </div>
+      </details>
+    </>
+  );
+}
+
+export function PaperDecisionPage({ lang }: { lang: Lang }) {
+  const paper = getPaperDecision(lang);
+  const ticket = getPaperDecisionExample(lang, "ticket");
+  const sections = PAPER_DECISION_SECTIONS.filter((id) => id !== "practice" && id !== "sources");
+  const blocks: Record<ReadingSection, ReactNode> = {
+    what: (
+      <>
+        <p>{paper.intro.scenario}</p>
+        <ExampleCalls example={ticket} labels={paper.exampleLabels} inputLabel={paper.intro.message} levelLabel={paper.intro.urgencyLevel} />
+        <p>{paper.intro.explanation}</p>
+        <details className={styles.disclosure}>
+          <summary>{paper.detailLabels.types}</summary>
+          <p className={styles.smallNote}>{paper.intro.model}</p>
+          <dl className={styles.types}>
+            {paper.intro.types.map(({ name, text }) => (
+              <div key={name}><dt>{name}</dt><dd>{text}</dd></div>
+            ))}
+          </dl>
+          {ticket.explanation.map((text) => <p key={text} className={styles.smallNote}>{text}</p>)}
+          <p>{paper.intro.extensions}</p>
+          <p>{paper.intro.calibration}</p>
+          <SourceLinks ids={["jevUpdate", "liquidTypes", "gemini", "openrouter", "aaMethod"]} />
+        </details>
+      </>
+    ),
+    use: (
+      <>
+        <PaperTabs
+          id="use"
+          label={paper.sections.use}
+          tabs={PAPER_DECISION_USES.map((id) => {
+            const example = getPaperDecisionExample(lang, id);
+            return {
+              name: example.label,
+              panel: (
+                <>
+                  {example.explanation.map((text) => <p key={text} className={styles.tabIntro}>{text}</p>)}
+                  {example.sources.length > 0 && <SourceLinks ids={example.sources} />}
+                  <ExampleCalls example={example} labels={paper.exampleLabels} commandInput={id === "commands"} />
+                </>
+              ),
+            };
+          })}
+        />
+        <p className={styles.warning}>{paper.useWarning}</p>
+      </>
+    ),
+    models: (
+      <>
+        <ol className={styles.timeline}>
+          {PAPER_DECISION_TIMELINE.map(({ date, source }, index) => (
+            <li key={date}>
+              <details className={styles.disclosure} name="decision-timeline">
+                <summary>
+                  <span className={styles.milestone}>
+                    <time dateTime={date}>{formatPaperDate(date, lang)}</time>
+                    <span>{paper.timeline[index].title}</span>
+                  </span>
+                </summary>
+                <p>{paper.timeline[index].text}</p>
+                <SourceLinks ids={[source]} />
+              </details>
+            </li>
+          ))}
+        </ol>
+        <details className={styles.disclosure}>
+          <summary>{paper.modelNotes.title}</summary>
+          <dl className={styles.limitList}>
+            {paper.modelNotes.entries.map(({ name, text, sources }) => (
+              <div key={name}>
+                <dt>{name}</dt>
+                <dd>{text}<SourceLinks ids={sources} /></dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      </>
+    ),
+    index: <IndexResults paper={paper} lang={lang} />,
+    why: (
+      <>
+        <p>{paperPriceRanges(lang)}</p>
+        <Prices paper={paper} lang={lang} />
+        <details className={styles.disclosure}>
+          <summary>{paper.detailLabels.pricing}</summary>
+          <p>{paper.price.intro}</p>
+          <NumberTiles figures={paperPriceTariffs(lang)} />
+          <p className={styles.smallNote}>{paper.price.billingNote}</p>
+          <p className={styles.smallNote}>{paper.price.geminiComparison}</p>
+          <SourceLinks ids={["openrouter", "haiku", "liquid", "gemini"]} />
+        </details>
+        <div className={styles.panel}>
+          <DataTable
+            caption={paper.timing.caption}
+            columns={[paper.index.model, paper.index.score, paper.timing.duration]}
+            rows={PAPER_DECISION_TIMING.map(({ model, score, durationMs }) => [
+              model, score, formatPaperDuration(durationMs, lang),
+            ])}
+          />
+          <p className={styles.smallNote}>{paper.timing.note}</p>
+          <SourceLinks ids={["aaV2"]} />
+        </div>
+        <p>{paper.timing.extra}</p>
+        <SourceLinks ids={["aaV2", "nace", "gemini"]} />
+        <details className={styles.disclosure}>
+          <summary>{paper.timing.archive.title}</summary>
+          <NumberTiles figures={paperArchivedTiming(lang).map(([label, value]) => ({ value, label }))} />
+          <p className={styles.smallNote}>{paper.timing.archive.note}</p>
+          <SourceLinks ids={["jev", "haikuPerformance"]} />
+        </details>
+      </>
+    ),
+    scale: (
+      <>
+        <p>{paper.scale.intro}</p>
+        <PaperTabs
+          id="experiment"
+          label={paper.sections.scale}
+          tabs={PAPER_DECISION_EXPERIMENTS.map((id) => {
+            const experiment = getPaperDecisionExperiment(lang, id);
+            return {
+              name: experiment.label,
+              panel: <ExperimentResult experiment={experiment} labels={paper.exampleLabels} lang={lang} />,
+            };
+          })}
+        />
+        <details className={styles.disclosure}>
+          <summary>{paper.detailLabels.measurement}</summary>
+          <p className={styles.smallNote}>{paper.scale.setup}</p>
+          <p className={styles.smallNote}>{paper.scale.note}</p>
+        </details>
+        <details className={styles.disclosure}>
+          <summary>{paper.scale.footprint.title}</summary>
+          <NumberTiles figures={paper.scale.footprint.cards.map(({ model, amount, text }) => ({
+            value: amount,
+            label: <><b>{model}</b><p>{text}</p></>,
+          }))} />
+          <p className={styles.smallNote}>{paper.scale.footprint.note}</p>
+        </details>
+      </>
+    ),
+    limits: (
+      <div className={styles.limitAccordion}>
+        {paper.limits.map(({ title, text }) => (
+          <details key={title} name="decision-limits" className={styles.disclosure}>
+            <summary>{title}</summary>
+            <p>{text}</p>
+          </details>
+        ))}
+      </div>
+    ),
   };
 
   return (
-    <div className={styles.tabs} role="tablist" aria-label={label}>
-      {items.map((item, index) => (
-        <button
-          key={item}
-          type="button"
-          role="tab"
-          id={`${name}-tab-${index}`}
-          aria-selected={index === active}
-          aria-controls={`${name}-panel`}
-          tabIndex={index === active ? 0 : -1}
-          className={styles.tab}
-          onClick={() => onChange(index)}
-          onKeyDown={(event) => move(event, index)}
-        >
-          {item}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/**
- * The uses of decision models as one switcher. Each use has its words and the
- * calls that show it, drawn as slips: the text the model reads, then one row
- * per question with the answer that comes back.
- */
-function UseExamples({ paper }: { paper: PaperDecisionStrings }) {
-  const [active, setActive] = useState(0);
-  const use = paper.use[active];
-
-  return (
-    <figure className={styles.call}>
-      <figcaption className={styles.callHead}>
-        <span>{paper.illustrationLabel}</span>
-        <span className={styles.callNote}>{paper.illustrationNote}</span>
-      </figcaption>
-
-      <Tabs
-        name="use"
-        label={paper.useLabel}
-        items={paper.use.map((item) => item.tab)}
-        active={active}
-        onChange={setActive}
-      />
-
-      <div
-        id="use-panel"
-        role="tabpanel"
-        aria-labelledby={`use-tab-${active}`}
-        className={styles.usePanel}
-      >
-        <h3 className={styles.useMark}>{use.mark}</h3>
-        {use.text.map((text, index) => (
-          <p key={index} className={styles.useText}>
-            <Inline text={text} />
-          </p>
-        ))}
-
-        {use.calls.map((call, index) => (
-          <div key={index} className={styles.callBlock}>
-            <p className={styles.callState}>
-              <span>{call.stateLabel}</span>
-              {call.state}
-            </p>
-            <ul className={styles.callRows}>
-              {call.rows.map((row, rowIndex) => (
-                <li key={rowIndex}>
-                  <span className={styles.callKind}>{row.kind}</span>
-                  <span className={styles.callQuestion}>{row.question}</span>
-                  <b className={styles.callAnswer}>{row.answer}</b>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </figure>
-  );
-}
-
-const dollars = (value: number) =>
-  `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-/**
- * The bill for a million identical calls, decision model against Claude
- * Haiku 5.5. The sums are done here from the prices and token counts in the
- * content file, so a changed price cannot leave a stale figure in the text.
- * Bars share one scale per call: the longest is the dearest row.
- */
-function PriceCalls({ paper }: { paper: PaperDecisionStrings }) {
-  const [active, setActive] = useState(0);
-  const call = PAPER_DECISION_PRICE_CALLS[active];
-  const text = paper.priceCalls[active];
-  const price = priceOfMillionCalls(call);
-  const top = Math.max(price.decision, price.haiku, price.haikuLow);
-
-  const rows = [
-    { key: "decision", label: paper.priceRows.decision, value: price.decision },
-    { key: "haiku", label: paper.priceRows.haiku, value: price.haiku },
-    { key: "haikuLow", label: paper.priceRows.haikuLow, value: price.haikuLow },
-  ] as const;
-
-  return (
-    <figure className={styles.call}>
-      <figcaption className={styles.callHead}>
-        <span>{paper.priceLabel}</span>
-        <span className={styles.callNote}>{paper.priceUnit}</span>
-      </figcaption>
-
-      <Tabs
-        name="price"
-        label={paper.priceLabel}
-        items={paper.priceCalls.map((item) => item.tab)}
-        active={active}
-        onChange={setActive}
-      />
-
-      <div
-        id="price-panel"
-        role="tabpanel"
-        aria-labelledby={`price-tab-${active}`}
-        className={styles.pricePanel}
-      >
-        <p className={styles.priceWhat}>{text.text}</p>
-        <p className={styles.priceTokens}>
-          <span>
-            <b>{call.inputTokens}</b> {paper.priceTokens.input}
-          </span>
-          <span>
-            <b>{call.answerTokens}</b> {paper.priceTokens.answer}
-          </span>
-        </p>
-
-        <ul className={styles.priceRows}>
-          {rows.map((row) => (
-            <li key={row.key} data-kind={row.key}>
-              <span className={styles.priceLabel}>{row.label}</span>
-              <span className={styles.priceTrack} aria-hidden="true">
-                <span
-                  className={styles.priceBar}
-                  style={{ width: `${(row.value / top) * 100}%` }}
-                />
-              </span>
-              <b className={styles.priceValue}>{dollars(row.value)}</b>
-              <span className={styles.priceTimes}>
-                {row.key === "decision" ? "" : `×${(row.value / price.decision).toFixed(1)}`}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </figure>
-  );
-}
-
-/**
- * How long a call takes, decision model against Claude Haiku 5.5 (Low). The
- * decision model's bar runs to the slow end of its range and is solid up to
- * the fast end, so the spread reads at a glance. Both bars share one scale.
- */
-function SpeedBars({ paper }: { paper: PaperDecisionStrings }) {
-  const { decisionMs, haikuFirstTokenMs } = PAPER_DECISION_SPEED;
-  const pct = (ms: number) => `${(ms / haikuFirstTokenMs) * 100}%`;
-  const times = (ms: number) => `×${Math.round(haikuFirstTokenMs / ms)}`;
-
-  return (
-    <figure className={styles.call}>
-      <figcaption className={styles.callHead}>
-        <span>{paper.speedLabel}</span>
-        <span className={styles.callNote}>{paper.speedUnit}</span>
-      </figcaption>
-
-      <ul className={styles.priceRows}>
-        <li data-kind="decision">
-          <span className={styles.priceLabel}>{paper.speedRows.decision}</span>
-          <span className={styles.priceTrack} aria-hidden="true">
-            <span
-              className={`${styles.priceBar} ${styles.priceBarRange}`}
-              style={{ width: pct(decisionMs.max) }}
-            >
-              <span className={styles.priceBarFloor} style={{ width: pct(decisionMs.min) }} />
-            </span>
-          </span>
-          <b className={styles.priceValue}>{paper.speedRows.decisionValue}</b>
-          <span className={styles.priceTimes} />
-        </li>
-        <li data-kind="haiku">
-          <span className={styles.priceLabel}>{paper.speedRows.haiku}</span>
-          <span className={styles.priceTrack} aria-hidden="true">
-            <span className={styles.priceBar} style={{ width: "100%" }} />
-          </span>
-          <b className={styles.priceValue}>{paper.speedRows.haikuValue}</b>
-          <span className={styles.priceTimes}>
-            {times(decisionMs.max)}
-            {paper.speedTo}
-            {times(decisionMs.min)}
-          </span>
-        </li>
-      </ul>
-    </figure>
-  );
-}
-
-/**
- * The /paper/decision page: a short article on decision models, what they
- * are for, and how far they have caught up with ordinary LLMs.
- *
- * It borrows the reading layout of /spirit: a contents list in the margin
- * and one column of text. All words come from getPaperDecision, so the two
- * languages cannot drift apart in structure.
- */
-export function PaperDecisionPage({ lang }: { lang: Lang }) {
-  const paper = getPaperDecision(lang);
-  const { before, after } = PAPER_DECISION_IMAGES;
-
-  const contents = [
-    { id: "what", label: paper.whatLabel },
-    { id: "models", label: paper.modelsLabel },
-    { id: "why", label: paper.whyLabel },
-    { id: "use", label: paper.useLabel },
-    { id: "index", label: paper.indexLabel },
-    { id: "limits", label: paper.limitsLabel },
-    { id: "sources", label: paper.sourcesLabel },
-  ];
-
-  return (
     <EcoShell lang={lang} otherHref={paperDecisionPath(otherLang(lang))} current="paper">
-      <article>
+      <article className={styles.article}>
+        <PaperDecisionBackground />
         <header className={styles.hero}>
-          <Link href={paperPath(lang)} className={styles.back}>
-            <ArrowLeftIcon />
-            {paper.back}
-          </Link>
-
-          <h1 className={styles.title}>{paper.heading}</h1>
-
-          <div className={styles.heroBody}>
-            <div className={styles.heroText}>
-              <p className={styles.dateLine}>
-                <span>{paper.eyebrow}</span>
-                <time dateTime={PAPER_DECISION_DATE}>{paper.date}</time>
-                <a href={paperDecisionLlmsPath(lang)} className={styles.llmsLink}>
-                  llms.txt
-                </a>
-              </p>
-              {paper.lead.map((text, index) => (
-                <p key={index} className={index === 0 ? styles.lead : styles.leadMuted}>
-                  {text}
-                </p>
-              ))}
-            </div>
-
-            <div className={`${eco.tinted} ${styles.heroPlate}`}>
-              <DotPlate shape="network" accent={0.5} cols={30} rows={20} lens arrive />
-            </div>
+          <PaperHalftone />
+          <Link href={paperPath(lang)} className={styles.back}><ArrowLeftIcon />{paper.back}</Link>
+          <div className={styles.opening}>
+            <p className={styles.format}>{paper.opening.format}</p>
+            <h1>{paper.title}</h1>
+            <p className={styles.lead}>{paper.lead}</p>
+          </div>
+          <div className={styles.startLinks}>
+            <a href="#what" className={styles.begin}>{paper.opening.example} <ArrowRightIcon /></a>
+            <a href="#scale" className={styles.begin}>{paper.opening.research} <ArrowRightIcon /></a>
           </div>
         </header>
-
-        <div className={styles.layout}>
-          <nav className={`${eco.card} ${styles.contents}`} aria-label={paper.contentsLabel}>
-            <ol>
-              {contents.map((item) => (
-                <li key={item.id}>
-                  <a href={`#${item.id}`}>{item.label}</a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-
-          <div className={`${eco.card} ${styles.main}`}>
-            <section id="what" className={styles.part}>
-              <h2 className={styles.h2}>{paper.whatLabel}</h2>
-              <Paragraphs items={paper.what} />
-
-              <dl className={styles.questions}>
-                {paper.questions.map((question) => (
-                  <div key={question.name}>
-                    <dt>{question.name}</dt>
-                    <dd>{question.text}</dd>
-                  </div>
-                ))}
-              </dl>
-
-
-              <Paragraphs items={paper.whatAfter} />
+        <div className={styles.main}>
+          {sections.map((id) => (
+            <section
+              key={id}
+              id={id}
+              aria-labelledby={id + "-heading"}
+              className={styles.part}
+              tabIndex={-1}
+            >
+              <h2 id={id + "-heading"} className={styles.chapterTitle}>{paper.sections[id]}</h2>
+              {blocks[id]}
             </section>
-
-            <section id="models" className={styles.part}>
-              <h2 className={styles.h2}>{paper.modelsLabel}</h2>
-              <Paragraphs items={paper.models} />
-              <ol className={styles.steps}>
-                {paper.modelList.map((model, index) => (
-                  <li key={model.name}>
-                    <span className={styles.stepNo}>{twoDigits(index + 1)}</span>
-                    <div>
-                      <h3 className={styles.stepMark}>{model.name}</h3>
-                      <p className={styles.text}>{model.text}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-              <Paragraphs items={[paper.modelsAfter]} />
-            </section>
-
-            <section id="why" className={styles.part}>
-              <h2 className={styles.h2}>{paper.whyLabel}</h2>
-              <Paragraphs items={paper.why} />
-              <ul className={styles.numbers}>
-                {paper.numbers.map((number) => (
-                  <li key={number.value}>
-                    <b className={styles.value}>{number.value}</b>
-                    <span>{number.label}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <PriceCalls paper={paper} />
-              <div className={styles.priceNotes}>
-                <Paragraphs items={paper.priceNotes} muted />
-              </div>
-              <Paragraphs items={paper.priceVerdict} />
-
-              <SpeedBars paper={paper} />
-              <div className={styles.priceNotes}>
-                <Paragraphs items={paper.speedNotes} muted />
-              </div>
-              <Paragraphs items={paper.speedVerdict} />
-            </section>
-
-            <section id="use" className={styles.part}>
-              <h2 className={styles.h2}>{paper.useLabel}</h2>
-              <Paragraphs items={[paper.useIntro]} />
-              <UseExamples paper={paper} />
-              <Paragraphs items={[paper.useMore]} />
-              <p className={styles.warning}>{paper.useWarning}</p>
-            </section>
-
-            <section id="index" className={styles.part}>
-              <h2 className={styles.h2}>{paper.indexLabel}</h2>
-              <Paragraphs items={paper.index} />
-
-              <h3 className={styles.h3}>{paper.beforeLabel}</h3>
-              <ImageViewer
-                src={before.src}
-                width={before.width}
-                height={before.height}
-                alt={paper.beforeAlt}
-                caption={paper.beforeCaption}
-                openLabel={paper.viewImage}
-                closeLabel={paper.closeImage}
-              />
-              <Paragraphs items={paper.before} />
-
-              <h3 className={styles.h3}>{paper.afterLabel}</h3>
-              <ImageViewer
-                src={after.src}
-                width={after.width}
-                height={after.height}
-                alt={paper.afterAlt}
-                caption={paper.afterCaption}
-                openLabel={paper.viewImage}
-                closeLabel={paper.closeImage}
-              />
-              <Paragraphs items={paper.after} />
-
-              <div className={styles.verdict}>
-                <Paragraphs items={paper.indexVerdict} />
-              </div>
-            </section>
-
-            <section id="limits" className={styles.part}>
-              <h2 className={styles.h2}>{paper.limitsLabel}</h2>
-              <ol className={styles.steps}>
-                {paper.limits.map((limit, index) => (
-                  <li key={limit.mark}>
-                    <span className={styles.stepNo}>{twoDigits(index + 1)}</span>
-                    <div>
-                      <h3 className={styles.stepMark}>{limit.mark}</h3>
-                      <p className={styles.text}>{limit.text}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </section>
-
-            <footer id="sources" className={styles.part}>
-              <h2 className={styles.h3}>{paper.sourcesLabel}</h2>
+          ))}
+          <section id="sources" aria-label={paper.sections.sources} className={styles.endnotes} tabIndex={-1}>
+            <details className={styles.disclosure}>
+              <summary>{paper.sections.sources}</summary>
               <ul className={styles.sources}>
-                {PAPER_DECISION_SOURCES.map((source) => (
+                {Object.values(PAPER_DECISION_SOURCES).map((source) => (
                   <li key={source.href}>
-                    <a href={source.href} target="_blank" rel="noreferrer">
-                      <span>{source.label}</span>
-                      <ArrowUpRightIcon className={eco.arrowMuted} />
-                    </a>
+                    <a href={source.href} target="_blank" rel="noreferrer">{source.label} <ArrowUpRightIcon /></a>
                   </li>
                 ))}
               </ul>
-              <p className={styles.disclaimer}>{paper.disclaimer}</p>
-            </footer>
-          </div>
+            </details>
+            <p className={styles.edition}>
+              <a href={paperDecisionLlmsPath(lang)}>{paper.textVersion}</a>
+              <span>{paper.dates.updated} <time dateTime={PAPER_DECISION_DATE}>{formatPaperDate(PAPER_DECISION_DATE, lang, true)}</time></span>
+            </p>
+          </section>
         </div>
+        <PaperDecisionPractice title={paper.sections.practice} practice={getPaperDecisionPractice(lang)} />
       </article>
     </EcoShell>
   );

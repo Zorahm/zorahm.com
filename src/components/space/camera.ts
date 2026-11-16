@@ -83,22 +83,6 @@ export function selectBody(index: number) {
 }
 
 /**
- * Прилететь с главной страницы.
- *
- * Кадр «Сатурн» на главной ныряется целиком, и сцена обязана открыться там же,
- * где он оборвался: тело раскрыто на весь экран, камера тут же начинает
- * отъезжать и показывает всю систему. Выбранным тело при этом не считается —
- * карточка не открывается, читать никто не просил.
- */
-export function arriveAt(index: number) {
-  spaceState.focus = 1;
-  spaceState.anchorIndex = index;
-  spaceState.focusIndex = -1;
-  spaceState.intro = 0;
-  useSpaceStore.setState({ selected: -1 });
-}
-
-/**
  * Вернуть сцену в исходное положение.
  *
  * Состояние живёт в модуле и переживает уход со страницы — как scrollState

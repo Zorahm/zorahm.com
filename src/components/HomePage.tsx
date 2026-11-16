@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   HOME_SECTIONS,
-  SPACE_STRUCTURE,
   getFrames,
+  getPaperArticles,
   getUi,
   langPath,
   otherLang,
-  spacePath,
+  paperDecisionPath,
   type Frame,
   type Lang,
 } from "@/content";
@@ -19,15 +19,13 @@ import { DotPlate } from "./eco/DotPlate";
 import { EcoShell } from "./eco/EcoShell";
 import { ArrowRightIcon } from "./eco/icons";
 import eco from "./eco/eco.module.css";
-import { arriveAt } from "./space/camera";
 import styles from "./HomePage.module.css";
 
-const SATURN = SPACE_STRUCTURE.findIndex((body) => body.id === "saturn");
-
 /**
- * The home page on the card design: a centred title with the way in, Saturn
- * on a wide white card under it, the index as a bento grid of tinted cards,
- * and the story as one card whose plate reassembles as its text scrolls past.
+ * The home page on the card design: a centred title with the way in, the
+ * newest article and its dots on a wide card under it, the index as a bento
+ * grid of tinted cards, and the story as one card whose plate reassembles as
+ * its text scrolls past.
  */
 export function HomePage({ lang }: { lang: Lang }) {
   const frames = getFrames(lang);
@@ -47,8 +45,8 @@ export function HomePage({ lang }: { lang: Lang }) {
 function Hero({ lang, frame }: { lang: Lang; frame: Frame }) {
   const ui = getUi(lang);
   const lead = frame.body.filter((paragraph) => !paragraph.muted);
-  // The scene opens on the same Saturn and pulls back to the overview
-  const enter = () => arriveAt(SATURN);
+  // The newest article is the one thing the first screen offers besides the index
+  const article = getPaperArticles(lang)[0];
 
   return (
     <section className={styles.hero}>
@@ -67,7 +65,7 @@ function Hero({ lang, frame }: { lang: Lang; frame: Frame }) {
           </p>
         ))}
         <div className={`${eco.actions} ${styles.heroActions} ${styles.rise}`}>
-          <Link href={spacePath(lang)} className={eco.primary} onClick={enter}>
+          <Link href={paperDecisionPath(lang)} className={eco.primary}>
             {ui.home.enter}
             <ArrowRightIcon />
           </Link>
@@ -79,14 +77,26 @@ function Hero({ lang, frame }: { lang: Lang; frame: Frame }) {
 
       {/* The button above is the named way in; the card is the same link for a pointer */}
       <Link
-        href={spacePath(lang)}
-        className={`${eco.card} ${styles.saturn} ${styles.rise}`}
-        aria-hidden="true"
-        tabIndex={-1}
-        onClick={enter}
+        href={article.path(lang)}
+        className={`${eco.card} ${styles.feature} ${styles.rise}`}
       >
-        <DotPlate shape="saturn" accent={0.3} cols={52} rows={30} lens arrive />
-        <p className={`${eco.hint} ${styles.heroHint}`}>{ui.home.heroHint}</p>
+        <div className={`${eco.tinted} ${styles.featureArt}`}>
+          <DotPlate shape={article.shape} accent={1} cols={30} rows={20} lens arrive />
+          <p className={`${eco.hint} ${styles.featureHint}`} aria-hidden="true">{ui.home.heroHint}</p>
+        </div>
+        <div className={styles.featureInfo}>
+          <p className={styles.featureHead}>
+            <span className={eco.label}>{article.eyebrow}</span>
+            <time className={`${eco.code} ${styles.featureDate}`} dateTime={article.updated}>
+              {article.updatedText}
+            </time>
+          </p>
+          <h2 className={eco.displayL}>{article.title}</h2>
+          <p className={eco.body}>{article.summary}</p>
+          <span className={styles.featureArrow} aria-hidden="true">
+            <ArrowRightIcon />
+          </span>
+        </div>
       </Link>
     </section>
   );
